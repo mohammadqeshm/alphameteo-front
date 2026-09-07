@@ -1,0 +1,102 @@
+import { WeatherLayer } from "./types";
+
+export const WEATHER_LAYERS: WeatherLayer[] = [
+  {
+    id: "none",
+    name: "Clean Base Map (نقشه ساده)",
+    description: "Standard MapLibre base map without weather overlay",
+    unit: "",
+    min: 0,
+    max: 100,
+    defaultValue: 0,
+    gradient: "from-slate-700 to-slate-900",
+    icon: "Map",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
+  {
+    id: "temperature",
+    name: "IR (Temperature)",
+    description: "2m above ground (Iran Sector)",
+    unit: "°C",
+    min: -30,
+    max: 40,
+    defaultValue: 15,
+    gradient: "from-purple-900 via-blue-600 via-green-500 via-yellow-500 to-red-600",
+    icon: "Thermometer",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
+  {
+    id: "wind",
+    name: "Wind Speed",
+    description: "10m surface velocity streamlines",
+    unit: "m/s",
+    min: 0,
+    max: 60,
+    defaultValue: 12,
+    gradient: "from-cyan-500 via-blue-600 via-green-400 via-yellow-400 to-purple-600",
+    icon: "Wind",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
+  {
+    id: "pressure",
+    name: "MSLP Pressure",
+    description: "Mean sea level atmospheric pressure",
+    unit: "hPa",
+    min: 950,
+    max: 1050,
+    defaultValue: 1013,
+    gradient: "from-blue-900 via-indigo-600 via-purple-500 to-amber-500",
+    icon: "Gauge",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
+  {
+    id: "precipitation",
+    name: "Precipitation Rate",
+    description: "Liquid accumulation rate (mm/h)",
+    unit: "mm/h",
+    min: 0,
+    max: 100,
+    defaultValue: 10,
+    gradient: "from-sky-400 via-blue-600 via-indigo-600 to-pink-600",
+    icon: "CloudRain",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
+  {
+    id: "heatmap_demo",
+    name: "Heatmap (Global)",
+    description: "300 custom scalar points (Worldwide)",
+    unit: "pts",
+    min: 0,
+    max: 100,
+    defaultValue: 50,
+    gradient: "from-blue-600 via-green-400 via-yellow-400 to-red-600",
+    icon: "Grid",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
+];
+
+export interface SearchStation {
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+}
+
+export const METEOROLOGICAL_STATIONS: SearchStation[] = [
+  { name: "Tehran", country: "Iran", lat: 35.6892, lon: 51.3890 },
+  { name: "Tabriz", country: "Iran", lat: 38.0962, lon: 46.2731 },
+  { name: "Isfahan", country: "Iran", lat: 32.6546, lon: 51.6680 },
+  { name: "Shiraz", country: "Iran", lat: 29.5918, lon: 52.5837 },
+  { name: "Mashhad", country: "Iran", lat: 36.2972, lon: 59.6067 },
+  { name: "Ahvaz", country: "Iran", lat: 31.3183, lon: 48.6706 },
+  { name: "London", country: "United Kingdom", lat: 51.5074, lon: -0.1278 },
+  { name: "New York", country: "United States", lat: 40.7128, lon: -74.0060 },
+  { name: "Tokyo", country: "Japan", lat: 35.6762, lon: 139.6503 },
+  { name: "Paris", country: "France", lat: 48.8566, lon: 2.3522 },
+  { name: "Moscow", country: "Russia", lat: 55.7558, lon: 37.6173 },
+  { name: "Cairo", country: "Egypt", lat: 30.0444, lon: 31.2357 },
+  { name: "Sydney", country: "Australia", lat: -33.8688, lon: 151.2093 },
+  { name: "Reykjavik", country: "Iceland", lat: 64.1466, lon: -21.9426 },
+  { name: "Tromso", country: "Norway", lat: 69.6492, lon: 18.9553 },
+  { name: "Geneva", country: "Switzerland", lat: 46.2044, lon: 6.1432 }
+];

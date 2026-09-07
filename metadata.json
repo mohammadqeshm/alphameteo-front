@@ -1,0 +1,6 @@
+{
+  "name": "Alpha Meteo",
+  "description": "Scientific Minimalism weather interface with real-time MapLibre maps, atmospheric overlays, predictive models, interactive timeline scrubber, and an AI meteorological assistant.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
