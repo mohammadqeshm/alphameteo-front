@@ -1,8 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Coordinate, WeatherLayer, ToolbarTool, DrawingItem } from "../types";
-import { ZoomIn, ZoomOut, Compass, Maximize2, Crosshair, MapPin, Lock, Unlock } from "lucide-react";
+import { Coordinate, WeatherLayer, ToolbarTool, DrawingItem, ActiveLayer } from "../types";
+import { ZoomIn, ZoomOut, Compass, Maximize2, Crosshair, MapPin, Lock, Unlock, Zap, Activity, Globe, Satellite, RefreshCw, Layers, Radio } from "lucide-react";
+import { LightningService, LiveLightningPayload, LiveStroke, LightningNetworkStats } from "../services/lightningService";
+import { eumetsatMtgService, MTGLIPayload } from "../services/eumetsatMtgService";
+
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
 
 // 300 deterministic random sample points across the map (Middle East & Iran bounding area)
 const DEMO_POINTS = Array.from({ length: 300 }, (_, i) => {
@@ -115,6 +131,14 @@ interface MeteoMapProps {
   minVal: number;
   maxVal: number;
   heatmapRadius?: number;
+  showLiveLightning?: boolean;
+  onToggleLiveLightning?: (enabled: boolean) => void;
+  activeCameras?: number[];
+  onToggleCamera?: (cameraId: number) => void;
+  showCoverageBoundary?: boolean;
+  onToggleCoverageBoundary?: (show: boolean) => void;
+  lightningTimeFilter?: "all" | "15m" | "5m" | "2m";
+  activeLayers?: ActiveLayer[];
 }
 
 export const MeteoMap: React.FC<MeteoMapProps> = ({
@@ -135,11 +159,70 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
   minVal,
   maxVal,
   heatmapRadius = 3.5,
+  showLiveLightning,
+  onToggleLiveLightning,
+  activeCameras: propsActiveCameras,
+  onToggleCamera: propsOnToggleCamera,
+  showCoverageBoundary: propsShowCoverageBoundary,
+  onToggleCoverageBoundary: propsOnToggleCoverageBoundary,
+  lightningTimeFilter = "all",
+  activeLayers,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const canvasOverlayRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  const [livePayload, setLivePayload] = useState<LiveLightningPayload | null>(null);
+  const [internalActiveCameras, setInternalActiveCameras] = useState<number[]>([1, 2, 3, 4]);
+  const [internalShowCoverageBoundary, setInternalShowCoverageBoundary] = useState<boolean>(true);
+
+  const activeCameras = propsActiveCameras ?? internalActiveCameras;
+  const showCoverageBoundary = propsShowCoverageBoundary ?? internalShowCoverageBoundary;
+
+  const handleToggleCamera = (cameraId: number) => {
+    if (propsOnToggleCamera) {
+      propsOnToggleCamera(cameraId);
+    } else {
+      setInternalActiveCameras((prev) =>
+        prev.includes(cameraId) ? prev.filter((c) => c !== cameraId) : [...prev, cameraId].sort()
+      );
+    }
+  };
+
+  const handleToggleCoverageBoundary = (show: boolean) => {
+    if (propsOnToggleCoverageBoundary) {
+      propsOnToggleCoverageBoundary(show);
+    } else {
+      setInternalShowCoverageBoundary(show);
+    }
+  };
+
+  // Strictly active ONLY when selected via layers panel or activeLayers state
+  const isLightningActive = 
+    Boolean(showLiveLightning) ||
+    activeLayer?.id === "lightning" || 
+    activeLayer?.id === "satellite_lightning" || 
+    activeLayer?.id === "eumetsat_mtg_li" ||
+    activeLayer?.id === "mtg_li_lightning" ||
+    (activeLayer as any)?.variableId === "mtg_li_lightning" ||
+    Boolean(activeLayers?.some(l => 
+      l.sourceId === "eumetsat_mtg_li" || 
+      l.variableId === "mtg_li_lightning" || 
+      (l as any).id === "lightning" || 
+      (l as any).id === "satellite_lightning"
+    ));
+
+  useEffect(() => {
+    eumetsatMtgService.startLiveStream();
+    const unsub = eumetsatMtgService.subscribe((payload: MTGLIPayload) => {
+      setLivePayload(payload as any);
+    });
+
+    return () => {
+      unsub();
+    };
+  }, []);
 
   const mapLockedRef = useRef(mapLocked);
   const activeToolRef = useRef(activeTool);
@@ -228,7 +311,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Use reliable CartoDB Dark Matter style with preserveDrawingBuffer enabled for screenshot capture
+    // Clean, high-contrast dark basemap
     const darkStyle: maplibregl.StyleSpecification = {
       version: 8,
       sources: {
@@ -241,7 +324,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
             "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
           ],
           tileSize: 256,
-          attribution: "© OpenStreetMap contributors, © CARTO"
+          attribution: "© OpenStreetMap contributors, © CARTO, © EUMETSAT MTG-I1"
         }
       },
       layers: [
@@ -544,6 +627,194 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       });
 
       map.on("touchend", finishPencilOrDrag);
+
+      // Create lightning bolt symbol icon (44x44)
+      const lightningCanvas = document.createElement("canvas");
+      lightningCanvas.width = 44;
+      lightningCanvas.height = 44;
+      const lCtx = lightningCanvas.getContext("2d");
+      if (lCtx) {
+        // Outer amber/yellow radial glow
+        const glow = lCtx.createRadialGradient(22, 22, 2, 22, 22, 21);
+        glow.addColorStop(0, "rgba(255, 234, 0, 1)");
+        glow.addColorStop(0.35, "rgba(245, 158, 11, 0.75)");
+        glow.addColorStop(0.7, "rgba(217, 119, 6, 0.25)");
+        glow.addColorStop(1, "rgba(217, 119, 6, 0)");
+        lCtx.fillStyle = glow;
+        lCtx.beginPath();
+        lCtx.arc(22, 22, 21, 0, Math.PI * 2);
+        lCtx.fill();
+
+        // Inner sharp lightning bolt icon
+        lCtx.fillStyle = "#FFEA00";
+        lCtx.strokeStyle = "#FFFFFF";
+        lCtx.lineWidth = 1.6;
+        lCtx.lineJoin = "round";
+        lCtx.beginPath();
+        lCtx.moveTo(25, 6);
+        lCtx.lineTo(13, 22);
+        lCtx.lineTo(21, 22);
+        lCtx.lineTo(17, 38);
+        lCtx.lineTo(31, 19);
+        lCtx.lineTo(23, 19);
+        lCtx.closePath();
+        lCtx.fill();
+        lCtx.stroke();
+
+        const imgData = lCtx.getImageData(0, 0, 44, 44);
+        if (!map.hasImage("lightning-symbol")) {
+          map.addImage("lightning-symbol", imgData);
+        }
+      }
+
+      // 1. Add GeoJSON source for EUMETSAT MTG-LI Official Coverage
+      if (!map.getSource("mtg-li-coverage-source")) {
+        fetch("/api/eumetsat/mtg-li/coverage")
+          .then((res) => res.json())
+          .then((coverageData) => {
+            if (!map.getSource("mtg-li-coverage-source")) {
+              map.addSource("mtg-li-coverage-source", {
+                type: "geojson",
+                data: coverageData
+              });
+
+              // Coverage fill for 4 optical cameras
+              map.addLayer({
+                id: "mtg-li-coverage-fill",
+                type: "fill",
+                source: "mtg-li-coverage-source",
+                filter: ["!=", ["get", "id"], "full-disk"],
+                paint: {
+                  "fill-color": ["coalesce", ["get", "color"], "#38BDF8"],
+                  "fill-opacity": 0.08
+                }
+              });
+
+              // Boundary outlines
+              map.addLayer({
+                id: "mtg-li-coverage-lines",
+                type: "line",
+                source: "mtg-li-coverage-source",
+                paint: {
+                  "line-color": ["coalesce", ["get", "color"], "#38BDF8"],
+                  "line-width": [
+                    "case",
+                    ["==", ["get", "isBoundary"], true], 2.2,
+                    1.2
+                  ],
+                  "line-opacity": 0.8
+                }
+              });
+
+              // Camera Code Labels (OC1, OC2, OC3, OC4)
+              map.addLayer({
+                id: "mtg-li-coverage-labels",
+                type: "symbol",
+                source: "mtg-li-coverage-source",
+                filter: ["has", "cameraCode"],
+                layout: {
+                  "text-field": ["get", "cameraCode"],
+                  "text-size": 13,
+                  "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+                  "text-allow-overlap": true
+                },
+                paint: {
+                  "text-color": ["coalesce", ["get", "color"], "#38BDF8"],
+                  "text-halo-color": "#050811",
+                  "text-halo-width": 2.5
+                }
+              });
+            }
+          })
+          .catch((err) => console.warn("Failed to load MTG-LI coverage", err));
+      }
+
+      // 2. Add GeoJSON source for EUMETSAT MTG-LI Lightning points
+      if (!map.getSource("live-lightning-source")) {
+        map.addSource("live-lightning-source", {
+          type: "geojson",
+          data: eumetsatMtgService.getGeoJSON(activeCameras)
+        });
+
+        // Layer 1: Ambient outer glow for freshly struck flashes (< 2 minutes)
+        map.addLayer({
+          id: "live-lightning-glow-layer",
+          type: "circle",
+          source: "live-lightning-source",
+          paint: {
+            "circle-radius": [
+              "interpolate", ["linear"], ["zoom"],
+              2, ["match", ["get", "ageTier"], 0, 7.0, 1, 4.5, 3.0],
+              6, ["match", ["get", "ageTier"], 0, 14.0, 1, 9.0, 6.0],
+              10, ["match", ["get", "ageTier"], 0, 22.0, 1, 14.0, 9.0]
+            ],
+            "circle-color": ["get", "color"],
+            "circle-opacity": [
+              "match", ["get", "ageTier"],
+              0, 0.6,
+              1, 0.35,
+              0.15
+            ],
+            "circle-blur": 0.55
+          }
+        });
+
+        // Layer 2: Core solid strike circle
+        map.addLayer({
+          id: "live-lightning-circle-layer",
+          type: "circle",
+          source: "live-lightning-source",
+          paint: {
+            "circle-radius": [
+              "interpolate", ["linear"], ["zoom"],
+              2, ["match", ["get", "ageTier"], 0, 3.8, 1, 3.0, 2.2],
+              6, ["match", ["get", "ageTier"], 0, 6.8, 1, 5.2, 4.0],
+              10, ["match", ["get", "ageTier"], 0, 10.5, 1, 8.0, 6.5]
+            ],
+            "circle-color": ["get", "color"],
+            "circle-opacity": 0.95,
+            "circle-stroke-width": 1.2,
+            "circle-stroke-color": "#FFFFFF",
+            "circle-stroke-opacity": 0.9
+          }
+        });
+
+        // Layer 3: Sharp Lightning Bolt Symbol (⚡)
+        map.addLayer({
+          id: "live-lightning-symbol-layer",
+          type: "symbol",
+          source: "live-lightning-source",
+          layout: {
+            "icon-image": "lightning-symbol",
+            "icon-size": [
+              "interpolate", ["linear"], ["zoom"],
+              2, 0.36,
+              5, 0.58,
+              8, 0.85,
+              12, 1.15
+            ],
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true
+          }
+        });
+      }
+
+      // Smooth click to focus - Strictly NO popups per user instructions
+      const onStrikeClick = (e: any) => {
+        if (e.features && e.features[0]) {
+          const geom = e.features[0].geometry as any;
+          if (geom && geom.coordinates) {
+            map.flyTo({
+              center: [geom.coordinates[0], geom.coordinates[1]],
+              zoom: Math.max(map.getZoom(), 8),
+              duration: 1200
+            });
+          }
+        }
+      };
+
+      map.on("click", "live-lightning-symbol-layer", onStrikeClick);
+      map.on("click", "live-lightning-circle-layer", onStrikeClick);
     });
 
     return () => {
@@ -553,6 +824,45 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       }
     };
   }, []);
+
+  // Synchronize Live Lightning points & MTG-LI Coverage when state changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    // If lightning activated and no data in memory yet, immediately request from service
+    if (isLightningActive && !eumetsatMtgService.getCurrentPayload()) {
+      eumetsatMtgService.refreshData();
+    }
+
+    const source = map.getSource("live-lightning-source") as maplibregl.GeoJSONSource;
+    if (source && typeof source.setData === "function") {
+      source.setData(eumetsatMtgService.getGeoJSON(activeCameras, lightningTimeFilter));
+    }
+
+    const coverageVisibility = isLightningActive && showCoverageBoundary ? "visible" : "none";
+    ["mtg-li-coverage-fill", "mtg-li-coverage-lines", "mtg-li-coverage-labels"].forEach((lid) => {
+      if (map.getLayer(lid)) {
+        map.setLayoutProperty(lid, "visibility", coverageVisibility);
+      }
+    });
+
+    if (map.getLayer("mtg-li-coverage-fill")) {
+      map.setFilter("mtg-li-coverage-fill", [
+        "all",
+        ["!=", ["get", "id"], "full-disk"],
+        ["in", ["get", "cameraNumber"], ["literal", activeCameras]]
+      ] as any);
+    }
+
+    const visibility = isLightningActive ? "visible" : "none";
+    ["live-lightning-symbol-layer", "live-lightning-circle-layer", "live-lightning-glow-layer"].forEach((lid) => {
+      if (map.getLayer(lid)) {
+        map.setLayoutProperty(lid, "visibility", visibility);
+        map.setFilter(lid, null);
+      }
+    });
+  }, [livePayload, activeCameras, showCoverageBoundary, isLightningActive, lightningTimeFilter]);
 
   // ResizeObserver to resize MapLibre canvas and overlay canvas when split layout changes
   useEffect(() => {
@@ -756,8 +1066,8 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       // Ensure canvas matches viewport bounds
       ctx.globalAlpha = layerOpacity / 100;
 
-      // 1. SCIENTIFIC METEOROLOGICAL RASTER WEATHER FIELD RENDERING (Skipped if clean base map selected or opacity 0)
-      if (activeLayer.id !== "none" && layerOpacity > 0) {
+      // 1. SCIENTIFIC METEOROLOGICAL RASTER WEATHER FIELD RENDERING (Skipped if clean base map or lightning selected or opacity 0)
+      if (activeLayer.id !== "none" && !isLightningActive && layerOpacity > 0) {
         const valueCache = new Map<number, number>();
 
       const getLayerValueRaw = (layerId: string, lat: number, lon: number, hour: number) => {
@@ -1461,7 +1771,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [activeLayer, layerOpacity, drawings, currentLinePoints, timelineHour, selectedId, visualizationStyle, colorScaleName, minVal, maxVal]);
+  }, [activeLayer, layerOpacity, drawings, currentLinePoints, timelineHour, selectedId, visualizationStyle, colorScaleName, minVal, maxVal, showLiveLightning, isLightningActive]);
 
   // Scientific weather color mapping helper
   const getAtmosphericColor = (layerId: string, pct: number) => {

@@ -234,3 +234,24 @@ export interface MapPaneState {
   coords: Coordinate;
 }
 
+export interface LightningStrike {
+  id: string;
+  lat: number;
+  lon: number;
+  timeMs: number;
+  delay: number;
+  region: number;
+  detectorsCount: number;
+  polarity: number;
+  receivedAt: number;
+}
+
+export interface LightningStats {
+  connected: boolean;
+  server?: string;
+  totalActiveStrikes: number;
+  strikesPerMinute: number;
+  activeSseClients: number;
+}
+
+

@@ -3,6 +3,8 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type, type FunctionDeclaration } from "@google/genai";
 import dotenv from "dotenv";
+import { LightningManager } from "./server/lightningManager";
+import { EumetsatMtgService } from "./server/eumetsatService";
 
 dotenv.config();
 
@@ -230,6 +232,128 @@ async function startServer() {
   // API 1: Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // API 1.5: EUMETSAT Meteosat Third Generation (MTG-I1) Lightning Imager (LI)
+  const eumetsatService = EumetsatMtgService.getInstance();
+  const lightningManager = LightningManager.getInstance();
+
+  // 1.5.1: Official MTG-LI Coverage GeoJSON (4 Optical Cameras + Full Disc)
+  app.get("/api/eumetsat/mtg-li/coverage", (req, res) => {
+    res.json(eumetsatService.getCoverageGeoJSON());
+  });
+
+  // 1.5.2: Live EUMETSAT MTG-LI Lightning Data (telemetry + GeoJSON + camera metrics)
+  app.get("/api/eumetsat/mtg-li/live", (req, res) => {
+    const camerasParam = req.query.cameras as string;
+    const activeCameras = camerasParam
+      ? camerasParam.split(",").map(c => parseInt(c.trim(), 10)).filter(c => !isNaN(c))
+      : [1, 2, 3, 4];
+    res.json(eumetsatService.getLivePayload(activeCameras));
+  });
+
+  // 1.5.3: GeoJSON Points for MapLibre Layer
+  app.get("/api/eumetsat/mtg-li/geojson", (req, res) => {
+    const camerasParam = req.query.cameras as string;
+    const activeCameras = camerasParam
+      ? camerasParam.split(",").map(c => parseInt(c.trim(), 10)).filter(c => !isNaN(c))
+      : [1, 2, 3, 4];
+    res.json(eumetsatService.getGeoJSON(activeCameras));
+  });
+
+  // 1.5.4: Server-Sent Events (SSE) stream for real-time MTG-LI optical lightning flashes
+  app.get("/api/eumetsat/mtg-li/stream", (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders?.();
+
+    const initialStats = eumetsatService.getStats();
+    res.write(`data: ${JSON.stringify({
+      type: "connected",
+      source: "EUMETSAT MTG-I1 LI",
+      apiTimestamp: initialStats.apiTimestamp,
+      apiTimeUtc: initialStats.apiTimeUtc,
+      apiTimeIran: initialStats.apiTimeIran,
+      apiDateShamsi: initialStats.apiDateShamsi,
+      apiDateGregorian: initialStats.apiDateGregorian,
+      lastDetectionTime: initialStats.lastDetectionTime,
+      lastDetectionUtc: initialStats.lastDetectionUtc,
+      lastDetectionSecondsAgo: initialStats.lastDetectionSecondsAgo
+    })}\n\n`);
+
+    const unsubscribe = eumetsatService.subscribeSse((flash) => {
+      const currentStats = eumetsatService.getStats();
+      res.write(`data: ${JSON.stringify({
+        type: "flash",
+        flash,
+        apiTimestamp: currentStats.apiTimestamp,
+        apiTimeUtc: currentStats.apiTimeUtc,
+        apiTimeIran: currentStats.apiTimeIran,
+        apiDateShamsi: currentStats.apiDateShamsi,
+        apiDateGregorian: currentStats.apiDateGregorian,
+        lastDetectionTime: currentStats.lastDetectionTime,
+        lastDetectionUtc: currentStats.lastDetectionUtc,
+        lastDetectionSecondsAgo: currentStats.lastDetectionSecondsAgo
+      })}\n\n`);
+    });
+
+    const keepAlive = setInterval(() => {
+      res.write(`: keepalive\n\n`);
+    }, 15000);
+
+    req.on("close", () => {
+      clearInterval(keepAlive);
+      unsubscribe();
+    });
+  });
+
+  // 1.5.5: Force refresh / live burst poll
+  app.post("/api/eumetsat/mtg-li/refresh", (req, res) => {
+    res.json(eumetsatService.forceRefresh());
+  });
+
+  // Direct lightning endpoints routed to EUMETSAT MTG-LI service
+  app.get("/api/lightning/live", (req, res) => {
+    res.json(eumetsatService.getLivePayload([1, 2, 3, 4]));
+  });
+
+  app.get("/api/lightning/geojson", (req, res) => {
+    res.json(eumetsatService.getGeoJSON([1, 2, 3, 4]));
+  });
+
+  app.get("/api/lightning/stream", (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders?.();
+
+    res.write(`data: ${JSON.stringify({ type: "connected", source: "EUMETSAT MTG-I1 LI", time: Date.now() })}\n\n`);
+
+    const unsubscribe = eumetsatService.subscribeSse((flash) => {
+      res.write(`data: ${JSON.stringify({ type: "stroke", stroke: flash })}\n\n`);
+    });
+
+    const keepAlive = setInterval(() => {
+      res.write(`: keepalive\n\n`);
+    }, 15000);
+
+    req.on("close", () => {
+      clearInterval(keepAlive);
+      unsubscribe();
+    });
+  });
+
+  app.post("/api/lightning/refresh", (req, res) => {
+    res.json(eumetsatService.forceRefresh());
+  });
+
+  app.get("/api/lightning/stats", (req, res) => {
+    res.json(eumetsatService.getStats());
+  });
+
+  app.get("/api/lightning/info", (req, res) => {
+    res.json(eumetsatService.getStats());
   });
 
   // API 2: Get meteorological values for a given coordinate

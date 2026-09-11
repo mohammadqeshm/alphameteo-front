@@ -242,7 +242,8 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
 
   const currentModel = DATA_SOURCES.find(s => s.id === selectedModelId) || DATA_SOURCES[0];
   const nwpModels = DATA_SOURCES.filter(s => s.categoryId === 'models');
-  const obsSources = DATA_SOURCES.filter(s => ['radar', 'satellite', 'lightning', 'live_obs', 'ocean_marine', 'air_quality'].includes(s.categoryId));
+  // Per user instruction: LIVE section must contain strictly and exclusively the EUMETSAT MTG-LI lightning parameter
+  const obsSources = DATA_SOURCES.filter(s => s.id === 'eumetsat_mtg_li' || s.categoryId === 'live_obs');
   const climateSources = DATA_SOURCES.filter(s => ['climate', 'seasonal', 'historical'].includes(s.categoryId));
 
   // Search Results Filter

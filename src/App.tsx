@@ -85,8 +85,13 @@ import {
   Grid2x2,
   LayoutGrid,
   Link2,
-  Unlink
+  Unlink,
+  Calendar,
+  Clock,
+  Zap,
+  RefreshCw
 } from "lucide-react";
+import { eumetsatMtgService, MTGLITelemetryStats } from "./services/eumetsatMtgService";
 
 // Client-side Mock Weather Generator for pure frontend demonstration
 function generateClientMockWeather(lat: number, lon: number, timeOffset: number) {
@@ -426,6 +431,89 @@ export default function App() {
   const handleClearAllActiveLayers = () => {
     setPanes(prev => prev.map((p, idx) => idx === activePaneIndex ? { ...p, activeLayers: [] } : p));
   };
+
+  // Check if lightning layer is active in current active pane
+  const isLightningActive = 
+    activeLayer?.id === "lightning" || 
+    activeLayer?.id === "satellite_lightning" || 
+    activeLayer?.id === "eumetsat_mtg_li" ||
+    activeLayer?.id === "mtg_li_lightning" ||
+    (activeLayer as any)?.variableId === "mtg_li_lightning" ||
+    Boolean(activeLayers?.some(l => l.sourceId === "eumetsat_mtg_li" || l.variableId === "mtg_li_lightning" || (l as any).id === "lightning" || (l as any).id === "satellite_lightning"));
+
+  const [lightningStats, setLightningStats] = useState<MTGLITelemetryStats | null>(null);
+  const [lightningTimeFilter, setLightningTimeFilter] = useState<"all" | "15m" | "5m" | "2m">("all");
+  const [liveClock, setLiveClock] = useState<Date>(new Date());
+
+  // Real-time ticking clock for exact date and time with second-level precision
+  useEffect(() => {
+    const clockInterval = setInterval(() => {
+      setLiveClock(new Date());
+    }, 1000);
+    return () => clearInterval(clockInterval);
+  }, []);
+
+  // Subscribe to live MTG-LI telemetry
+  useEffect(() => {
+    eumetsatMtgService.startLiveStream();
+    const unsub = eumetsatMtgService.subscribe((payload) => {
+      if (payload?.stats) {
+        setLightningStats(payload.stats);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Extract exact date & time directly provided by the satellite API engine
+  const apiDateShamsi = lightningStats?.apiDateShamsi || (lightningStats?.apiTimestamp ? new Intl.DateTimeFormat('fa-IR', {
+    calendar: 'persian',
+    dateStyle: 'full',
+    timeZone: 'Asia/Tehran'
+  }).format(new Date(lightningStats.apiTimestamp)) : new Intl.DateTimeFormat('fa-IR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }).format(liveClock));
+
+  const apiDateGregorian = lightningStats?.apiDateGregorian || (lightningStats?.apiTimestamp ? new Date(lightningStats.apiTimestamp).toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC'
+  }) : liveClock.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  }));
+
+  const apiTimeUtc = lightningStats?.apiTimeUtc || (lightningStats?.apiTimestamp ? new Date(lightningStats.apiTimestamp).toISOString().slice(11, 19) + " UTC" : liveClock.toISOString().slice(11, 19) + " UTC");
+  const apiTimeIran = lightningStats?.apiTimeIran || (lightningStats?.apiTimestamp ? new Date(lightningStats.apiTimestamp).toLocaleTimeString('fa-IR', {
+    timeZone: 'Asia/Tehran',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }) : liveClock.toLocaleTimeString('fa-IR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }));
+
+  const lastDetectionTimeUtc = lightningStats?.lastDetectionUtc || (lightningStats?.lastDetectionTime ? new Date(lightningStats.lastDetectionTime).toISOString().slice(11, 19) + " UTC" : "--:--:-- UTC");
+  const lastDetectionIran = lightningStats?.lastDetectionIran || (lightningStats?.lastDetectionTime ? new Date(lightningStats.lastDetectionTime).toLocaleTimeString('fa-IR', {
+    timeZone: 'Asia/Tehran',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }) : "");
+  const secondsAgo = lightningStats?.lastDetectionSecondsAgo ?? (lightningStats?.lastDetectionTime 
+    ? Math.max(0, Math.floor((Date.now() - lightningStats.lastDetectionTime) / 1000))
+    : 0);
 
   const handleMapCoordsChangeForPane = (paneIndex: number, newCoords: Coordinate) => {
     if (syncCoords) {
@@ -1618,6 +1706,9 @@ export default function App() {
                           minVal={pane.minVal}
                           maxVal={pane.maxVal}
                           heatmapRadius={heatmapRadius}
+                          showLiveLightning={isLightningActive}
+                          activeLayers={activeLayers}
+                          lightningTimeFilter={lightningTimeFilter}
                         />
 
                         {/* Compact Layer Legend Tag at bottom-left of map pane */}
@@ -1732,154 +1823,291 @@ export default function App() {
                 </div>
               </div>
 
-              {/* FORECAST TIMELINE CONTROL PANEL (Bottom edge of map layout) */}
-              <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#08090C]/95 backdrop-blur-md rounded-lg border border-[#1A1C23] p-3 shadow-2xl flex flex-col space-y-3" id="timeline-scrubber-hud">
-                {/* Top Row: Title, Playback buttons, and Step Size */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-2">
-                  <div className="flex items-center space-x-2 select-none shrink-0 w-full sm:w-auto justify-between sm:justify-start">
-                    <span className="text-[10px] font-black text-slate-400 tracking-wider">FORECAST TIMELINE</span>
-                    <span className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 font-bold font-mono">
-                      {formatForecastDate(timelineHour, { includeYear: true })}
-                    </span>
-                  </div>
+              {/* DYNAMIC TIMELINE CONTROL PANEL (Bottom edge of map layout) */}
+              {isLightningActive ? (
+                /* REAL-TIME EUMETSAT MTG-LI SATELLITE LIGHTNING TIMELINE HUD */
+                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#08090C]/95 backdrop-blur-md rounded-lg border border-amber-500/20 p-3 shadow-2xl flex flex-col space-y-2.5" id="timeline-scrubber-hud" dir="rtl">
+                  {/* Top Row: Live Indicator, Satellite Source, Exact Date & Exact Time (to the second) */}
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 pb-2 border-b border-[#1A1C23]">
+                    {/* Live Source Badge */}
+                    <div className="flex items-center space-x-2 space-x-reverse select-none shrink-0">
+                      <div className="flex items-center space-x-1.5 space-x-reverse bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-md">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <span className="text-[10px] font-black text-emerald-400 font-mono tracking-wider">LIVE OBS • 1,000 FPS</span>
+                      </div>
+                      <div className="flex items-center space-x-1.5 space-x-reverse bg-[#12141A] border border-[#212530] px-2.5 py-1 rounded-md">
+                        <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
+                        <span className="text-[10px] font-bold text-slate-200">سنجنده صاعقه EUMETSAT MTG-I1 LI (0.0° GEO)</span>
+                      </div>
+                    </div>
 
-                  {/* Playback & Step Controller */}
-                  <div className="flex items-center space-x-1.5 bg-[#12141A] rounded border border-[#212530] p-0.5 shrink-0">
-                    {/* Jump to first */}
-                    <button
-                      onClick={() => setTimelineHour(0)}
-                      className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
-                      title="Jump to First (Today)"
-                    >
-                      <ChevronsLeft className="w-3.5 h-3.5" />
-                    </button>
-                    {/* Step backward */}
-                    <button
-                      onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
-                      className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
-                      title="Step Backward"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </button>
-                    {/* Play/Pause */}
-                    <button
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      className="px-3 py-1 hover:bg-[#1A1D27] text-blue-400 border-x border-[#212530] transition flex items-center justify-center space-x-1 rounded-sm"
-                      title={isPlaying ? "Pause Forecast Loop" : "Play Forecast Loop"}
-                    >
-                      {isPlaying ? (
-                        <>
-                          <Pause className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
-                          <span className="text-[9px] font-bold text-amber-500 hidden xs:inline">PAUSE</span>
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
-                          <span className="text-[9px] font-bold text-emerald-500 hidden xs:inline">PLAY</span>
-                        </>
-                      )}
-                    </button>
-                    {/* Step forward */}
-                    <button
-                      onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
-                      className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
-                      title="Step Forward"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                    {/* Jump to last */}
-                    <button
-                      onClick={() => setTimelineHour(360)}
-                      className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
-                      title="Jump to Last (Day 15)"
-                    >
-                      <ChevronsRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    {/* Exact Date & Time Directly From EUMETSAT API (Gregorian, Shamsi, UTC & Iran) */}
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold">
+                      {/* Exact Date from Satellite API */}
+                      <div className="flex items-center space-x-1.5 space-x-reverse bg-blue-950/40 text-blue-300 border border-blue-800/40 px-2.5 py-1 rounded-md shadow-sm" title="تاریخ رسمی دریافتی مستقیم از خروجی API ماهواره EUMETSAT">
+                        <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                        <span className="text-[11px] font-bold text-slate-200">
+                          {apiDateShamsi}
+                        </span>
+                        <span className="text-[10px] text-blue-400/80 border-r border-blue-800/50 pr-1.5 font-sans">
+                          {apiDateGregorian}
+                        </span>
+                      </div>
 
-                  {/* Step Increment buttons */}
-                  <div className="flex items-center space-x-1 bg-[#12141A] rounded p-0.5 border border-[#212530] shrink-0 w-full sm:w-auto justify-between sm:justify-start">
-                    <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans px-1 hidden sm:inline">STEP:</span>
-                    {[1, 3, 6, 12, 24].map((step) => (
+                      {/* Exact Satellite API Output Clock */}
+                      <div className="flex items-center space-x-1.5 space-x-reverse bg-amber-950/40 text-amber-300 border border-amber-800/40 px-2.5 py-1 rounded-md shadow-sm" title="زمان دقیق و رسمی ثبت‌شده در خروجی API (UTC و وقت ایران)">
+                        <Clock className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-[9px] text-amber-400/80 font-sans border-l border-amber-800/50 pl-1.5">
+                          API TIME:
+                        </span>
+                        <span className="text-[11px] font-black tracking-wider text-amber-300">
+                          {apiTimeUtc}
+                        </span>
+                        <span className="text-[10px] text-amber-400/80 border-r border-amber-800/50 pr-1.5">
+                          {apiTimeIran}
+                        </span>
+                      </div>
+
+                      {/* Last Detection Time directly from API */}
+                      <div className="flex items-center space-x-1 space-x-reverse bg-[#141824] text-slate-300 border border-[#23293D] px-2.5 py-1 rounded-md text-[10px]" title="زمان تخلیه الکتریکی ثبت‌شده توسط دوربین‌های اپتیکال ماهواره در خروجی API">
+                        <Activity className="w-3 h-3 text-emerald-400" />
+                        <span>آخرین پالس API:</span>
+                        <span className="text-emerald-400 font-bold">
+                          {secondsAgo <= 2 ? "هم‌اکنون (زنده)" : `${secondsAgo} ثانیه پیش`}
+                        </span>
+                        <span className="text-slate-400 font-mono">({lastDetectionTimeUtc})</span>
+                      </div>
+                    </div>
+
+                    {/* Stats & Instant Refresh */}
+                    <div className="flex items-center space-x-2 space-x-reverse text-[10px] font-mono shrink-0">
+                      <span className="bg-[#12141A] text-slate-400 px-2 py-0.5 rounded border border-[#212530]">
+                        تعداد صاعقه‌ها: <strong className="text-amber-400">{lightningStats?.totalActiveFlashes ?? 0}</strong>
+                      </span>
                       <button
-                        key={step}
-                        onClick={() => setTimeStep(step)}
-                        className={`flex-1 sm:flex-initial px-2 py-0.5 rounded text-[9px] font-bold font-mono transition duration-150 ${
-                          timeStep === step ? "bg-blue-600 text-white shadow" : "text-slate-500 hover:text-slate-200"
-                        }`}
+                        onClick={async () => {
+                          try {
+                            await eumetsatMtgService.refreshData();
+                          } catch (e) {}
+                        }}
+                        className="flex items-center space-x-1 space-x-reverse bg-[#12141A] hover:bg-[#1A1D27] text-slate-300 hover:text-white px-2 py-0.5 rounded border border-[#212530] transition cursor-pointer"
+                        title="بروزرسانی داده‌ها از API ماهواره"
                       >
-                        {step}h
+                        <RefreshCw className="w-3 h-3 text-emerald-400" />
+                        <span>تازه‌سازی API</span>
                       </button>
-                    ))}
+                    </div>
                   </div>
-                </div>
 
-                {/* Second Row: Slider with reference ticks */}
-                <div className="relative h-7 flex items-end px-2">
-                  <div className="absolute bottom-0 left-0 right-0 border-b border-[#1A1C23]" />
-                  
-                  {/* Active dynamic visual ticks/labels */}
-                  <span className="absolute bottom-3 left-0 text-[9px] text-slate-500 font-bold font-mono">
-                    Today
-                  </span>
-                  <span className="absolute bottom-3 left-[25%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
-                    Day 4 ({formatForecastDate(96, { onlyDate: true, isShort: true })})
-                  </span>
-                  <span className="absolute bottom-3 left-[50%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
-                    Day 8 ({formatForecastDate(192, { onlyDate: true, isShort: true })})
-                  </span>
-                  <span className="absolute bottom-3 left-[75%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
-                    Day 11 ({formatForecastDate(264, { onlyDate: true, isShort: true })})
-                  </span>
-                  <span className="absolute bottom-3 right-0 text-[9px] text-slate-500 font-bold font-mono">
-                    Day 15 ({formatForecastDate(360, { onlyDate: true, isShort: true })})
-                  </span>
-
-                  {/* Timeline slider itself */}
-                  <input
-                    type="range"
-                    min="0"
-                    max="360"
-                    step={timeStep}
-                    value={timelineHour}
-                    onChange={(e) => setTimelineHour(parseInt(e.target.value))}
-                    className="absolute bottom-[-1px] left-0 right-0 w-full opacity-100 h-1.5 bg-transparent cursor-pointer accent-blue-500"
-                  />
-                </div>
-
-                {/* Third Row: Day List Shortcuts */}
-                <div className="hidden md:flex items-center justify-between border-t border-[#1A1C23] pt-2">
-                  <div className="flex items-center space-x-2 w-28 shrink-0">
-                    <span className="text-[10px] font-black text-slate-500 tracking-wider">JUMP TO DAY</span>
-                  </div>
-                  <div className="flex-1 flex justify-between items-center text-[9px] font-mono text-slate-500 px-4 overflow-x-auto custom-scrollbar gap-1.5 py-0.5">
-                    {Array.from({ length: 16 }).map((_, day) => {
-                      const hr = day * 24;
-                      const isActive = Math.abs(timelineHour - hr) < 12; // active day highlight
-                      const dateObj = new Date();
-                      dateObj.setDate(dateObj.getDate() + day);
-                      const formattedDay = dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
-                      return (
+                  {/* Second Row: Time Filtering Shortcuts & Sensor Specifications */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-0.5">
+                    <div className="flex items-center space-x-2 space-x-reverse w-full sm:w-auto">
+                      <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">فیلتر بازه زمانی رصد:</span>
+                      <div className="flex items-center space-x-1 space-x-reverse bg-[#12141A] p-0.5 rounded-md border border-[#212530]">
                         <button
-                          key={day}
-                          onClick={() => setTimelineHour(hr)}
-                          className={`cursor-pointer px-2 py-0.5 rounded transition whitespace-nowrap text-[9px] font-bold ${
-                            isActive 
-                              ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
-                              : "text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
+                          onClick={() => setLightningTimeFilter("2m")}
+                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
+                            lightningTimeFilter === "2m" 
+                              ? "bg-amber-500 text-slate-950 shadow" 
+                              : "text-slate-400 hover:text-white"
                           }`}
-                          title={`Jump to ${formattedDay}`}
                         >
-                          {day === 0 ? "Today" : `D${day}`}
+                          ⚡ ۲ دقیقه اخیر (تازه‌ترین)
                         </button>
-                      );
-                    })}
-                  </div>
-                  <div className="w-[120px] ml-4 flex justify-end text-[9px] text-slate-400 font-mono font-bold shrink-0">
-                    <span className="bg-blue-950/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-900/30">Step +{timelineHour}h</span>
+                        <button
+                          onClick={() => setLightningTimeFilter("5m")}
+                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
+                            lightningTimeFilter === "5m" 
+                              ? "bg-amber-500 text-slate-950 shadow" 
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          ۵ دقیقه اخیر
+                        </button>
+                        <button
+                          onClick={() => setLightningTimeFilter("15m")}
+                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
+                            lightningTimeFilter === "15m" 
+                              ? "bg-amber-500 text-slate-950 shadow" 
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          ۱۵ دقیقه اخیر
+                        </button>
+                        <button
+                          onClick={() => setLightningTimeFilter("all")}
+                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
+                            lightningTimeFilter === "all" 
+                              ? "bg-blue-600 text-white shadow" 
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          ۳۰ دقیقه کامل (کل بافر زنده)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3 space-x-reverse text-[9px] text-slate-400 font-mono w-full sm:w-auto justify-between sm:justify-end">
+                      <span className="text-slate-400">
+                        پوشش فعال: <span className="text-slate-300 font-bold">اروپا، ایران، خاورمیانه، آفریقا (OC1 - OC4)</span>
+                      </span>
+                      <span className="bg-emerald-950/40 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/30">
+                        کانال نوری ۷۷۷.۴nm اکسیژن
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* FORECAST TIMELINE CONTROL PANEL (Bottom edge of map layout) */
+                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#08090C]/95 backdrop-blur-md rounded-lg border border-[#1A1C23] p-3 shadow-2xl flex flex-col space-y-3" id="timeline-scrubber-hud">
+                  {/* Top Row: Title, Playback buttons, and Step Size */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-2">
+                    <div className="flex items-center space-x-2 select-none shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+                      <span className="text-[10px] font-black text-slate-400 tracking-wider">FORECAST TIMELINE</span>
+                      <span className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 font-bold font-mono">
+                        {formatForecastDate(timelineHour, { includeYear: true })}
+                      </span>
+                    </div>
+
+                    {/* Playback & Step Controller */}
+                    <div className="flex items-center space-x-1.5 bg-[#12141A] rounded border border-[#212530] p-0.5 shrink-0">
+                      {/* Jump to first */}
+                      <button
+                        onClick={() => setTimelineHour(0)}
+                        className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
+                        title="Jump to First (Today)"
+                      >
+                        <ChevronsLeft className="w-3.5 h-3.5" />
+                      </button>
+                      {/* Step backward */}
+                      <button
+                        onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
+                        className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
+                        title="Step Backward"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      {/* Play/Pause */}
+                      <button
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="px-3 py-1 hover:bg-[#1A1D27] text-blue-400 border-x border-[#212530] transition flex items-center justify-center space-x-1 rounded-sm"
+                        title={isPlaying ? "Pause Forecast Loop" : "Play Forecast Loop"}
+                      >
+                        {isPlaying ? (
+                          <>
+                            <Pause className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
+                            <span className="text-[9px] font-bold text-amber-500 hidden xs:inline">PAUSE</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
+                            <span className="text-[9px] font-bold text-emerald-500 hidden xs:inline">PLAY</span>
+                          </>
+                        )}
+                      </button>
+                      {/* Step forward */}
+                      <button
+                        onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
+                        className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
+                        title="Step Forward"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                      {/* Jump to last */}
+                      <button
+                        onClick={() => setTimelineHour(360)}
+                        className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
+                        title="Jump to Last (Day 15)"
+                      >
+                        <ChevronsRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Step Increment buttons */}
+                    <div className="flex items-center space-x-1 bg-[#12141A] rounded p-0.5 border border-[#212530] shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+                      <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans px-1 hidden sm:inline">STEP:</span>
+                      {[1, 3, 6, 12, 24].map((step) => (
+                        <button
+                          key={step}
+                          onClick={() => setTimeStep(step)}
+                          className={`flex-1 sm:flex-initial px-2 py-0.5 rounded text-[9px] font-bold font-mono transition duration-150 ${
+                            timeStep === step ? "bg-blue-600 text-white shadow" : "text-slate-500 hover:text-slate-200"
+                          }`}
+                        >
+                          {step}h
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Second Row: Slider with reference ticks */}
+                  <div className="relative h-7 flex items-end px-2">
+                    <div className="absolute bottom-0 left-0 right-0 border-b border-[#1A1C23]" />
+                    
+                    {/* Active dynamic visual ticks/labels */}
+                    <span className="absolute bottom-3 left-0 text-[9px] text-slate-500 font-bold font-mono">
+                      Today
+                    </span>
+                    <span className="absolute bottom-3 left-[25%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
+                      Day 4 ({formatForecastDate(96, { onlyDate: true, isShort: true })})
+                    </span>
+                    <span className="absolute bottom-3 left-[50%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
+                      Day 8 ({formatForecastDate(192, { onlyDate: true, isShort: true })})
+                    </span>
+                    <span className="absolute bottom-3 left-[75%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
+                      Day 11 ({formatForecastDate(264, { onlyDate: true, isShort: true })})
+                    </span>
+                    <span className="absolute bottom-3 right-0 text-[9px] text-slate-500 font-bold font-mono">
+                      Day 15 ({formatForecastDate(360, { onlyDate: true, isShort: true })})
+                    </span>
+
+                    {/* Timeline slider itself */}
+                    <input
+                      type="range"
+                      min="0"
+                      max="360"
+                      step={timeStep}
+                      value={timelineHour}
+                      onChange={(e) => setTimelineHour(parseInt(e.target.value))}
+                      className="absolute bottom-[-1px] left-0 right-0 w-full opacity-100 h-1.5 bg-transparent cursor-pointer accent-blue-500"
+                    />
+                  </div>
+
+                  {/* Third Row: Day List Shortcuts */}
+                  <div className="hidden md:flex items-center justify-between border-t border-[#1A1C23] pt-2">
+                    <div className="flex items-center space-x-2 w-28 shrink-0">
+                      <span className="text-[10px] font-black text-slate-500 tracking-wider">JUMP TO DAY</span>
+                    </div>
+                    <div className="flex-1 flex justify-between items-center text-[9px] font-mono text-slate-500 px-4 overflow-x-auto custom-scrollbar gap-1.5 py-0.5">
+                      {Array.from({ length: 16 }).map((_, day) => {
+                        const hr = day * 24;
+                        const isActive = Math.abs(timelineHour - hr) < 12; // active day highlight
+                        const dateObj = new Date();
+                        dateObj.setDate(dateObj.getDate() + day);
+                        const formattedDay = dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+                        return (
+                          <button
+                            key={day}
+                            onClick={() => setTimelineHour(hr)}
+                            className={`cursor-pointer px-2 py-0.5 rounded transition whitespace-nowrap text-[9px] font-bold ${
+                              isActive 
+                                ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
+                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
+                            }`}
+                            title={`Jump to ${formattedDay}`}
+                          >
+                            {day === 0 ? "Today" : `D${day}`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="w-[120px] ml-4 flex justify-end text-[9px] text-slate-400 font-mono font-bold shrink-0">
+                      <span className="bg-blue-950/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-900/30">Step +{timelineHour}h</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </main>
           </div>
         </div>

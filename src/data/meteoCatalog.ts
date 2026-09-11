@@ -24,11 +24,11 @@ export class CategoriesCatalog {
     },
     {
       id: "live_obs",
-      name: "Live Observations",
-      iconName: "Radio",
-      description: "Surface METAR, SYNOP, Buoys, AMDAR aircraft & Radiosondes",
-      badge: "Real-time",
-      sourceCount: 6
+      name: "مشاهدات زنده (Live Observations)",
+      iconName: "Zap",
+      description: "سامانه ماهواره‌ای رصد رعد و برق و صاعقه لحظه‌ای EUMETSAT MTG-LI (فضاپایه)",
+      badge: "EUMETSAT Live",
+      sourceCount: 1
     },
     {
       id: "radar",
@@ -48,10 +48,10 @@ export class CategoriesCatalog {
     },
     {
       id: "lightning",
-      name: "Lightning Networks",
+      name: "رادار صاعقه و توفان تندری",
       iconName: "Zap",
-      description: "GLD360 & ENTLN real-time total lightning strikes & density",
-      badge: "Live",
+      description: "رادار منطقه‌ای البروق (۱۵ دقیقه گذشته) + ماهواره فضاپایه MTG-LI و رادار داپلر همرفت",
+      badge: "Live Radar",
       sourceCount: 3
     },
     {
@@ -309,32 +309,21 @@ export const DATA_SOURCES: DataSourceModel[] = [
     supportedVariableIds: ["temp_2m", "wind_10m", "wind_gust", "precip_total", "reflectivity_sim", "cape", "helicity"]
   },
 
-  // Live Observations
+  // Live Observations - Exclusively EUMETSAT MTG-LI Lightning Imager per user requirement
   {
-    id: "obs_metar_synop",
+    id: "eumetsat_mtg_li",
     categoryId: "live_obs",
-    name: "METAR & SYNOP Surface Stations",
-    shortName: "METAR / SYNOP",
-    provider: "WMO Global Telecommunication System",
-    spatialResolution: "12,000+ Land Stations",
-    temporalResolution: "15 - 30 min",
-    forecastHorizon: "Live Observation",
-    updateFrequency: "Continuous",
-    description: "Real-time decoded surface aviation reports and WMO synoptic readings.",
-    supportedVariableIds: ["temp_2m", "dew_point", "rel_hum", "mslp", "wind_10m", "wind_gust", "visibility"]
-  },
-  {
-    id: "obs_buoys_ships",
-    categoryId: "live_obs",
-    name: "Ocean Marine Buoys & Voluntary Ships",
-    shortName: "Marine Buoys",
-    provider: "NOAA NDBC & WMO VOS",
-    spatialResolution: "3,500+ Moored/Drifting Buoys",
-    temporalResolution: "Hourly",
-    forecastHorizon: "Live Observation",
-    updateFrequency: "Hourly",
-    description: "In-situ marine surface station observations including wave & SST.",
-    supportedVariableIds: ["temp_2m", "mslp", "wind_10m", "wave_height", "sst"]
+    name: "EUMETSAT MTG Lightning Imager (LI)",
+    shortName: "MTG-LI EUMETSAT",
+    provider: "EUMETSAT (Darmstadt, Germany)",
+    spatialResolution: "4.5 km SSP (~7 km Europe/Middle East)",
+    temporalResolution: "1 ms (1,000 frames/sec)",
+    forecastHorizon: "Real-time Live Stream (0.0° GEO)",
+    updateFrequency: "Continuous (Real-time)",
+    description: "صاعقه‌نگار فضاپایه ماهواره متئوستم نسل ۳ (MTG-I1) با ۴ دوربین نوری نوار باریک ۷۷۷.۴ نانومتر اکسیژن اتمی برای ثبت صاعقه‌های درون ابر و ابر به زمین.",
+    badge: "Official Live",
+    isFavorite: true,
+    supportedVariableIds: ["mtg_li_lightning"]
   },
 
   // Weather Radar
@@ -836,6 +825,23 @@ export const WEATHER_VARIABLES: WeatherVariable[] = [
     defaultPaletteId: "neutral",
     min: 0,
     max: 100
+  },
+  // MTG-LI Lightning variable
+  {
+    id: "mtg_li_lightning",
+    name: "رعد و برق و صاعقه لحظه‌ای MTG-LI (فضاپایه)",
+    shortName: "MTG-LI Lightning",
+    category: "Thunderstorm & Convection",
+    unit: "flashes/min",
+    description: "تخلیه‌های الکتریکی ابر به زمین و درون ابر رصد شده با ۴ دوربین نوری ماهواره MTG-I1 متعلق به EUMETSAT با پوشش ۸۴٪ کره زمین در باند ۷۷۷.۴ نانومتر",
+    iconName: "Zap",
+    supportedLevelIds: ["column"],
+    defaultLevelId: "column",
+    defaultVisualizationId: "heatmap",
+    defaultPaletteId: "spectral",
+    min: 0,
+    max: 100,
+    isFavorite: true
   }
 ];
 

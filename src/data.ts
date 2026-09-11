@@ -73,6 +73,30 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
     icon: "Grid",
     thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
   },
+  {
+    id: "lightning",
+    name: "رعد و برق و صاعقه ماهواره‌ای (EUMETSAT MTG-LI)",
+    description: "داده‌های زنده و لحظه‌ای حسگر اپتیکی Lightning Imager ماهواره متئوستم نسل سوم EUMETSAT",
+    unit: "صاعقه/پیکسل",
+    min: 0,
+    max: 100,
+    defaultValue: 100,
+    gradient: "from-white via-amber-300 via-orange-500 to-red-600",
+    icon: "Zap",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
+  {
+    id: "satellite_lightning",
+    name: "صاعقه‌نگار نوری فضاپایه EUMETSAT MTG-LI",
+    description: "رصد ماهواره‌ای اپتیکی لحظه‌ای صاعقه‌های داخل ابر و زمین (خاورمیانه، ایران، اروپا و آفریقا)",
+    unit: "Fl/km²",
+    min: 0,
+    max: 100,
+    defaultValue: 85,
+    gradient: "from-blue-600 via-amber-400 to-red-600",
+    icon: "Satellite",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
 ];
 
 export interface SearchStation {
