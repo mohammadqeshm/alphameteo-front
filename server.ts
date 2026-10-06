@@ -8,13 +8,21 @@ import { EumetsatMtgService } from "./server/eumetsatService";
 
 dotenv.config();
 
-// Initialize the Google Gen AI client safely
-const aiApiKey = process.env.GEMINI_API_KEY;
-let aiClient: GoogleGenAI | null = null;
+// Global process safety handlers to prevent dev server crashes
+process.on("unhandledRejection", (reason, promise) => {
+  console.warn("[Server] Unhandled Rejection at:", promise, "reason:", reason);
+});
 
-if (aiApiKey) {
-  aiClient = new GoogleGenAI({
-    apiKey: aiApiKey,
+process.on("uncaughtException", (err) => {
+  console.error("[Server] Uncaught Exception:", err);
+});
+
+// Lazy getter for Google Gen AI client
+function getAiClient(): GoogleGenAI | null {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({
+    apiKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
@@ -472,6 +480,7 @@ async function startServer() {
       return res.status(400).json({ error: "weatherData is required." });
     }
 
+    const aiClient = getAiClient();
     if (!aiClient) {
       return res.json({
         analysis: "AI Analysis is unavailable because the GEMINI_API_KEY environment variable is not set. Please add your key in Settings > Secrets to enable this feature."
@@ -523,7 +532,7 @@ Use advanced scientific terminology (e.g., baroclinic, thermal gradient, pressur
       return res.status(400).json({ error: "An array of messages is required." });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || aiApiKey;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return res.json({
         response: "AI Weather Assistant is offline. Please configure your GEMINI_API_KEY under the Settings > Secrets tab to activate real-time intelligence!"
@@ -582,4 +591,6 @@ Use advanced scientific terminology (e.g., baroclinic, thermal gradient, pressur
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error("[Server] Fatal error starting server:", err);
+});

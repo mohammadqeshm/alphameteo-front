@@ -309,7 +309,7 @@ export const DATA_SOURCES: DataSourceModel[] = [
     supportedVariableIds: ["temp_2m", "wind_10m", "wind_gust", "precip_total", "reflectivity_sim", "cape", "helicity"]
   },
 
-  // Live Observations - Exclusively EUMETSAT MTG-LI Lightning Imager per user requirement
+  // Live Observations - EUMETSAT MTG-LI Lightning Imager & NASA GIBS Satellite Cloud Cover
   {
     id: "eumetsat_mtg_li",
     categoryId: "live_obs",
@@ -324,6 +324,21 @@ export const DATA_SOURCES: DataSourceModel[] = [
     badge: "Official Live",
     isFavorite: true,
     supportedVariableIds: ["mtg_li_lightning"]
+  },
+  {
+    id: "nasa_gibs_cloud",
+    categoryId: "live_obs",
+    name: "تصویر ماهواره‌ای زنده پوشش ابر (NASA GIBS)",
+    shortName: "NASA GIBS Cloud",
+    provider: "NASA EOSDIS / GIBS & NOAA GOES",
+    spatialResolution: "250m - 1km (Global Coverage)",
+    temporalResolution: "10 min (GEO) / NRT Daily Composite",
+    forecastHorizon: "Real-time Live Satellite Stream",
+    updateFrequency: "Live & Continuous",
+    description: "تصاویر ماهواره‌ای زنده و واقعی پوشش ابر، سامانه‌های جوی، ابرهای همرفتی و طوفان‌ها در سراسر جهان از سرویس رسمی NASA GIBS و ماهواره‌های زمین‌آهنگ (GOES East/West, VIIRS TrueColor, Cloud Optical Thickness).",
+    badge: "NASA Live",
+    isFavorite: true,
+    supportedVariableIds: ["nasa_cloud_cover"]
   },
 
   // Weather Radar
@@ -839,6 +854,23 @@ export const WEATHER_VARIABLES: WeatherVariable[] = [
     defaultLevelId: "column",
     defaultVisualizationId: "heatmap",
     defaultPaletteId: "spectral",
+    min: 0,
+    max: 100,
+    isFavorite: true
+  },
+  // NASA GIBS Satellite Cloud Cover variable
+  {
+    id: "nasa_cloud_cover",
+    name: "تصویر ماهواره پوشش ابر جهانی (NASA GIBS)",
+    shortName: "NASA Cloud Imagery",
+    category: "Satellite & Clouds",
+    unit: "%",
+    description: "تصاویر با تفکیک بالا و زنده پوشش ابر و جبهه‌های طوفانی کره زمین از سرویس NASA GIBS شامل سنسورهای مدار قطبی VIIRS/MODIS و ماهواره‌های زمین‌آهنگ GOES-East و GOES-West با بروزرسانی زنده.",
+    iconName: "Cloud",
+    supportedLevelIds: ["column"],
+    defaultLevelId: "column",
+    defaultVisualizationId: "smooth_gradient",
+    defaultPaletteId: "neutral",
     min: 0,
     max: 100,
     isFavorite: true

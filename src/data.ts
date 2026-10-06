@@ -97,6 +97,18 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
     icon: "Satellite",
     thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
   },
+  {
+    id: "nasa_gibs_cloud",
+    name: "تصویر ماهواره پوشش ابر (NASA GIBS)",
+    description: "تصاویر زنده و بروز ماهواره‌ای پوشش ابر و جبهه‌های طوفانی جهان از سرویس رسمی NASA GIBS / Geostationary",
+    unit: "%",
+    min: 0,
+    max: 100,
+    defaultValue: 90,
+    gradient: "from-slate-900 via-blue-800 via-sky-300 to-white",
+    icon: "Cloud",
+    thumbnail: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZhE6BRjxavmCA-fsjgxUCIXWOBarP7JWdhJb5cMMycNTWmkQ-G6NC_PfINna_kDLi8GupS3ImbrRWTSSTFutdjvXOCwYpNdKx47mXQGE0mg8snmup-T4nyre72vRPiRVhTqpIvuCYqjz2FEyiukRuabVGer7qhmfth2-euOHbIlk8gtesHkqVf5i-GXRAg-SbTC5AtGuvir3KFWslPatJz4i8U4ffgpwMcMm_8b3j6Tp_zdIp954pa1K0Sy4LBf5hkidYpIth2NWd",
+  },
 ];
 
 export interface SearchStation {

@@ -213,6 +213,27 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       (l as any).id === "satellite_lightning"
     ));
 
+  // NASA GIBS Satellite Cloud Cover active check and product states
+  const [nasaCloudProduct, setNasaCloudProduct] = useState<"viirs_truecolor" | "goes_east" | "goes_west" | "viirs_cloud_optical">("viirs_truecolor");
+  const [nasaCloudOpacity, setNasaCloudOpacity] = useState<number>(85);
+  const [showNasaHud, setShowNasaHud] = useState<boolean>(true);
+
+  const isNasaCloudActive = 
+    activeLayer?.id === "nasa_gibs_cloud" || 
+    activeLayer?.id === "clouds" ||
+    (activeLayer as any)?.variableId === "nasa_cloud_cover" ||
+    Boolean(activeLayers?.some(l => 
+      l.sourceId === "nasa_gibs_cloud" || 
+      l.variableId === "nasa_cloud_cover" || 
+      (l as any).id === "nasa_gibs_cloud"
+    ));
+
+  useEffect(() => {
+    if (layerOpacity !== undefined) {
+      setNasaCloudOpacity(layerOpacity);
+    }
+  }, [layerOpacity]);
+
   useEffect(() => {
     eumetsatMtgService.startLiveStream();
     const unsub = eumetsatMtgService.subscribe((payload: MTGLIPayload) => {
@@ -311,7 +332,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Clean, high-contrast dark basemap
+    // Clean, high-contrast dark basemap with NASA GIBS Satellite Cloud layers
     const darkStyle: maplibregl.StyleSpecification = {
       version: 8,
       sources: {
@@ -324,7 +345,43 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
             "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
           ],
           tileSize: 256,
-          attribution: "© OpenStreetMap contributors, © CARTO, © EUMETSAT MTG-I1"
+          attribution: "© OpenStreetMap contributors, © CARTO, © EUMETSAT MTG-I1, © NASA GIBS"
+        },
+        "nasa-gibs-viirs-source": {
+          type: "raster",
+          tiles: [
+            "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"
+          ],
+          tileSize: 256,
+          maxzoom: 9,
+          attribution: "© NASA EOSDIS GIBS / Suomi-NPP VIIRS TrueColor"
+        },
+        "nasa-gibs-goes-east-source": {
+          type: "raster",
+          tiles: [
+            "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GOES-East_ABI_GeoColor/default/default/GoogleMapsCompatible_Level7/{z}/{y}/{x}.jpg"
+          ],
+          tileSize: 256,
+          maxzoom: 7,
+          attribution: "© NOAA / NASA GOES-East Geostationary"
+        },
+        "nasa-gibs-goes-west-source": {
+          type: "raster",
+          tiles: [
+            "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GOES-West_ABI_GeoColor/default/default/GoogleMapsCompatible_Level7/{z}/{y}/{x}.jpg"
+          ],
+          tileSize: 256,
+          maxzoom: 7,
+          attribution: "© NOAA / NASA GOES-West Geostationary"
+        },
+        "nasa-gibs-optical-source": {
+          type: "raster",
+          tiles: [
+            "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_Cloud_Optical_Thickness/default/default/GoogleMapsCompatible_Level7/{z}/{y}/{x}.png"
+          ],
+          tileSize: 256,
+          maxzoom: 7,
+          attribution: "© NASA GIBS VIIRS Cloud Optical Thickness"
         }
       },
       layers: [
@@ -334,6 +391,54 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
           source: "carto-dark",
           minzoom: 0,
           maxzoom: 19
+        },
+        {
+          id: "nasa-gibs-viirs-layer",
+          type: "raster",
+          source: "nasa-gibs-viirs-source",
+          layout: {
+            visibility: "none"
+          },
+          paint: {
+            "raster-opacity": 0.85,
+            "raster-fade-duration": 200
+          }
+        },
+        {
+          id: "nasa-gibs-goes-east-layer",
+          type: "raster",
+          source: "nasa-gibs-goes-east-source",
+          layout: {
+            visibility: "none"
+          },
+          paint: {
+            "raster-opacity": 0.85,
+            "raster-fade-duration": 200
+          }
+        },
+        {
+          id: "nasa-gibs-goes-west-layer",
+          type: "raster",
+          source: "nasa-gibs-goes-west-source",
+          layout: {
+            visibility: "none"
+          },
+          paint: {
+            "raster-opacity": 0.85,
+            "raster-fade-duration": 200
+          }
+        },
+        {
+          id: "nasa-gibs-optical-layer",
+          type: "raster",
+          source: "nasa-gibs-optical-source",
+          layout: {
+            visibility: "none"
+          },
+          paint: {
+            "raster-opacity": 0.85,
+            "raster-fade-duration": 200
+          }
         }
       ]
     };
@@ -864,6 +969,36 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
     });
   }, [livePayload, activeCameras, showCoverageBoundary, isLightningActive, lightningTimeFilter]);
 
+  // Synchronize NASA GIBS Live Satellite Cloud Cover Layers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    const viirsVis = isNasaCloudActive && nasaCloudProduct === "viirs_truecolor" ? "visible" : "none";
+    const goesEastVis = isNasaCloudActive && nasaCloudProduct === "goes_east" ? "visible" : "none";
+    const goesWestVis = isNasaCloudActive && nasaCloudProduct === "goes_west" ? "visible" : "none";
+    const opticalVis = isNasaCloudActive && nasaCloudProduct === "viirs_cloud_optical" ? "visible" : "none";
+
+    const opacityVal = Math.min(1, Math.max(0.05, nasaCloudOpacity / 100));
+
+    if (map.getLayer("nasa-gibs-viirs-layer")) {
+      map.setLayoutProperty("nasa-gibs-viirs-layer", "visibility", viirsVis);
+      map.setPaintProperty("nasa-gibs-viirs-layer", "raster-opacity", opacityVal);
+    }
+    if (map.getLayer("nasa-gibs-goes-east-layer")) {
+      map.setLayoutProperty("nasa-gibs-goes-east-layer", "visibility", goesEastVis);
+      map.setPaintProperty("nasa-gibs-goes-east-layer", "raster-opacity", opacityVal);
+    }
+    if (map.getLayer("nasa-gibs-goes-west-layer")) {
+      map.setLayoutProperty("nasa-gibs-goes-west-layer", "visibility", goesWestVis);
+      map.setPaintProperty("nasa-gibs-goes-west-layer", "raster-opacity", opacityVal);
+    }
+    if (map.getLayer("nasa-gibs-optical-layer")) {
+      map.setLayoutProperty("nasa-gibs-optical-layer", "visibility", opticalVis);
+      map.setPaintProperty("nasa-gibs-optical-layer", "raster-opacity", opacityVal);
+    }
+  }, [isNasaCloudActive, nasaCloudOpacity, nasaCloudProduct]);
+
   // ResizeObserver to resize MapLibre canvas and overlay canvas when split layout changes
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -1066,8 +1201,8 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       // Ensure canvas matches viewport bounds
       ctx.globalAlpha = layerOpacity / 100;
 
-      // 1. SCIENTIFIC METEOROLOGICAL RASTER WEATHER FIELD RENDERING (Skipped if clean base map or lightning selected or opacity 0)
-      if (activeLayer.id !== "none" && !isLightningActive && layerOpacity > 0) {
+      // 1. SCIENTIFIC METEOROLOGICAL RASTER WEATHER FIELD RENDERING (Skipped if clean base map or lightning or NASA GIBS satellite selected or opacity 0)
+      if (activeLayer.id !== "none" && activeLayer.id !== "nasa_gibs_cloud" && (activeLayer as any)?.variableId !== "nasa_cloud_cover" && !isLightningActive && layerOpacity > 0) {
         const valueCache = new Map<number, number>();
 
       const getLayerValueRaw = (layerId: string, lat: number, lon: number, hour: number) => {
@@ -1771,7 +1906,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [activeLayer, layerOpacity, drawings, currentLinePoints, timelineHour, selectedId, visualizationStyle, colorScaleName, minVal, maxVal, showLiveLightning, isLightningActive]);
+  }, [activeLayer, layerOpacity, drawings, currentLinePoints, timelineHour, selectedId, visualizationStyle, colorScaleName, minVal, maxVal, showLiveLightning, isLightningActive, isNasaCloudActive]);
 
   // Scientific weather color mapping helper
   const getAtmosphericColor = (layerId: string, pct: number) => {
@@ -2157,6 +2292,120 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
           </div>
         );
       })()}
+
+      {/* NASA GIBS Live Satellite Cloud Cover Floating HUD */}
+      {isNasaCloudActive && (
+        <div
+          className="absolute bottom-16 right-4 bg-[#0F1117]/95 backdrop-blur-md border border-sky-500/40 rounded-xl p-3 text-xs flex flex-col space-y-2.5 z-30 shadow-2xl min-w-[290px] max-w-[340px] text-right font-sans"
+          dir="rtl"
+          id="nasa-gibs-hud"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
+              </span>
+              <div className="flex flex-col text-right">
+                <span className="text-slate-100 font-bold text-xs">
+                  تصویر زنده ماهواره پوشش ابر
+                </span>
+                <span className="text-[10px] text-sky-400 font-mono">
+                  NASA GIBS / Geostationary NRT
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowNasaHud(!showNasaHud)}
+              className="text-slate-400 hover:text-slate-200 text-[10px] px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700 transition"
+            >
+              {showNasaHud ? "بستن" : "تنظیمات"}
+            </button>
+          </div>
+
+          {showNasaHud && (
+            <>
+              {/* Product Selector */}
+              <div className="flex flex-col space-y-1.5">
+                <span className="text-slate-400 text-[10px]">انتخاب سنسور و ماهواره:</span>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    onClick={() => setNasaCloudProduct("viirs_truecolor")}
+                    className={`px-2 py-1.5 rounded text-[10px] font-medium text-center transition flex flex-col items-center justify-center ${
+                      nasaCloudProduct === "viirs_truecolor"
+                        ? "bg-sky-600/90 text-white border border-sky-400 font-bold shadow-sm"
+                        : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
+                    }`}
+                  >
+                    <span>🌍 VIIRS TrueColor</span>
+                    <span className="text-[9px] opacity-75">جهانی (رزولوشن ۲۵۰m)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setNasaCloudProduct("goes_east")}
+                    className={`px-2 py-1.5 rounded text-[10px] font-medium text-center transition flex flex-col items-center justify-center ${
+                      nasaCloudProduct === "goes_east"
+                        ? "bg-sky-600/90 text-white border border-sky-400 font-bold shadow-sm"
+                        : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
+                    }`}
+                  >
+                    <span>🛰️ GOES-East GeoColor</span>
+                    <span className="text-[9px] opacity-75">زمین‌آهنگ (۱۰ دقیقه)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setNasaCloudProduct("goes_west")}
+                    className={`px-2 py-1.5 rounded text-[10px] font-medium text-center transition flex flex-col items-center justify-center ${
+                      nasaCloudProduct === "goes_west"
+                        ? "bg-sky-600/90 text-white border border-sky-400 font-bold shadow-sm"
+                        : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
+                    }`}
+                  >
+                    <span>🛰️ GOES-West GeoColor</span>
+                    <span className="text-[9px] opacity-75">اقیانوس آرام (۱۰ دقیقه)</span>
+                  </button>
+
+                  <button
+                    onClick={() => setNasaCloudProduct("viirs_cloud_optical")}
+                    className={`px-2 py-1.5 rounded text-[10px] font-medium text-center transition flex flex-col items-center justify-center ${
+                      nasaCloudProduct === "viirs_cloud_optical"
+                        ? "bg-sky-600/90 text-white border border-sky-400 font-bold shadow-sm"
+                        : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
+                    }`}
+                  >
+                    <span>☁️ ضخامت اپتیکی ابر</span>
+                    <span className="text-[9px] opacity-75">Optical Thickness</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Opacity Slider */}
+              <div className="flex flex-col space-y-1 pt-1 border-t border-slate-800/80">
+                <div className="flex items-center justify-between text-[10px] text-slate-400">
+                  <span>شفافیت تصویر ماهواره:</span>
+                  <span className="font-mono font-bold text-sky-400">{nasaCloudOpacity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  step="5"
+                  value={nasaCloudOpacity}
+                  onChange={(e) => setNasaCloudOpacity(parseInt(e.target.value))}
+                  className="w-full accent-sky-400 h-1 bg-slate-800 rounded-lg cursor-pointer"
+                />
+              </div>
+
+              {/* Live Info Footer */}
+              <div className="flex items-center justify-between text-[9px] text-slate-400 bg-slate-950/60 p-1.5 rounded border border-slate-800/60">
+                <span className="text-emerald-400 font-medium">✓ سروریس فعال و آنلاین</span>
+                <span className="font-mono text-slate-500">WMTS Global Tile Layer</span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };
