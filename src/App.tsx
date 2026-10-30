@@ -297,7 +297,10 @@ export default function App() {
         setLightningStats(payload.stats);
       }
     });
-    return () => unsub();
+    return () => {
+      unsub();
+      eumetsatMtgService.stopLiveStream();
+    };
   }, []);
 
   // Extract exact date & time directly provided by the satellite API engine

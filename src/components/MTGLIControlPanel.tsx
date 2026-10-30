@@ -61,6 +61,7 @@ export const MTGLIControlPanel: React.FC<MTGLIControlPanelProps> = ({
 
     return () => {
       unsubscribe();
+      eumetsatMtgService.stopLiveStream();
     };
   }, [isVisible]);
 

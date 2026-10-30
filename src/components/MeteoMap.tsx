@@ -246,6 +246,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
 
     return () => {
       unsub();
+      eumetsatMtgService.stopLiveStream();
     };
   }, []);
 

@@ -7,6 +7,53 @@
     <meta name="description" content="Scientific Minimalism weather interface with real-time MapLibre maps, atmospheric overlays, predictive models, interactive timeline scrubber, and an AI meteorological assistant." />
     <meta property="og:title" content="Alpha Meteo" />
     <meta property="og:description" content="Scientific Minimalism weather interface with real-time MapLibre maps, atmospheric overlays, predictive models, interactive timeline scrubber, and an AI meteorological assistant." />
+    <script>
+      // Compatibility shim for browser extensions (e.g. Ant Downloader / IDM / frame_ant)
+      // that attempt to assign to window.fetch in environments where Window.prototype.fetch only has a getter.
+      (function() {
+        try {
+          let _currentFetch = window.fetch ? window.fetch.bind(window) : undefined;
+          if (_currentFetch) {
+            Object.defineProperty(window, 'fetch', {
+              get: function() {
+                return _currentFetch;
+              },
+              set: function(newFetch) {
+                _currentFetch = newFetch;
+              },
+              configurable: true,
+              enumerable: true
+            });
+          }
+        } catch (e) {}
+
+        // Isolate browser extension errors from crashing the workstation
+        window.addEventListener('error', function(event) {
+          if (event && event.filename && (
+            event.filename.startsWith('chrome-extension://') ||
+            event.filename.startsWith('moz-extension://') ||
+            event.filename.includes('frame_ant')
+          )) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event && event.reason;
+          var stack = (reason && reason.stack) || '';
+          if (typeof stack === 'string' && (
+            stack.includes('chrome-extension://') ||
+            stack.includes('moz-extension://') ||
+            stack.includes('frame_ant')
+          )) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
