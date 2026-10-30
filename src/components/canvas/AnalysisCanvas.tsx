@@ -12,7 +12,7 @@ import { QuickAddPalette } from "./QuickAddPalette";
 import { SyncGroupsModal } from "./SyncGroupsModal";
 import html2canvas from "html2canvas";
 
-const STORAGE_KEY = "alpha_meteo_analysis_canvas_doc_v1";
+import { defaultCanvasRepository } from "../../services/canvas/canvasRepository";
 
 interface AnalysisCanvasProps {
   onReturnToMap?: () => void;
@@ -25,16 +25,15 @@ export const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   incomingSnapshot,
   onClearIncomingSnapshot,
 }) => {
-  // Document State
+  // Document State - initialize synchronously from localStorage or fallback, then sync via repository
   const [doc, setDoc] = useState<CanvasDocument>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
+      const raw = localStorage.getItem("alpha_meteo_canvas_doc_v1_primary");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.items)) return parsed;
       }
-    } catch (e) {
-      console.warn("Could not read saved canvas document:", e);
-    }
+    } catch {}
     return HORMOZGAN_CONVECTIVE_OUTLOOK_TEMPLATE;
   });
 
@@ -58,13 +57,11 @@ export const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   // Canvas Stage Reference for PNG export
   const canvasStageRef = useRef<HTMLDivElement>(null);
 
-  // Autosave to localStorage
+  // Autosave to repository on change
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(doc));
-    } catch (e) {
-      console.error("Autosave canvas error:", e);
-    }
+    defaultCanvasRepository.saveDocument(doc).catch(err => {
+      console.error("[AnalysisCanvas] Autosave error:", err);
+    });
   }, [doc]);
 
   // Ingest incoming snapshot from main map if passed

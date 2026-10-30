@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { LiveMapCanvasItem, SyncGroup } from "../../../types/canvas";
 import { MeteoMap } from "../../MeteoMap";
 import { WEATHER_LAYERS } from "../../../data";
@@ -34,10 +34,24 @@ export const LiveMapCard: React.FC<LiveMapCardProps> = ({
   onDuplicate,
   onDelete,
 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState<boolean>(true);
   const [isInteractive, setIsInteractive] = useState<boolean>(true);
   const [mapDrawings, setMapDrawings] = useState<any[]>([]);
   const [isMapLocked, setIsMapLocked] = useState<boolean>(false);
   const activeWeatherLayer = WEATHER_LAYERS.find(l => l.id === item.activeLayerId) || WEATHER_LAYERS[0];
+
+  useEffect(() => {
+    if (!cardRef.current || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const assignedSyncGroup = syncGroups.find(g => g.id === item.syncGroupId);
 
@@ -68,7 +82,7 @@ export const LiveMapCard: React.FC<LiveMapCardProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#0A0C10] rounded border border-[#1A1F2C] overflow-hidden shadow-2xl select-none">
+    <div ref={cardRef} className="w-full h-full flex flex-col bg-[#0A0C10] rounded border border-[#1A1F2C] overflow-hidden shadow-2xl select-none">
       {/* Header bar */}
       <div className="h-9 bg-[#0E1118] border-b border-[#1A1F2C] px-3 flex items-center justify-between shrink-0 cursor-move">
         {/* Title & Model Info */}
@@ -201,25 +215,33 @@ export const LiveMapCard: React.FC<LiveMapCardProps> = ({
         // Don't drag the canvas when interacting with the map
         e.stopPropagation();
       }}>
-        <MeteoMap
-          currentCoords={item.coords}
-          onCoordsChange={(c) => {
-            onUpdate({ coords: c });
-          }}
-          activeLayer={activeWeatherLayer}
-          layerOpacity={item.layerOpacity ?? 85}
-          minVal={activeWeatherLayer.min}
-          maxVal={activeWeatherLayer.max}
-          colorScaleName={item.colorScaleName || "Thermal"}
-          visualizationStyle={item.visualizationStyle || "continuous"}
-          activeLayers={[]}
-          timelineHour={item.forecastHour || 0}
-          activeTool="select"
-          drawings={mapDrawings}
-          setDrawings={setMapDrawings}
-          mapLocked={isMapLocked || Boolean(item.isLocked)}
-          onMapLockToggle={(locked) => setIsMapLocked(locked)}
-        />
+        {isVisible ? (
+          <MeteoMap
+            currentCoords={item.coords}
+            onCoordsChange={(c) => {
+              onUpdate({ coords: c });
+            }}
+            activeLayer={activeWeatherLayer}
+            layerOpacity={item.layerOpacity ?? 85}
+            minVal={activeWeatherLayer.min}
+            maxVal={activeWeatherLayer.max}
+            colorScaleName={item.colorScaleName || "Thermal"}
+            visualizationStyle={item.visualizationStyle || "continuous"}
+            activeLayers={[]}
+            timelineHour={item.forecastHour || 0}
+            activeTool="select"
+            drawings={mapDrawings}
+            setDrawings={setMapDrawings}
+            mapLocked={isMapLocked || Boolean(item.isLocked)}
+            onMapLockToggle={(locked) => setIsMapLocked(locked)}
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-[#07090D] text-slate-500 text-xs font-mono">
+            <span className="text-cyan-400 mb-1">{item.model}</span>
+            <span>{activeWeatherLayer.name}</span>
+            <span className="text-[10px] text-slate-600 mt-2">Off-screen standby</span>
+          </div>
+        )}
 
         {/* Frozen Indicator overlay when non-interactive */}
         {!isInteractive && (

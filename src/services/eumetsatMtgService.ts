@@ -148,7 +148,10 @@ class EumetsatMtgClientService {
     return null;
   }
 
+  private subscriberCount = 0;
+
   public startLiveStream() {
+    this.subscriberCount++;
     if (this.isConnecting || this.sse) return;
     this.isConnecting = true;
 
@@ -245,7 +248,16 @@ class EumetsatMtgClientService {
     }
   }
 
-  public stopLiveStream() {
+  public stopLiveStream(force = false) {
+    if (!force) {
+      this.subscriberCount = Math.max(0, this.subscriberCount - 1);
+      if (this.subscriberCount > 0) {
+        return; // Other subscribers active
+      }
+    } else {
+      this.subscriberCount = 0;
+    }
+
     if (this.sse) {
       this.sse.close();
       this.sse = null;

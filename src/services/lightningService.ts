@@ -81,7 +81,14 @@ export class LightningService {
     return LightningService.instance;
   }
 
+  private subscriberCount = 0;
+
+  /**
+   * Starts or retains the shared live lightning connection.
+   * Uses reference counting so multiple map instances or cards can independently subscribe.
+   */
   public async start() {
+    this.subscriberCount++;
     if (this.isRunning) return;
     this.isRunning = true;
 
@@ -97,7 +104,20 @@ export class LightningService {
     }, 12000);
   }
 
-  public stop() {
+  /**
+   * Releases one subscription. Stops connection only when all subscribers have released.
+   * Pass force=true to forcefully tear down.
+   */
+  public stop(force = false) {
+    if (!force) {
+      this.subscriberCount = Math.max(0, this.subscriberCount - 1);
+      if (this.subscriberCount > 0) {
+        return; // Other subscribers still active
+      }
+    } else {
+      this.subscriberCount = 0;
+    }
+
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;

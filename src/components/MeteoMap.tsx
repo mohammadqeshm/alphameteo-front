@@ -2482,20 +2482,19 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       {/* NASA GIBS Live Satellite Cloud Cover Floating HUD */}
       {isNasaCloudActive && (
         <div
-          className="absolute bottom-16 right-4 bg-[#0F1117]/95 backdrop-blur-md border border-sky-500/40 rounded-xl p-3 text-xs flex flex-col space-y-2.5 z-30 shadow-2xl min-w-[290px] max-w-[340px] text-right font-sans"
-          dir="rtl"
+          className="absolute bottom-16 right-4 bg-[#0F1117]/95 backdrop-blur-md border border-sky-500/40 rounded-xl p-3 text-xs flex flex-col space-y-2.5 z-30 shadow-2xl min-w-[290px] max-w-[340px] text-left font-sans"
           id="nasa-gibs-hud"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div className="flex items-center space-x-2 space-x-reverse">
+            <div className="flex items-center space-x-2">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500"></span>
               </span>
-              <div className="flex flex-col text-right">
+              <div className="flex flex-col text-left">
                 <span className="text-slate-100 font-bold text-xs">
-                  تصویر زنده ماهواره پوشش ابر
+                  Live Satellite Cloud Cover
                 </span>
                 <span className="text-[10px] text-sky-400 font-mono">
                   NASA GIBS / Geostationary NRT
@@ -2506,7 +2505,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
               onClick={() => setShowNasaHud(!showNasaHud)}
               className="text-slate-400 hover:text-slate-200 text-[10px] px-1.5 py-0.5 rounded bg-slate-800/80 border border-slate-700 transition"
             >
-              {showNasaHud ? "بستن" : "تنظیمات"}
+              {showNasaHud ? "Collapse" : "Settings"}
             </button>
           </div>
 
@@ -2514,7 +2513,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
             <>
               {/* Product Selector */}
               <div className="flex flex-col space-y-1.5">
-                <span className="text-slate-400 text-[10px]">انتخاب سنسور و ماهواره:</span>
+                <span className="text-slate-400 text-[10px]">Sensor & Satellite Product:</span>
                 <div className="grid grid-cols-2 gap-1.5">
                   <button
                     onClick={() => setNasaCloudProduct("viirs_truecolor")}
@@ -2525,7 +2524,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                     }`}
                   >
                     <span>🌍 VIIRS TrueColor</span>
-                    <span className="text-[9px] opacity-75">جهانی (رزولوشن ۲۵۰m)</span>
+                    <span className="text-[9px] opacity-75">Global (250m Res)</span>
                   </button>
 
                   <button
@@ -2537,7 +2536,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                     }`}
                   >
                     <span>🛰️ GOES-East GeoColor</span>
-                    <span className="text-[9px] opacity-75">زمین‌آهنگ (۱۰ دقیقه)</span>
+                    <span className="text-[9px] opacity-75">Geostationary (10m)</span>
                   </button>
 
                   <button
@@ -2549,7 +2548,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                     }`}
                   >
                     <span>🛰️ GOES-West GeoColor</span>
-                    <span className="text-[9px] opacity-75">اقیانوس آرام (۱۰ دقیقه)</span>
+                    <span className="text-[9px] opacity-75">Pacific (10m Refresh)</span>
                   </button>
 
                   <button
@@ -2560,8 +2559,8 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                         : "bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-slate-800"
                     }`}
                   >
-                    <span>☁️ ضخامت اپتیکی ابر</span>
-                    <span className="text-[9px] opacity-75">Optical Thickness</span>
+                    <span>☁️ Cloud Optical Depth</span>
+                    <span className="text-[9px] opacity-75">VIIRS Thickness</span>
                   </button>
                 </div>
               </div>
@@ -2569,7 +2568,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
               {/* Opacity Slider */}
               <div className="flex flex-col space-y-1 pt-1 border-t border-slate-800/80">
                 <div className="flex items-center justify-between text-[10px] text-slate-400">
-                  <span>شفافیت تصویر ماهواره:</span>
+                  <span>Satellite Layer Opacity:</span>
                   <span className="font-mono font-bold text-sky-400">{nasaCloudOpacity}%</span>
                 </div>
                 <input
@@ -2585,8 +2584,8 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
 
               {/* Live Info Footer */}
               <div className="flex items-center justify-between text-[9px] text-slate-400 bg-slate-950/60 p-1.5 rounded border border-slate-800/60">
-                <span className="text-emerald-400 font-medium">✓ سروریس فعال و آنلاین</span>
-                <span className="font-mono text-slate-500">WMTS Global Tile Layer</span>
+                <span className="text-emerald-400 font-medium">✓ WMTS Stream Online</span>
+                <span className="font-mono text-slate-500">EPSG:3857 Global</span>
               </div>
             </>
           )}

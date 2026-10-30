@@ -94,182 +94,13 @@ import {
 } from "lucide-react";
 import { eumetsatMtgService, MTGLITelemetryStats } from "./services/eumetsatMtgService";
 
-// Client-side Mock Weather Generator for pure frontend demonstration
-function generateClientMockWeather(lat: number, lon: number, timeOffset: number) {
-  const seed = Math.sin(lat) * Math.cos(lon);
-  const hash = (val: number) => {
-    const x = Math.sin(seed + val) * 10000;
-    return x - Math.floor(x);
-  };
-
-  const baseTemp = 32 - Math.abs(lat) * 0.6;
-  const tempDiurnal = Math.sin((timeOffset / 24) * 2 * Math.PI - Math.PI / 2) * 6;
-  const localSeed = hash(1);
-  const finalTemp = Math.round((baseTemp + tempDiurnal + (localSeed * 10 - 5)) * 10) / 10;
-
-  const baseWind = 3 + Math.abs(Math.sin(lat * (Math.PI / 45))) * 12;
-  const finalWind = Math.round((baseWind + hash(2) * 8) * 10) / 10;
-  const windDirection = Math.round(hash(3) * 360);
-
-  const basePressure = 1013.25 + (Math.sin(lat * 0.1) * 15);
-  const finalPressure = Math.round((basePressure + (hash(4) * 10 - 5)) * 10) / 10;
-
-  const basePrecip = Math.abs(lat) < 10 ? 4.5 : (Math.abs(lat) > 20 && Math.abs(lat) < 35 ? 0.1 : 1.2);
-  const finalPrecip = Math.round((basePrecip * hash(5) * 5) * 10) / 10;
-
-  const cloudCover = Math.round(hash(6) * 100);
-
-  const baseHumidity = 50 + (Math.sin(lat * 0.2) * 20);
-  const finalHumidity = Math.min(100, Math.max(10, Math.round(baseHumidity + (hash(7) * 30 - 15))));
-
-  const waveHeight = Math.round((0.5 + (finalWind * 0.15) + hash(8) * 2) * 10) / 10;
-
-  const elevation = Math.round(Math.abs(Math.sin(lat * 2) * Math.cos(lon * 3)) * 2400 + Math.abs(hash(9)) * 120);
-
-  return {
-    location: {
-      lat,
-      lon,
-      elevation,
-    },
-    forecast: {
-      temperature: finalTemp,
-      windSpeed: finalWind,
-      windDirection,
-      pressure: finalPressure,
-      precipitation: finalPrecip,
-      clouds: cloudCover,
-      humidity: finalHumidity,
-      waves: waveHeight,
-    }
-  };
-}
-
-// Helper to format dynamic dates starting from today based on hour offset
-function formatForecastDate(hourOffset: number, options: { includeYear?: boolean; onlyDate?: boolean; isShort?: boolean } = {}) {
-  const date = new Date();
-  date.setHours(date.getHours() + hourOffset);
-  
-  if (options.onlyDate) {
-    return date.toLocaleDateString("en-US", {
-      day: "numeric",
-      month: options.isShort ? "short" : "long",
-      year: options.includeYear ? "numeric" : undefined
-    });
-  }
-  
-  const dateStr = date.toLocaleDateString("en-US", {
-    day: "numeric",
-    month: options.isShort ? "short" : "long",
-    year: options.includeYear ? "numeric" : undefined
-  });
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${dateStr} ${hours}:${minutes} (+${hourOffset}h)`;
-}
-
-// Client-side Mock AI Analysis Generator for pure frontend demonstration
-function generateMockAnalysis(coords: Coordinate, weather: WeatherForecast) {
-  const isHighElev = coords.elevation > 1500;
-  return `[GFS INFERENCE MODEL 0.25° RESEARCH BRIEF]
-
-1. BAROCLINIC PROFILE & TURBULENCE ASSESSMENT:
-At coordinates ${coords.lat.toFixed(4)}°N, ${coords.lon.toFixed(4)}°E and elevation ${coords.elevation}m, the atmospheric column demonstrates stable geostrophic conditions with a surface pressure of ${weather.pressure} hPa. Ground-level boundary friction indicates a velocity of ${weather.windSpeed} m/s originating from a heading vector of ${weather.windDirection}°. ${isHighElev ? "Orographic barrier friction at this high altitude induces minor mountain turbulence wave formations in low-level flight sectors." : "Boundary-layer shear stresses are quiet, representing optimal conditions with negligible friction velocity."}
-
-2. THERMODYNAMIC & MOISTURE GRADIENTS:
-Relative humidity levels are stabilized at ${weather.humidity}%, with precipitable moisture accumulation estimates at ${weather.precipitation} mm. The active 2-meter air temperature is ${weather.temperature} °C, displaying a consistent diurnal trend aligned with the 00Z model run. Total cloud cover is ${weather.clouds}%, consisting primarily of stable stratified cloud bands at the mid-to-lower tropospheric interface.
-
-3. CONVECTIVE TRIGGERS & REGIONAL FORECAST:
-Thermodynamic stability is high across the sector with negligible Convective Available Potential Energy (CAPE) buildup. Wave friction heights of ${weather.waves}m are forecast in nearby marine tracks. Operators are advised to monitor upper isobaric charts for any minor jet stream instabilities or moisture convergence vectors in the evening steps.`;
-}
-
-// Client-side Mock AI Chat Simulator
-function generateMockChatResponse(userMessage: string, coords: Coordinate, weather: WeatherForecast | null) {
-  const msg = userMessage.toLowerCase();
-  const isPersian = /[\u0600-\u06FF]/.test(userMessage);
-
-  if (isPersian) {
-    if (msg.includes("دما") || msg.includes("گرما") || msg.includes("سرما") || msg.includes("دمای")) {
-      return `سلام همکار گرامی. بر اساس تحلیل مدل GFS 0.25° برای موقعیت جغرافیایی فعال شما (${coords.lat.toFixed(4)}° N, ${coords.lon.toFixed(4)}° E):
-
-۱. **تحلیل ترمودینامیکی**: دمای شبیه‌سازی شده در ارتفاع ۲ متری سطح زمین در حال حاضر برابر با **${weather?.temperature ?? 22} درجه سانتی‌گراد** است.
-۲. **تغییرات روزانه (Diurnal)**: به دلیل ارتفاع منطقه (${coords.elevation} متر)، تغییرات دمایی تحت پدیده‌های سرمایش تابشی شبانه کوهستانی منظم است.
-۳. **وضعیت رطوبتی**: با رطوبت نسبی ${weather?.humidity ?? 60}٪، نقطه شبنم در محدوده پایدار و غیرهمرفتی قرار دارد.
-
-آیا تحلیل ترازهای باد یا فشار هوا در این نقطه را لازم دارید؟`;
-    }
-
-    if (msg.includes("باد") || msg.includes("طوفان") || msg.includes("وزش")) {
-      return `تحلیل جریانات باد سینوپتیکی برای مختصات انتخاب شده شما:
-
-۱. **سرعت و جهت**: باد در تراز استاندارد ۱۰ متری زمین با سرعت **${weather?.windSpeed ?? 5} متر بر ثانیه** و از جهت **${weather?.windDirection ?? 180} درجه** برآورد شده است.
-۲. **گرادیان فشار**: فشار جوی در حدود **${weather?.pressure ?? 1013} هکتوپاسکال** است که گرادیان ملایمی در دشت‌های مجاور ایجاد می‌کند.
-۳. **اثرات موج**: شبیه‌سازی امواج برای مناطق دریایی ارتفاع شاخص **${weather?.waves ?? 1.2} متر** را نشان می‌دهد.
-
-با استفاده از منوی ترسیم در سمت چپ (GIS Tools) می‌توانید حوزه‌های تحت تأثیر باد شدید را به صورت دایره یا مستطیل علامت‌گذاری کنید.`;
-    }
-
-    if (msg.includes("باران") || msg.includes("بارش") || msg.includes("ابر") || msg.includes("بارندگی")) {
-      return `ارزیابی پوشش ابر و پتانسیل بارش مدل GFS:
-
-۱. **پوشش کلی ابر**: در حال حاضر پوشش ابر در این منطقه حدود **${weather?.clouds ?? 40}٪** تخمین زده می‌شود (بیشتر از نوع آلتوکومولوس میانی).
-۲. **حجم بارش**: میزان تجمع بارندگی برابر با **${weather?.precipitation ?? 0} میلی‌متر** مدل‌سازی شده است که نشان‌دهنده هوایی پایدار در این گام زمانی است.
-۳. **رطوبت نسبی جو**: این شاخص در مقدار **${weather?.humidity ?? 55}٪** قرار دارد که شرایط همگرایی مرطوب شدید را ایجاد نمی‌کند.
-
-تغییرات ناگهانی دما در گام‌های زمانی بعدی را پایش کنید تا هرگونه روند صعودی همرفتی را شناسایی نمایید.`;
-    }
-
-    return `به ایستگاه هوش مصنوعی پیشرفته Alpha Meteo خوش آمدید. من دستیار سینوپتیک و پایش اتمسفر شما هستم.
-
-در حال حاضر نقطه تمرکز شما روی نقشه دارای مشخصات زیر است:
-- **مختصات جغرافیایی**: عرض ${coords.lat.toFixed(4)}° شمالی / طول ${coords.lon.toFixed(4)}° شرقی
-- **ارتفاع از سطح دریا**: ${coords.elevation} متر
-- **دمای اتمسفر (۲ متر)**: ${weather?.temperature ?? 15} درجه سانتی‌گراد
-- **فشار اتمسفر**: ${weather?.pressure ?? 1013} hPa
-
-کلیک روی نقاط مختلف نقشه فوراً داده‌های هواشناسی و ترازهای GFS را برای آن عرض و طول جغرافیایی شبیه‌سازی می‌کند. چه فاکتور هواشناسی دیگری را پایش کنیم؟`;
-  } else {
-    if (msg.includes("temp") || msg.includes("heat") || msg.includes("cold") || msg.includes("warm")) {
-      return `Meteorological thermal assessment for your focused position (${coords.lat.toFixed(4)}° N, ${coords.lon.toFixed(4)}° E):
-
-1. **Surface Temperature**: Simulated at **${weather?.temperature ?? 20} °C** (2-meter level GFS estimation).
-2. **Diurnal Cycle**: Expect moderate solar heating fluxes peaking in steps +12h to +18h, moderated by local elevation friction (${coords.elevation}m).
-3. **Relative Humidity**: Current moisture saturation is at **${weather?.humidity ?? 60}%**, keeping dew points well below convective thresholds.
-
-Would you like to analyze atmospheric soundings or isobaric wind contours for this coordinate?`;
-    }
-
-    if (msg.includes("wind") || msg.includes("storm") || msg.includes("gale") || msg.includes("gust")) {
-      return `Atmospheric fluid dynamic and kinetic vector assessment:
-
-1. **Velocity**: Calculated at **${weather?.windSpeed ?? 6} m/s** at a standard 10-meter measurement level.
-2. **Heading Vector**: Aligning to a compass angle of **${weather?.windDirection ?? 240}°**.
-3. **Baroclinic Shear**: The local sector exhibits stable geostrophic balance with minor wind shear, translating to a significant wave height estimate of **${weather?.waves ?? 1.5}m** in oceanic zones.
-
-Utilize the Left Ruler tool to measure distance from the focused coordinates to regional pressure centers.`;
-    }
-
-    if (msg.includes("rain") || msg.includes("precip") || msg.includes("cloud") || msg.includes("snow")) {
-      return `Atmospheric moisture and precipitation profiling:
-
-1. **Total Precipitation**: Active GFS step models **${weather?.precipitation ?? 0} mm** of accumulated precipitation.
-2. **Cloud Coverage**: Currently estimated at **${weather?.clouds ?? 50}%** cover, predominantly mid-altitude altocumulus.
-3. **Saturation Index**: Relative Humidity is **${weather?.humidity ?? 55}%**, indicating moderate moisture convergence in the lower planetary boundary layer.
-
-If low-level convergence combines with a fall in surface pressure, expect localized stratiform developments.`;
-    }
-
-    return `Welcome back, Meteorologist. This is Alpha Meteo's Clinical Intelligence Core.
-
-Active GFS 0.25° Grid Coords:
-- **Latitude**: ${coords.lat.toFixed(4)}° N
-- **Longitude**: ${coords.lon.toFixed(4)}° E
-- **Elevation**: ${coords.elevation} m
-- **Surface Pressure**: ${weather?.pressure ?? 1013} hPa
-
-You can click anywhere on the MapLibre viewport to update the live meteorological telemetry card, trigger a Clinical AI Atmospheric Briefing, or use the left toolbar to draw custom alert zones. How can I assist your analysis today?`;
-  }
-}
+import {
+  generateClientMockWeather,
+  formatForecastDate,
+  generateMockAnalysis,
+  generateMockChatResponse
+} from "./mocks";
+import { weatherService } from "./services/providers/weatherProvider";
 
 const DEFAULT_PANES: MapPaneState[] = [
   {
@@ -654,40 +485,26 @@ export default function App() {
     setMaxVal(activeLayer.max);
   }, [activeLayer]);
 
-  // Fetch forecast readings for the selected point/hour from the Express backend
+  // Fetch forecast readings for the selected point/hour from provider service
   useEffect(() => {
     let active = true;
     const fetchPointWeather = async () => {
       setWeatherLoading(true);
       try {
-        const response = await fetch("/api/weather/point", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lat: currentCoords.lat,
-            lon: currentCoords.lon,
-            timeOffset: timelineHour,
-            date: formatForecastDate(0, { includeYear: true, onlyDate: true })
-          }),
-        });
-        if (!response.ok) throw new Error("Server response not OK");
-        const data = await response.json();
-        if (active && data && data.forecast) {
+        const data = await weatherService.getPointForecast(
+          currentCoords.lat,
+          currentCoords.lon,
+          timelineHour,
+          formatForecastDate(0, { includeYear: true, onlyDate: true })
+        );
+        if (active && data?.forecast) {
           setCurrentWeather(data.forecast);
-          // Sync elevation if backend returns a calculated estimate
-          if (data.location && data.location.elevation !== undefined) {
+          if (data.location?.elevation !== undefined) {
             setCurrentCoords(prev => ({ ...prev, elevation: data.location.elevation }));
           }
-        } else {
-          throw new Error("Invalid GFS payload format");
         }
       } catch (err) {
-        console.warn("Express backend point weather feed offline. Using client-side model: ", err);
-        if (active) {
-          const clientWeather = generateClientMockWeather(currentCoords.lat, currentCoords.lon, timelineHour);
-          setCurrentWeather(clientWeather.forecast);
-          setCurrentCoords(prev => ({ ...prev, elevation: clientWeather.location.elevation }));
-        }
+        console.warn("Weather provider query fallback: ", err);
       } finally {
         if (active) setWeatherLoading(false);
       }
@@ -738,38 +555,21 @@ export default function App() {
     setSuggestions([]);
   };
 
-  // Perform AI Atmospheric Analysis using server-side Gemini API
+  // Perform AI Atmospheric Analysis using research provider
   const handlePerformAnalysis = async () => {
     if (!currentWeather) return;
     setIsAnalyzing(true);
     setAnalysisReport(null);
 
-    const payload = {
-      location: currentCoords,
-      date: formatForecastDate(timelineHour, { includeYear: true }),
-      forecast: currentWeather
-    };
-
     try {
-      const res = await fetch("/api/weather/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weatherData: payload }),
+      const result = await weatherService.analyzeWeather({
+        location: currentCoords,
+        date: formatForecastDate(timelineHour, { includeYear: true }),
+        forecast: currentWeather
       });
-      if (!res.ok) throw new Error("CORS or offline");
-      const data = await res.json();
-      if (data && data.analysis) {
-        if (data.analysis.includes("GEMINI_API_KEY")) {
-          // If key is not configured, fall back to our advanced client-side scientific generator
-          setAnalysisReport(generateMockAnalysis(currentCoords, currentWeather));
-        } else {
-          setAnalysisReport(data.analysis);
-        }
-      } else {
-        setAnalysisReport(data.error || generateMockAnalysis(currentCoords, currentWeather));
-      }
+      setAnalysisReport(result.analysis);
     } catch (err) {
-      console.warn("Analysis backend offline, triggering GFS high-fidelity client report: ", err);
+      console.warn("Analysis provider fallback:", err);
       setAnalysisReport(generateMockAnalysis(currentCoords, currentWeather));
     } finally {
       setIsAnalyzing(false);
@@ -1039,7 +839,7 @@ export default function App() {
       // Find the main map viewport element
       const viewport = mapViewportRef.current;
       if (!viewport) {
-        throw new Error("نمای نقشه یافت نشد.");
+        throw new Error("Map viewport element not found.");
       }
 
       // Find active map container
@@ -1053,7 +853,7 @@ export default function App() {
       const forceOverlayRepaint = (activeContainer as any).__forceOverlayRepaint;
 
       if (!map) {
-        throw new Error("موتور نقشه MapLibre هنوز به طور کامل بارگذاری نشده است.");
+        throw new Error("MapLibre engine is still initializing.");
       }
 
       const screenshot = await MapScreenshotService.captureMapScreenshot({
@@ -1071,7 +871,7 @@ export default function App() {
       setCapturedScreenshot(screenshot.dataUrl);
       setScreenshotModalOpen(true);
       setIsCropping(false);
-      showToast(`تصویر نقشه با موفقیت ثبت شد (${screenshot.width} × ${screenshot.height} px)`, "success");
+      showToast(`Map snapshot captured successfully (${screenshot.width} × ${screenshot.height} px)`, "success");
     } catch (err: any) {
       console.error("Screenshot capture error:", err);
       const errorMsg = err?.message || "Unable to capture the map. WebGL rendering or an external map layer prevented image export.";
@@ -1085,7 +885,7 @@ export default function App() {
   const handleShareLayout = () => {
     const shareText = `Alpha Meteo - GFS 0.25° Active Weather Map\nLat: ${currentCoords.lat}, Lon: ${currentCoords.lon}\nViewing: ${activeLayer.name}`;
     navigator.clipboard.writeText(shareText);
-    showToast("مشخصات نقشه در کلیپ‌بورد کپی شد", "success");
+    showToast("Map coordinates and active parameters copied to clipboard", "success");
   };
 
   // Send current operational map to Analysis Canvas
@@ -1105,7 +905,7 @@ export default function App() {
       height: 440
     });
     setWorkspaceMode("canvas");
-    showToast("نقشه با موفقیت به Analysis Canvas منتقل شد", "success");
+    showToast("Map snapshot sent to Analysis Canvas", "success");
   };
 
   return (

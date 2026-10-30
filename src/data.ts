@@ -3,8 +3,8 @@ import { WeatherLayer } from "./types";
 export const WEATHER_LAYERS: WeatherLayer[] = [
   {
     id: "none",
-    name: "Clean Base Map (نقشه ساده)",
-    description: "Standard MapLibre base map without weather overlay",
+    name: "Clean Base Map",
+    description: "Standard MapLibre base cartography without weather overlay",
     unit: "",
     min: 0,
     max: 100,
@@ -15,8 +15,8 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
   },
   {
     id: "temperature",
-    name: "IR (Temperature)",
-    description: "2m above ground (Iran Sector)",
+    name: "2m Temperature (IR)",
+    description: "2m above ground level (Middle East & Global)",
     unit: "°C",
     min: -30,
     max: 40,
@@ -27,8 +27,8 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
   },
   {
     id: "wind",
-    name: "Wind Speed",
-    description: "10m surface velocity streamlines",
+    name: "10m Wind Speed",
+    description: "10m surface velocity streamlines & vectors",
     unit: "m/s",
     min: 0,
     max: 60,
@@ -40,7 +40,7 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
   {
     id: "pressure",
     name: "MSLP Pressure",
-    description: "Mean sea level atmospheric pressure",
+    description: "Mean sea level atmospheric pressure isobars",
     unit: "hPa",
     min: 950,
     max: 1050,
@@ -64,7 +64,7 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
   {
     id: "heatmap_demo",
     name: "Heatmap (Global)",
-    description: "300 custom scalar points (Worldwide)",
+    description: "Scalar thermodynamic density fields",
     unit: "pts",
     min: 0,
     max: 100,
@@ -75,9 +75,9 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
   },
   {
     id: "lightning",
-    name: "رعد و برق و صاعقه ماهواره‌ای (EUMETSAT MTG-LI)",
-    description: "داده‌های زنده و لحظه‌ای حسگر اپتیکی Lightning Imager ماهواره متئوستم نسل سوم EUMETSAT",
-    unit: "صاعقه/پیکسل",
+    name: "Optical Lightning (EUMETSAT MTG-LI)",
+    description: "Real-time optical lightning pulses from Meteosat Third Generation LI",
+    unit: "fl/px",
     min: 0,
     max: 100,
     defaultValue: 100,
@@ -87,8 +87,8 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
   },
   {
     id: "satellite_lightning",
-    name: "صاعقه‌نگار نوری فضاپایه EUMETSAT MTG-LI",
-    description: "رصد ماهواره‌ای اپتیکی لحظه‌ای صاعقه‌های داخل ابر و زمین (خاورمیانه، ایران، اروپا و آفریقا)",
+    name: "Spaceborne Lightning Imager MTG-LI",
+    description: "Continuous spaceborne optical surveillance (Middle East, Europe, Africa)",
     unit: "Fl/km²",
     min: 0,
     max: 100,
@@ -99,8 +99,8 @@ export const WEATHER_LAYERS: WeatherLayer[] = [
   },
   {
     id: "nasa_gibs_cloud",
-    name: "تصویر ماهواره پوشش ابر (NASA GIBS)",
-    description: "تصاویر زنده و بروز ماهواره‌ای پوشش ابر و جبهه‌های طوفانی جهان از سرویس رسمی NASA GIBS / Geostationary",
+    name: "Satellite Cloud Cover (NASA GIBS)",
+    description: "Official NASA Global Imagery Browse Services geostationary cloud imagery",
     unit: "%",
     min: 0,
     max: 100,
