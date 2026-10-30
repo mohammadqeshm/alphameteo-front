@@ -213,6 +213,10 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       (l as any).id === "satellite_lightning"
     ));
 
+  // Basemap style switcher state (Dark Tactical default, Satellite, Ocean)
+  const [basemapMode, setBasemapMode] = useState<"dark_tactical" | "satellite" | "ocean">("dark_tactical");
+  const [showBasemapMenu, setShowBasemapMenu] = useState<boolean>(false);
+
   // NASA GIBS Satellite Cloud Cover active check and product states
   const [nasaCloudProduct, setNasaCloudProduct] = useState<"viirs_truecolor" | "goes_east" | "goes_west" | "viirs_cloud_optical">("viirs_truecolor");
   const [nasaCloudOpacity, setNasaCloudOpacity] = useState<number>(85);
@@ -332,20 +336,41 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Clean, high-contrast dark basemap with NASA GIBS Satellite Cloud layers
+    // High-performance keyless Esri Dark Tactical basemap with Satellite and Ocean options
     const darkStyle: maplibregl.StyleSpecification = {
       version: 8,
       sources: {
-        "carto-dark": {
+        "esri-dark-gray-base": {
           type: "raster",
           tiles: [
-            "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
-            "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
           ],
           tileSize: 256,
-          attribution: "© OpenStreetMap contributors, © CARTO, © EUMETSAT MTG-I1, © NASA GIBS"
+          attribution: "© Esri, DeLorme, NAVTEQ, OpenStreetMap contributors"
+        },
+        "esri-satellite": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          ],
+          tileSize: 256,
+          attribution: "© Esri, Maxar, Earthstar Geographics"
+        },
+        "esri-ocean": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
+          ],
+          tileSize: 256,
+          attribution: "© Esri, GEBCO, NOAA, National Geographic"
+        },
+        "esri-dark-gray-labels": {
+          type: "raster",
+          tiles: [
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+          ],
+          tileSize: 256,
+          attribution: "© Esri"
         },
         "nasa-gibs-viirs-source": {
           type: "raster",
@@ -386,11 +411,61 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       },
       layers: [
         {
-          id: "carto-dark-layer",
+          id: "esri-dark-gray-base-layer",
           type: "raster",
-          source: "carto-dark",
+          source: "esri-dark-gray-base",
           minzoom: 0,
-          maxzoom: 19
+          maxzoom: 19,
+          layout: {
+            visibility: "visible"
+          },
+          paint: {
+            "raster-opacity": 1.0,
+            "raster-contrast": 0.08,
+            "raster-brightness-min": 0.0,
+            "raster-brightness-max": 0.95
+          }
+        },
+        {
+          id: "esri-satellite-layer",
+          type: "raster",
+          source: "esri-satellite",
+          minzoom: 0,
+          maxzoom: 19,
+          layout: {
+            visibility: "none"
+          },
+          paint: {
+            "raster-opacity": 0.95,
+            "raster-fade-duration": 200
+          }
+        },
+        {
+          id: "esri-ocean-layer",
+          type: "raster",
+          source: "esri-ocean",
+          minzoom: 0,
+          maxzoom: 19,
+          layout: {
+            visibility: "none"
+          },
+          paint: {
+            "raster-opacity": 0.95,
+            "raster-fade-duration": 200
+          }
+        },
+        {
+          id: "esri-dark-gray-labels-layer",
+          type: "raster",
+          source: "esri-dark-gray-labels",
+          minzoom: 0,
+          maxzoom: 19,
+          layout: {
+            visibility: "visible"
+          },
+          paint: {
+            "raster-opacity": 0.9
+          }
         },
         {
           id: "nasa-gibs-viirs-layer",
@@ -998,6 +1073,45 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       map.setPaintProperty("nasa-gibs-optical-layer", "raster-opacity", opacityVal);
     }
   }, [isNasaCloudActive, nasaCloudOpacity, nasaCloudProduct]);
+
+  // Synchronize Basemap Layer Visibility (Dark Tactical, Satellite, Ocean)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    try {
+      if (map.getLayer("esri-dark-gray-base-layer")) {
+        map.setLayoutProperty(
+          "esri-dark-gray-base-layer",
+          "visibility",
+          basemapMode === "dark_tactical" ? "visible" : "none"
+        );
+      }
+      if (map.getLayer("esri-satellite-layer")) {
+        map.setLayoutProperty(
+          "esri-satellite-layer",
+          "visibility",
+          basemapMode === "satellite" ? "visible" : "none"
+        );
+      }
+      if (map.getLayer("esri-ocean-layer")) {
+        map.setLayoutProperty(
+          "esri-ocean-layer",
+          "visibility",
+          basemapMode === "ocean" ? "visible" : "none"
+        );
+      }
+      if (map.getLayer("esri-dark-gray-labels-layer")) {
+        map.setLayoutProperty(
+          "esri-dark-gray-labels-layer",
+          "visibility",
+          basemapMode === "dark_tactical" || basemapMode === "satellite" ? "visible" : "none"
+        );
+      }
+    } catch (err) {
+      console.warn("Could not update basemap visibility:", err);
+    }
+  }, [basemapMode]);
 
   // ResizeObserver to resize MapLibre canvas and overlay canvas when split layout changes
   useEffect(() => {
@@ -2080,6 +2194,78 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         >
           3D
         </button>
+
+        {/* Basemap Switcher Button & Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowBasemapMenu(!showBasemapMenu)}
+            disabled={mapLocked}
+            className={`w-8 h-8 rounded-md flex items-center justify-center shadow-lg border transition ${
+              showBasemapMenu
+                ? "bg-sky-600 border-sky-400 text-white"
+                : mapLocked 
+                  ? "bg-[#131316]/60 border-[#2D2D30]/40 text-slate-600 cursor-not-allowed" 
+                  : "bg-[#131316] border-[#2D2D30] text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+            }`}
+            id="btn-basemap-switcher"
+            title="انتخاب سبک نقشه پایه (Basemap Layer)"
+          >
+            <Layers className="w-4 h-4" />
+          </button>
+
+          {showBasemapMenu && (
+            <div className="absolute right-10 top-0 bg-[#0f172a]/95 backdrop-blur-md border border-slate-700/80 rounded-lg p-2 shadow-2xl z-40 w-44 flex flex-col space-y-1">
+              <div className="text-[10px] font-semibold text-slate-400 px-1 py-0.5 border-b border-slate-700/50 mb-1 flex items-center justify-between">
+                <span>نقشه پایه</span>
+                <span className="text-[9px] text-emerald-400 font-mono">بدون کلید ✓</span>
+              </div>
+              <button
+                onClick={() => {
+                  setBasemapMode("dark_tactical");
+                  setShowBasemapMenu(false);
+                }}
+                className={`flex items-center space-x-2 space-x-reverse px-2 py-1.5 rounded text-xs font-medium text-right transition ${
+                  basemapMode === "dark_tactical"
+                    ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
+                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                }`}
+              >
+                <div className="w-3 h-3 rounded-full bg-slate-900 border border-sky-400 shrink-0" />
+                <span className="truncate">تاریک تاکتیکال (پیش‌فرض)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setBasemapMode("satellite");
+                  setShowBasemapMenu(false);
+                }}
+                className={`flex items-center space-x-2 space-x-reverse px-2 py-1.5 rounded text-xs font-medium text-right transition ${
+                  basemapMode === "satellite"
+                    ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
+                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                }`}
+              >
+                <div className="w-3 h-3 rounded-full bg-emerald-800 border border-emerald-400 shrink-0" />
+                <span className="truncate">ماهواره‌ای واقعی</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setBasemapMode("ocean");
+                  setShowBasemapMenu(false);
+                }}
+                className={`flex items-center space-x-2 space-x-reverse px-2 py-1.5 rounded text-xs font-medium text-right transition ${
+                  basemapMode === "ocean"
+                    ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
+                    : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                }`}
+              >
+                <div className="w-3 h-3 rounded-full bg-blue-900 border border-blue-400 shrink-0" />
+                <span className="truncate">اقیانوس و توپوگرافی</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Floating Drawing Tool Status Indicator */}

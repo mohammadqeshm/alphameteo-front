@@ -1,0 +1,6 @@
+{
+  "summary":  "Comprehensive architectural implementation plan for the professional meteorological Analysis Canvas in Alpha Meteo. Details spatial canvas engine, node registry (Live Maps, Map Snapshots, Climate Indices, Charts/Meteograms, Images, Text Blocks, Annotations, and Frames), top-bar workspace switcher replacing the map viewport, Hormozgan Severe Convective Outlook showcase template, configurable Sync Groups, and high-fidelity PNG export.",
+  "updatedAt":  "2026-10-30T09:45:19.150586437Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

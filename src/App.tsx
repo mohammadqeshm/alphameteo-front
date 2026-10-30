@@ -21,6 +21,7 @@ import { SplitControls } from "./components/SplitControls";
 import { ScreenshotCropper, CropRect } from "./components/ScreenshotCropper";
 import { ScreenshotModal, ScreenshotMetadata } from "./components/ScreenshotModal";
 import { MapScreenshotService, ScreenshotDimensions } from "./services/mapScreenshotService";
+import { AnalysisCanvas } from "./components/canvas/AnalysisCanvas";
 // @ts-ignore
 import brandLogo from "./assets/images/alpha_meteo_logo_1784052061482.png";
 
@@ -334,6 +335,10 @@ export default function App() {
   const [precipitationViewMode, setPrecipitationViewMode] = useState<"pixelated" | "gradient" | "contour">("gradient");
   const [precipitationColorTheme, setPrecipitationColorTheme] = useState<"ocean" | "fire" | "toxic" | "magma">("ocean");
   const [heatmapRadius, setHeatmapRadius] = useState<number>(3.5);
+  
+  // Workspace Mode: Operational Map vs Analysis Canvas
+  const [workspaceMode, setWorkspaceMode] = useState<"map" | "canvas">("canvas");
+  const [incomingCanvasSnapshot, setIncomingCanvasSnapshot] = useState<any>(null);
 
   // Split Screen Multi-Map State
   const [splitLayout, setSplitLayout] = useState<SplitLayoutMode>("single");
@@ -1083,6 +1088,26 @@ export default function App() {
     showToast("مشخصات نقشه در کلیپ‌بورد کپی شد", "success");
   };
 
+  // Send current operational map to Analysis Canvas
+  const handleSendToCanvas = () => {
+    setIncomingCanvasSnapshot({
+      type: "map_snapshot",
+      title: `${activePane.title} — ${activeLayer.name}`,
+      parameterName: activeLayer.name,
+      sourceModel: "GFS 0.25°",
+      modelRun: `${formatForecastDate(0, { onlyDate: true, isShort: true })} 00Z`,
+      validTime: formatForecastDate(timelineHour, { includeYear: false }),
+      forecastHour: timelineHour,
+      level: "Surface",
+      imageUrl: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=900&q=80",
+      notes: `Snapshot centered at ${currentCoords.lat.toFixed(2)}°N, ${currentCoords.lon.toFixed(2)}°E with ${activeLayer.name}`,
+      width: 480,
+      height: 440
+    });
+    setWorkspaceMode("canvas");
+    showToast("نقشه با موفقیت به Analysis Canvas منتقل شد", "success");
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col antialiased text-xs text-slate-200 bg-[#060709] font-sans select-none" id="alpha-meteo-root">
       
@@ -1090,7 +1115,7 @@ export default function App() {
       <header className="h-14 bg-[#08090C] border-b border-[#1A1C23] flex items-center justify-between px-4 shrink-0 z-50 shadow-md" id="global-header">
         <div className="flex items-center space-x-6">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-3 group cursor-pointer">
+          <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => setWorkspaceMode("map")}>
             <div className="w-11 h-11 rounded-xl overflow-hidden bg-gradient-to-br from-[#12141A] to-[#0A0B0E] flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-md border border-[#1A1C23]">
               <img
                 src={brandLogo}
@@ -1102,6 +1127,32 @@ export default function App() {
             <span className="text-white font-sans font-black tracking-wider text-sm uppercase">
               ALPHA <span className="text-blue-500 font-normal">METEO</span>
             </span>
+          </div>
+
+          {/* Top-Level Workspace Mode Switcher (Operational Map vs Analysis Canvas) */}
+          <div className="flex items-center bg-[#10131B] border border-[#212636] rounded-lg p-0.5 space-x-0.5 shadow-inner" id="workspace-mode-switcher">
+            <button
+              onClick={() => setWorkspaceMode("map")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                workspaceMode === "map"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-[#181D2A]"
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>Operational Map</span>
+            </button>
+            <button
+              onClick={() => setWorkspaceMode("canvas")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                workspaceMode === "canvas"
+                  ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/20"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-[#181D2A]"
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Analysis Canvas</span>
+            </button>
           </div>
 
           {/* Search box with autocomplete suggestions */}
@@ -1334,9 +1385,16 @@ export default function App() {
 
       {/* 2. CORE INTERFACE CONTAINER (Sidebar + Map + Secondary panels) */}
       <div className="flex-1 flex overflow-hidden relative">
-        
-        {/* LEFT GIS TOOLBAR with Human-Readable Labels */}
-        <aside className="w-14 md:w-[72px] bg-[#08090C] border-r border-[#1A1C23] flex flex-col justify-between items-center py-2 shrink-0 z-40 shadow-lg max-md:absolute max-md:left-3 max-md:top-14 max-md:bottom-auto max-md:max-h-[calc(100vh-220px)] max-md:border max-md:rounded-lg max-md:shadow-2xl max-md:bg-[#08090C]/90 max-md:backdrop-blur-md max-md:py-3" id="left-gis-toolbar">
+        {workspaceMode === "canvas" ? (
+          <AnalysisCanvas
+            onReturnToMap={() => setWorkspaceMode("map")}
+            incomingSnapshot={incomingCanvasSnapshot}
+            onClearIncomingSnapshot={() => setIncomingCanvasSnapshot(null)}
+          />
+        ) : (
+          <>
+            {/* LEFT GIS TOOLBAR with Human-Readable Labels */}
+            <aside className="w-14 md:w-[72px] bg-[#08090C] border-r border-[#1A1C23] flex flex-col justify-between items-center py-2 shrink-0 z-40 shadow-lg max-md:absolute max-md:left-3 max-md:top-14 max-md:bottom-auto max-md:max-h-[calc(100vh-220px)] max-md:border max-md:rounded-lg max-md:shadow-2xl max-md:bg-[#08090C]/90 max-md:backdrop-blur-md max-md:py-3" id="left-gis-toolbar">
           <div className="flex flex-col items-center w-full space-y-0.5 overflow-y-auto custom-scrollbar">
             <div className="text-[7.5px] text-slate-500 uppercase font-black tracking-widest mb-1 select-none text-center hidden md:block">GIS Tools</div>
             
@@ -1512,6 +1570,14 @@ export default function App() {
 
           {/* Lower Toolbar tools */}
           <div className="flex flex-col items-center w-full space-y-1.5 border-t border-[#1A1C23] pt-2">
+            <button
+              onClick={handleSendToCanvas}
+              className="w-10 md:w-14 py-1.5 rounded flex flex-col items-center transition text-cyan-400 hover:text-white hover:bg-cyan-950/40 border border-cyan-500/20"
+              title="ارسال نقشه فعلی به Analysis Canvas"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="text-[7.5px] font-bold tracking-tight hidden md:inline">To Canvas</span>
+            </button>
             <button
               onClick={handleExportScreenshot}
               className={`w-10 md:w-14 py-1.5 rounded flex flex-col items-center transition ${
@@ -2111,6 +2177,8 @@ export default function App() {
             </main>
           </div>
         </div>
+          </>
+        )}
 
         {/* RIGHT AREA (Sidebar Panel + Far Right Global Dock in a single container) */}
         <aside className="flex h-full shrink-0 border-l border-[#1A1C23] z-30 bg-[#08090C] overflow-hidden max-md:absolute max-md:right-0 max-md:top-0 max-md:bottom-0 max-md:h-full max-md:border-l-0 max-md:shadow-2xl" id="right-side-container">
