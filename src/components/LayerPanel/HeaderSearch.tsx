@@ -21,7 +21,7 @@ export const HeaderSearch: React.FC<HeaderSearchProps> = ({
   favoritesCount
 }) => {
   return (
-    <div className="p-3 bg-[#08090C] border-b border-[#1A1C23] flex flex-col gap-2.5 shrink-0 select-none">
+    <div className="p-3 bg-[#1a1a1a] border-b border-[#1A1C23] flex flex-col gap-2.5 shrink-0 select-none">
       {/* Title + Subtitle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">

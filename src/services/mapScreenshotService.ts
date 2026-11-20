@@ -34,12 +34,12 @@ export interface ScreenshotResult {
  * Standard professional preset resolutions for meteorological exports
  */
 export const SCREENSHOT_PRESETS: { id: string; label: string; width: number; height: number; description: string }[] = [
-  { id: "current", label: "نمای فعلی (Current)", width: 0, height: 0, description: "رزولوشن متناسب با کادر انتخابی نمایشگر" },
-  { id: "fhd", label: "1080p Full HD", width: 1920, height: 1080, description: "1920 × 1080 پیکسل (استاندارد وب و اسلاید)" },
-  { id: "qhd", label: "2K QHD", width: 2560, height: 1440, description: "2560 × 1440 پیکسل (کیفیت بسیار بالا)" },
-  { id: "uhd", label: "4K Ultra HD", width: 3840, height: 2160, description: "3840 × 2160 پیکسل (چاپ و گزارشات باکیفیت)" },
-  { id: "square", label: "1:1 Square HD", width: 1200, height: 1200, description: "1200 × 1200 پیکسل (مناسب شبکه‌های اجتماعی)" },
-  { id: "hd", label: "720p HD", width: 1280, height: 720, description: "1280 × 720 پیکسل (حجم بهینه)" }
+  { id: "current", label: "Current View", width: 0, height: 0, description: "Resolution matching selected viewport crop box" },
+  { id: "fhd", label: "1080p Full HD", width: 1920, height: 1080, description: "1920 × 1080 px (Standard web & slides)" },
+  { id: "qhd", label: "2K QHD", width: 2560, height: 1440, description: "2560 × 1440 px (High-definition display)" },
+  { id: "uhd", label: "4K Ultra HD", width: 3840, height: 2160, description: "3840 × 2160 px (Print & publication quality)" },
+  { id: "square", label: "1:1 Square HD", width: 1200, height: 1200, description: "1200 × 1200 px (Social & report cards)" },
+  { id: "hd", label: "720p HD", width: 1280, height: 720, description: "1280 × 720 px (Compact file size)" }
 ];
 
 /**
@@ -150,14 +150,14 @@ export class MapScreenshotService {
     } = options;
 
     if (!mapInstance) {
-      throw new Error("سرویس نقشه در دسترس نیست.");
+      throw new Error("Map instance is unavailable.");
     }
 
     if (!mapContainer) {
-      throw new Error("المان نگهدارنده نقشه یافت نشد.");
+      throw new Error("Map container element not found.");
     }
 
-    onProgress?.("آماده‌سازی لایه‌های نقشه و داده‌های جوی...");
+    onProgress?.("Preparing map layers and atmospheric overlays...");
 
     // 1. Ensure style is loaded
     if (!mapInstance.isStyleLoaded()) {
@@ -173,7 +173,7 @@ export class MapScreenshotService {
       forceOverlayRepaint();
     }
 
-    onProgress?.("تصویربرداری همگام از بافر WebGL نقشه پایه...");
+    onProgress?.("Capturing synchronous WebGL frame from basemap...");
 
     // 3. Capture WebGL frame synchronously inside MapLibre's render event
     let baseMapSnapshot = await captureWebGLFrame(mapInstance, 1500);
@@ -182,7 +182,7 @@ export class MapScreenshotService {
     let isBaseMapValid = validateCanvasPixels(baseMapSnapshot);
 
     if (!isBaseMapValid) {
-      onProgress?.("دریافت مجدد تایل‌های نقشه و تکمیل فریم گرافیکی...");
+      onProgress?.("Reloading map tiles and finalizing frame...");
       // Secondary pass: wait for tile idle and capture again
       await new Promise<void>((res) => {
         if (mapInstance.areTilesLoaded()) {
@@ -208,7 +208,7 @@ export class MapScreenshotService {
       }
     }
 
-    onProgress?.("برش و تنظیم ابعاد خروجی تصویر...");
+    onProgress?.("Cropping and scaling final image dimensions...");
 
     // 5. Compute crop and scaling coordinates
     const containerRect = mapContainer.getBoundingClientRect();
@@ -267,7 +267,7 @@ export class MapScreenshotService {
     compositeCanvas.height = outH;
     const ctx = compositeCanvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) {
-      throw new Error("خطا در ایجاد کانتکست گرافیکی ۲ بعدی.");
+      throw new Error("Failed to initialize 2D canvas context.");
     }
 
     ctx.imageSmoothingEnabled = true;
@@ -287,13 +287,13 @@ export class MapScreenshotService {
       ctx.drawImage(overlaySnapshot, osx, osy, osw, osh, 0, 0, outW, outH);
     }
 
-    onProgress?.("تولید فایل نهایی و کپی در حافظه...");
+    onProgress?.("Generating final image file...");
 
     // 7. Convert composite canvas to PNG Blob and Data URL
     const blob = await new Promise<Blob>((resolve, reject) => {
       compositeCanvas.toBlob((b) => {
         if (b) resolve(b);
-        else reject(new Error("خطا در تبدیل تصویر نهایی به فرمت PNG."));
+        else reject(new Error("Failed to encode final image as PNG."));
       }, "image/png");
     });
 

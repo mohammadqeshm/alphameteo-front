@@ -67,7 +67,7 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({ content }) => 
         );
       } else {
         elements.push(
-          <ul key={`ul-${key}`} className="space-y-1.5 my-2 pr-1 space-y-1 text-slate-200">
+          <ul key={`ul-${key}`} className="space-y-1.5 my-2 pl-1 text-slate-200">
             {listItems}
           </ul>
         );
@@ -139,17 +139,17 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({ content }) => 
       listItems.push(
         <li
           key={`li-${index}`}
-          className={`flex items-start space-x-1.5 ${indentLevel > 0 ? "mr-4" : ""} text-[11px] leading-relaxed`}
+          className={`flex items-start space-x-1.5 ${indentLevel > 0 ? "ml-4" : ""} text-[11px] leading-relaxed`}
         >
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0 ml-1.5" />
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0 mr-1.5" />
           <div className="flex-1">{renderInline(bulletMatch[3])}</div>
         </li>
       );
       return;
     }
 
-    // Numbered List Item: 1. item, ۱. item, etc.
-    const numMatch = line.match(/^(\s*)([0-9]+|[۰-۹]+)[.)]\s+(.+)$/);
+    // Numbered List Item: 1. item, 2. item, etc.
+    const numMatch = line.match(/^(\s*)([0-9]+)[.)]\s+(.+)$/);
     if (numMatch) {
       if (!isNumberedList && listItems.length > 0) {
         flushList(`switch-bullet-${index}`);
@@ -159,7 +159,7 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({ content }) => 
       const content = numMatch[3];
       listItems.push(
         <li key={`num-li-${index}`} className="flex items-start space-x-1.5 text-[11px] leading-relaxed">
-          <span className="font-mono text-blue-400 font-bold min-w-[16px] text-right shrink-0 ml-1">
+          <span className="font-mono text-blue-400 font-bold min-w-[16px] text-left shrink-0 mr-1">
             {numLabel}.
           </span>
           <div className="flex-1">{renderInline(content)}</div>
@@ -184,5 +184,5 @@ export const MarkdownMessage: React.FC<MarkdownMessageProps> = ({ content }) => 
 
   flushList("final");
 
-  return <div className="space-y-0.5 text-right" dir="auto">{elements}</div>;
+  return <div className="space-y-0.5 text-left">{elements}</div>;
 };

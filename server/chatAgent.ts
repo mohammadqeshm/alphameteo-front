@@ -44,7 +44,7 @@ export async function processAgentChat(
 
 YOUR CORE RESPONSIBILITIES:
 1. REASON AND ANSWER DYNAMICALLY & SCIENTIFICALLY:
-   - Answer all user questions thoroughly, scientifically, and in the user's language (Persian/Farsi or English).
+   - Answer all user questions thoroughly, scientifically, and clearly in English.
    - If asked about climate records (such as driest inhabited place on Earth = Arica, Chile / Atacama Desert; or McMurdo Dry Valleys in Antarctica for uninhabited; hottest surface = Lut Desert 80.8°C; hottest standard station air = Death Valley / Ahvaz; coldest = Vostok / Oymyakon), analyze the question accurately and provide deep, rich context.
 
 2. DIRECT UI WORKSTATION ACTIONS VIA FUNCTION CALLING:
@@ -58,7 +58,7 @@ YOUR CORE RESPONSIBILITIES:
 
 3. RESPONSE FORMATTING:
    - Provide your complete, intelligent response.
-   - Summarize any executed workstation actions at the end with clear confirmation bullet points (e.g. "✅ نقشه با موفقیت بر روی شهر آریکا (شیلی) تنظیم و زوم گردید.").
+   - Summarize any executed workstation actions at the end with clear confirmation bullet points (e.g. "✅ Map centered and zoomed to Arica, Chile.").
 
 Current Workstation State:
 - Focus Coordinates: ${req.currentCoords ? `${req.currentCoords.lat.toFixed(4)}°N, ${req.currentCoords.lon.toFixed(4)}°E (Elevation: ${req.currentCoords.elevation}m)` : "Default"}
@@ -99,17 +99,17 @@ Current Workstation State:
           let summary = `Executing ${fc.name}`;
           if (fc.name === "navigateToLocation") {
             const loc = (fc.args as any)?.locationName || "Coordinates";
-            summary = `انتقال و زوم نقشه به ${loc} (${(fc.args as any)?.latitude?.toFixed(2)}°, ${(fc.args as any)?.longitude?.toFixed(2)}°)`;
+            summary = `Fly & zoom map to ${loc} (${(fc.args as any)?.latitude?.toFixed(2)}°, ${(fc.args as any)?.longitude?.toFixed(2)}°)`;
           } else if (fc.name === "setWeatherLayer") {
-            summary = `تغییر لایه نقشه به ${(fc.args as any)?.layerId}`;
+            summary = `Switch weather layer to ${(fc.args as any)?.layerId}`;
           } else if (fc.name === "configureCatalogLayer") {
-            summary = `تنظیم مدل ${(fc.args as any)?.sourceId} با متغیر ${(fc.args as any)?.variableId}`;
+            summary = `Configure ${(fc.args as any)?.sourceId} (${(fc.args as any)?.variableId})`;
           } else if (fc.name === "setTimelineForecastHour") {
-            summary = `تنظیم گام زمانی پیش‌بینی به +${(fc.args as any)?.hour} ساعت`;
+            summary = `Set forecast timeline to +${(fc.args as any)?.hour}h`;
           } else if (fc.name === "setSplitScreenMode") {
-            summary = `تغییر حالت چندنقشه‌ای به ${(fc.args as any)?.layout}`;
+            summary = `Switch split-screen mode to ${(fc.args as any)?.layout}`;
           } else if (fc.name === "openUIPanel") {
-            summary = `باز کردن پنل: ${(fc.args as any)?.panelName}`;
+            summary = `Open panel: ${(fc.args as any)?.panelName}`;
           }
 
           actions.push({
@@ -133,7 +133,7 @@ Current Workstation State:
 
       if (!responseText.trim() && actions.length > 0) {
         const actionSummaries = actions.map(a => a.summary).join("\n- ");
-        responseText = `دستورات با موفقیت توسط مدل جمنای بر روی سامانه هواشناسی اجرا گردید:\n- ${actionSummaries}`;
+        responseText = `Commands executed successfully on the meteorological workstation:\n- ${actionSummaries}`;
       }
 
       // Extract grounding sources if any

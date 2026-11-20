@@ -371,7 +371,7 @@ export const SidebarNotes: React.FC<SidebarNotesProps> = ({
   const groupOrder = ["today", "yesterday", "this_week", "earlier"];
 
   return (
-    <div className="flex flex-col h-full bg-[#08090C] text-slate-200 font-sans select-none" id="notes-panel">
+    <div className="flex flex-col h-full bg-[#1a1a1a] text-slate-200 font-sans select-none" id="notes-panel">
       {/* PANEL HEADER */}
       <div className="p-3.5 border-b border-[#1A1C23] bg-[#090A0E] flex items-center justify-between shrink-0">
         <div className="flex items-center space-x-2">
@@ -405,7 +405,7 @@ export const SidebarNotes: React.FC<SidebarNotesProps> = ({
 
       {/* VIEW 1: VERTICAL NOTES LIST (Default when no activeNoteId) */}
       {!activeNoteId && (
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#08090C]">
+        <div className="flex-1 flex flex-col overflow-hidden bg-[#1a1a1a]">
           {/* Search bar */}
           <div className="p-2.5 border-b border-[#1A1C23]/80 bg-[#0C0D12] shrink-0">
             <div className="relative flex items-center">
@@ -535,7 +535,7 @@ export const SidebarNotes: React.FC<SidebarNotesProps> = ({
 
       {/* VIEW 2: NOTE DETAIL VIEW (Active when activeNoteId is selected) */}
       {activeNoteId && activeNote && (
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#08090C]">
+        <div className="flex-1 flex flex-col overflow-hidden bg-[#1a1a1a]">
           {/* Top Actions & Title Strip */}
           <div className="px-3 py-2 bg-[#0C0D12] border-b border-[#1A1C23] flex items-center justify-between shrink-0">
             <div className="flex items-center space-x-2 flex-1 mr-2 min-w-0">
@@ -726,7 +726,7 @@ export const SidebarNotes: React.FC<SidebarNotesProps> = ({
 
               {/* Writing Area */}
               <div 
-                className="flex-1 overflow-y-auto p-4 flex flex-col space-y-3 bg-[#08090C] custom-scrollbar select-text cursor-text"
+                className="flex-1 overflow-y-auto p-4 flex flex-col space-y-3 bg-[#1a1a1a] custom-scrollbar select-text cursor-text"
                 onClick={(e) => {
                   if (editorRef.current && e.target === e.currentTarget) {
                     editorRef.current.focus();
@@ -755,7 +755,7 @@ export const SidebarNotes: React.FC<SidebarNotesProps> = ({
             </>
           ) : (
             /* Read-Only Content Preview View */
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col space-y-4 bg-[#08090C] custom-scrollbar select-text">
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col space-y-4 bg-[#1a1a1a] custom-scrollbar select-text">
               {/* Meta and timestamps */}
               <div className="flex justify-between text-[9px] text-slate-500 font-mono select-none border-b border-slate-800/40 pb-2.5" dir="ltr">
                 <span className="flex items-center space-x-1">

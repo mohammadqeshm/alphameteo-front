@@ -54,8 +54,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
 
   const layoutOptions: Array<{
     id: SplitLayoutMode;
-    titleFa: string;
-    titleEn: string;
+    title: string;
     count: number;
     desc: string;
     icon: React.ReactNode;
@@ -63,10 +62,9 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
   }> = [
     {
       id: "single",
-      titleFa: "یکتایی (۱ نقشه)",
-      titleEn: "Single View (1 Map)",
+      title: "Single View (1 Map)",
       count: 1,
-      desc: "نقشه استاندارد کامل تک پنجره",
+      desc: "Standard full-viewport single map workspace",
       icon: <Square className="w-4 h-4" />,
       renderPreview: () => (
         <div className="w-10 h-7 bg-blue-500/20 border border-blue-400/60 rounded flex items-center justify-center text-[9px] text-blue-300 font-bold">
@@ -76,10 +74,9 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
     },
     {
       id: "dual",
-      titleFa: "۲ تایی (دو نقشه عمودی)",
-      titleEn: "Dual View (2 Maps)",
+      title: "Dual View (2 Maps)",
       count: 2,
-      desc: "دو نقشه مجزا در کنار هم برای مقایسه مستقیم",
+      desc: "Two maps side-by-side for direct comparison",
       icon: <Columns2 className="w-4 h-4" />,
       renderPreview: () => (
         <div className="w-10 h-7 grid grid-cols-2 gap-0.5 bg-slate-900 p-0.5 rounded border border-slate-700">
@@ -90,10 +87,9 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
     },
     {
       id: "triple",
-      titleFa: "۳ تایی (۲ بالا + ۱ پایین)",
-      titleEn: "Triple View (3 Maps)",
+      title: "Triple View (3 Maps)",
       count: 3,
-      desc: "دو نقشه در بالا و یک نقشه عریض در پایین",
+      desc: "Two maps on top with one wide map below",
       icon: <LayoutGrid className="w-4 h-4" />,
       renderPreview: () => (
         <div className="w-10 h-7 grid grid-cols-2 grid-rows-2 gap-0.5 bg-slate-900 p-0.5 rounded border border-slate-700">
@@ -105,10 +101,9 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
     },
     {
       id: "quad",
-      titleFa: "۴ تایی (چهار نقشه ۲×۲)",
-      titleEn: "Quad View (4 Maps)",
+      title: "Quad View (4 Maps)",
       count: 4,
-      desc: "چهار نقشه همزمان ۲ در ۲ برای بررسی چندگانه",
+      desc: "Four synchronized 2x2 maps for multi-layer analysis",
       icon: <Grid2x2 className="w-4 h-4" />,
       renderPreview: () => (
         <div className="w-10 h-7 grid grid-cols-2 grid-rows-2 gap-0.5 bg-slate-900 p-0.5 rounded border border-slate-700">
@@ -135,11 +130,11 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
               ? "bg-gradient-to-r from-blue-600/30 to-indigo-600/30 text-blue-300 border border-blue-500/40 shadow-sm"
               : "text-slate-300 hover:text-white"
           }`}
-          title="تنظیمات اسپلیت نقشه (Split Screen Layout)"
+          title="Split Screen Layout Settings"
         >
           {currentLayoutOption.icon}
           <span className="font-sans font-bold text-[11px] tracking-wide">
-            {splitLayout === "single" ? "اسپلیت نقشه" : `${currentLayoutOption.count} نقشه`}
+            {splitLayout === "single" ? "Split View" : `${currentLayoutOption.count} Maps`}
           </span>
           {splitLayout !== "single" && (
             <span className="bg-blue-500/30 text-blue-300 text-[9px] px-1.5 py-0.2 rounded font-mono border border-blue-400/30">
@@ -158,7 +153,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
                 ? "bg-blue-600/20 border-blue-500/50 text-blue-400"
                 : "bg-[#181D2B] border-[#293046] text-slate-500 hover:text-slate-200"
             }`}
-            title={syncCoords ? "موقعیت همه نقشه‌ها همگام است (Sync On)" : "موقعیت نقشه‌ها مستقل است (Sync Off)"}
+            title={syncCoords ? "All map positions are synchronized (Sync On)" : "Map positions are independent (Sync Off)"}
           >
             {syncCoords ? <Link2 className="w-3.5 h-3.5" /> : <Unlink className="w-3.5 h-3.5" />}
           </button>
@@ -176,8 +171,8 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
                 <Grid2x2 className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white tracking-wide">چیدمان چند نقشه (Split Screen)</h4>
-                <p className="text-[10px] text-slate-400">انتخاب تعداد نقشه‌ها برای مقایسه همزمان</p>
+                <h4 className="text-xs font-bold text-white tracking-wide">Split Screen Layout</h4>
+                <p className="text-[10px] text-slate-400">Select number of viewports for side-by-side comparison</p>
               </div>
             </div>
             <button
@@ -192,11 +187,11 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
           <div className="bg-[#121726] border border-blue-500/30 rounded-lg p-2.5 flex items-start space-x-2.5">
             <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse mt-1 shrink-0" />
             <div className="text-[11px] leading-snug">
-              <span className="text-slate-400">نقشه فعال: </span>
+              <span className="text-slate-400">Active Map: </span>
               <span className="font-bold text-blue-300">{activePaneTitle}</span>
               <span className="text-slate-400"> ({activePaneLayerName})</span>
               <p className="text-[9px] text-slate-500 mt-1">
-                هر لایه‌ای از منوها یا نوار بالا انتخاب کنید، روی نقشه فعال ست می‌شود.
+                Any layer selected from menus or the top bar will apply to the active map pane.
               </p>
             </div>
           </div>
@@ -204,7 +199,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
           {/* Grid Layout Options */}
           <div className="space-y-2">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block px-1">
-              انتخاب حالت چیدمان:
+              Select Layout Mode:
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {layoutOptions.map((option) => {
@@ -229,7 +224,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center space-x-1">
                           <span className="text-xs font-bold text-slate-100 truncate block">
-                            {option.titleFa}
+                            {option.title}
                           </span>
                         </div>
                         <span className="text-[9px] text-slate-400 line-clamp-1 block mt-0.5">
@@ -260,9 +255,9 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
                   {syncCoords ? <Link2 className="w-4 h-4" /> : <Unlink className="w-4 h-4" />}
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-200 block">همگام‌سازی جابجایی و زوم (Sync Viewports)</span>
+                  <span className="text-xs font-bold text-slate-200 block">Sync Viewports (Pan & Zoom)</span>
                   <span className="text-[9px] text-slate-400 block">
-                    {syncCoords ? "همه نقشه‌ها رو یک نقطه سنک هستند" : "هر نقشه مستقلاً جابجا می‌شود"}
+                    {syncCoords ? "All maps stay locked on the same coordinates" : "Each map pans independently"}
                   </span>
                 </div>
               </div>
@@ -277,7 +272,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
           <div className="pt-2 border-t border-[#1E2436] flex items-center justify-between text-[10px] text-slate-400">
             <span className="flex items-center space-x-1">
               <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-              <span>کلیک روی هدر هر نقشه آن را فعال می‌کند.</span>
+              <span>Click any map header to make it active.</span>
             </span>
             <button
               onClick={() => {
@@ -286,7 +281,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
               }}
               className="text-blue-400 hover:underline font-bold"
             >
-              ریست به ۱ نقشه
+              Reset to 1 Map
             </button>
           </div>
 

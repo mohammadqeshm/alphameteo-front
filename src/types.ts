@@ -171,6 +171,29 @@ export interface PresetWorkstation {
   layers: Partial<ActiveLayer>[];
 }
 
+export interface CompositeSubLayer {
+  id: string; // unique sublayer instance identifier in composite
+  sourceId: string;
+  sourceName: string;
+  variableId: string;
+  variableName: string;
+  variableUnit: string;
+  levelId: string;
+  levelName: string;
+  opacity: number; // 0 - 100
+  blendMode?: BlendMode;
+  paletteId?: string;
+  visualizationId?: VisualizationTypeEnum;
+}
+
+export interface CustomCompositeLayer {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: number;
+  subLayers: CompositeSubLayer[];
+}
+
 export interface ChatMessageAction {
   name: string;
   args: Record<string, any>;

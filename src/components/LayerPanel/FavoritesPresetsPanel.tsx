@@ -62,7 +62,7 @@ export const FavoritesPresetsPanel: React.FC<FavoritesPresetsPanelProps> = ({
   const favoriteVariables = WEATHER_VARIABLES.filter(v => v.isFavorite);
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4 select-none bg-[#08090C] text-slate-200">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4 select-none bg-[#1a1a1a] text-slate-200">
       
       {/* 1. OPERATIONAL WORKSTATION PRESETS */}
       <div>

@@ -31,7 +31,8 @@ import {
   Satellite,
   Radar,
   Radio,
-  Calendar
+  Calendar,
+  GripVertical
 } from 'lucide-react';
 
 const getVariableIcon = (variableId: string) => {
@@ -74,6 +75,8 @@ export const ActiveLayersStack: React.FC<ActiveLayersStackProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabelText, setEditLabelText] = useState<string>('');
   const [expandedLayerId, setExpandedLayerId] = useState<string | null>(null);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   // Move layer up in stack (increase zIndex)
   const handleMoveUp = (index: number) => {
@@ -138,7 +141,7 @@ export const ActiveLayersStack: React.FC<ActiveLayersStackProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3 select-none bg-[#08090C] text-slate-200">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3 select-none bg-[#1a1a1a] text-slate-200">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -160,12 +163,20 @@ export const ActiveLayersStack: React.FC<ActiveLayersStackProps> = ({
         )}
       </div>
 
+      {/* Stack Order Help Text */}
+      {layers.length > 1 && (
+        <div className="text-[9px] text-slate-400 bg-[#212121] border border-[#2e2e2e] rounded-lg px-2.5 py-1.5 flex items-center justify-between">
+          <span>Render Priority: #1 is the topmost layer on the map</span>
+          <span className="text-cyan-400 font-mono font-bold">1 = TOP</span>
+        </div>
+      )}
+
       {layers.length === 0 ? (
-        <div className="text-center py-12 px-4 border border-dashed border-[#1A1C23] rounded-lg bg-[#0c0e14]">
+        <div className="text-center py-12 px-4 border border-dashed border-[#2e2e2e] rounded-lg bg-[#141414]">
           <Layers className="w-8 h-8 text-slate-600 mx-auto mb-2" />
           <p className="text-xs font-bold text-slate-400">No Active Layers Enabled</p>
           <p className="text-[10px] text-slate-500 mt-1">
-            Use Drill-Down or Catalog view to add weather parameters to your map.
+            Use Drill-Down, Catalog, or Composite view to add weather parameters to your map.
           </p>
         </div>
       ) : (
@@ -174,14 +185,49 @@ export const ActiveLayersStack: React.FC<ActiveLayersStackProps> = ({
             const isExpanded = expandedLayerId === layer.instanceId;
             const isEditing = editingId === layer.instanceId;
             const VariableIcon = getVariableIcon(layer.variableId);
+            const isDragging = draggedIdx === index;
+            const isOver = dragOverIdx === index;
 
             return (
               <div
                 key={layer.instanceId}
-                className={`rounded-lg border transition shadow-sm overflow-hidden ${
-                  layer.visible
-                    ? 'bg-[#12141a]/80 border-[#1A1C23] hover:border-blue-500/40'
-                    : 'bg-[#0a0b0f] border-[#161822] opacity-60'
+                draggable={!layer.locked}
+                onDragStart={(e) => {
+                  setDraggedIdx(index);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (dragOverIdx !== index) setDragOverIdx(index);
+                }}
+                onDragLeave={() => setDragOverIdx(null)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedIdx === null || draggedIdx === index) {
+                    setDraggedIdx(null);
+                    setDragOverIdx(null);
+                    return;
+                  }
+                  const copy = [...layers];
+                  const [moved] = copy.splice(draggedIdx, 1);
+                  copy.splice(index, 0, moved);
+                  onReorderLayers(copy);
+                  setDraggedIdx(null);
+                  setDragOverIdx(null);
+                }}
+                onDragEnd={() => {
+                  setDraggedIdx(null);
+                  setDragOverIdx(null);
+                }}
+                className={`rounded-lg border transition shadow-sm overflow-hidden select-none cursor-grab active:cursor-grabbing ${
+                  isDragging
+                    ? 'opacity-40 bg-[#161616] border-dashed border-blue-500'
+                    : isOver
+                    ? 'bg-[#262c3e] border-blue-400 ring-2 ring-blue-500/40 shadow-lg'
+                    : layer.visible
+                    ? 'bg-[#212121] border-[#2e2e2e] hover:border-blue-500/40'
+                    : 'bg-[#161616] border-[#222222] opacity-60'
                 }`}
               >
                 {/* Main Card Header */}
@@ -189,6 +235,11 @@ export const ActiveLayersStack: React.FC<ActiveLayersStackProps> = ({
                   
                   {/* Left: Move Controls + Layer Title */}
                   <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    {/* Drag Grip Handle */}
+                    <div className="text-slate-500 hover:text-slate-300 p-0.5 cursor-grab shrink-0" title="Drag to reorder layer priority">
+                      <GripVertical className="w-3.5 h-3.5" />
+                    </div>
+
                     {/* Up / Down Order Buttons */}
                     <div className="flex flex-col space-y-0.5 shrink-0">
                       <button
@@ -208,6 +259,15 @@ export const ActiveLayersStack: React.FC<ActiveLayersStackProps> = ({
                         <ArrowDown className="w-3 h-3" />
                       </button>
                     </div>
+
+                    {/* Order Rank Badge */}
+                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                      index === 0 
+                        ? 'bg-blue-600/30 text-blue-300 border-blue-500/50' 
+                        : 'bg-[#181818] text-slate-400 border-[#303030]'
+                    }`}>
+                      #{index + 1}
+                    </span>
 
                     {/* Color Palette Preview Mini Indicator */}
                     <div className="w-2.5 h-7 rounded overflow-hidden flex flex-col shrink-0 border border-[#1A1C23]">
@@ -230,7 +290,7 @@ export const ActiveLayersStack: React.FC<ActiveLayersStackProps> = ({
                             value={editLabelText}
                             onChange={(e) => setEditLabelText(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSaveRename(layer)}
-                            className="bg-[#08090C] text-xs text-white px-2 py-0.5 rounded border border-blue-500 focus:outline-none w-full"
+                            className="bg-[#1a1a1a] text-xs text-white px-2 py-0.5 rounded border border-blue-500 focus:outline-none w-full"
                           />
                           <button
                             onClick={() => handleSaveRename(layer)}

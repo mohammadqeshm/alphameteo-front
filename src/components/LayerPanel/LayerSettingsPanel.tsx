@@ -53,7 +53,7 @@ export const LayerSettingsPanel: React.FC<LayerSettingsPanelProps> = ({
   const selectedStackLayer = activeLayers.find(l => l.instanceId === selectedInstanceId) || activeLayers[0];
 
   return (
-    <div className="flex flex-col h-full bg-[#08090C] text-slate-200 select-none overflow-hidden" id="layer-settings-panel">
+    <div className="flex flex-col h-full bg-[#1a1a1a] text-slate-200 select-none overflow-hidden" id="layer-settings-panel">
       
       {/* 1. Header */}
       <div className="p-3 border-b border-[#1A1C23] bg-[#0b0d13] flex items-center justify-between shrink-0">
@@ -66,7 +66,7 @@ export const LayerSettingsPanel: React.FC<LayerSettingsPanelProps> = ({
               Layer Settings & Styling
             </h2>
             <span className="text-[9px] font-mono text-slate-500 block">
-              تنظیمات نمایش و رنگ‌بندی لایه‌ها
+              Layer visualization & color palette controls
             </span>
           </div>
         </div>

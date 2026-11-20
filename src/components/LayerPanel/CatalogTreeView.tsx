@@ -114,7 +114,7 @@ export const CatalogTreeView: React.FC<CatalogTreeViewProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 select-none bg-[#08090C] text-slate-200">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 select-none bg-[#1a1a1a] text-slate-200">
       <div className="text-[10px] uppercase font-black tracking-widest text-slate-400 mb-2">
         GIS Data Catalog Matrix
       </div>

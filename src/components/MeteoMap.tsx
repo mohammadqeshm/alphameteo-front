@@ -337,13 +337,14 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // High-performance keyless Esri Dark Tactical basemap with Satellite and Ocean options
+    // High-performance 100% keyless Esri Dark Tactical basemap with Satellite and Ocean options
     const darkStyle: maplibregl.StyleSpecification = {
       version: 8,
       sources: {
         "esri-dark-gray-base": {
           type: "raster",
           tiles: [
+            "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
             "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
           ],
           tileSize: 256,
@@ -352,7 +353,8 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         "esri-satellite": {
           type: "raster",
           tiles: [
-            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           ],
           tileSize: 256,
           attribution: "© Esri, Maxar, Earthstar Geographics"
@@ -360,7 +362,8 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         "esri-ocean": {
           type: "raster",
           tiles: [
-            "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
+            "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",
+            "https://services.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
           ],
           tileSize: 256,
           attribution: "© Esri, GEBCO, NOAA, National Geographic"
@@ -368,6 +371,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         "esri-dark-gray-labels": {
           type: "raster",
           tiles: [
+            "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
             "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
           ],
           tileSize: 256,
@@ -538,6 +542,24 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
     } as any);
 
     mapRef.current = map;
+
+    // Register error handler immediately to prevent MapLibre EventEmitter unhandled exceptions on tile fetch errors
+    map.on("error", (e) => {
+      const err = (e as any)?.error || e;
+      const msg = (err?.message || String(err || "")).toLowerCase();
+      // Silently handle tile 404s, CORS failures, network aborts, or unavailable zoom tiles
+      if (
+        msg.includes("failed to fetch") ||
+        msg.includes("ajaxerror") ||
+        msg.includes("404") ||
+        msg.includes("aborterror") ||
+        msg.includes("tile") ||
+        msg.includes("network")
+      ) {
+        return;
+      }
+      console.warn("MapLibre non-fatal event:", e);
+    });
 
     // Attach instance and direct screenshot helpers onto the DOM container
     if (mapContainerRef.current) {
@@ -1075,6 +1097,55 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
     }
   }, [isNasaCloudActive, nasaCloudOpacity, nasaCloudProduct]);
 
+  // Synchronize NASA Cloud opacity and MapLibre layer stacking order based on activeLayers order
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!activeLayers || activeLayers.length === 0) return;
+
+    // 1. Sync opacity from active layer stack if NASA cloud is present
+    const cloudInStack = activeLayers.find(l => 
+      l.visible !== false && (l.sourceId === "nasa_gibs_cloud" || l.variableId === "nasa_cloud_cover" || (l as any).id === "nasa_gibs_cloud")
+    );
+    if (cloudInStack && cloudInStack.opacity !== undefined) {
+      setNasaCloudOpacity(cloudInStack.opacity);
+    }
+
+    // 2. Synchronize WebGL layer order if both lightning and satellite clouds are active
+    if (!map || !map.isStyleLoaded()) return;
+
+    const lightningIdx = activeLayers.findIndex(l => 
+      l.visible !== false && (l.sourceId === "eumetsat_mtg_li" || l.variableId === "mtg_li_lightning" || (l as any).id === "lightning" || (l as any).id === "satellite_lightning")
+    );
+
+    const cloudIdx = activeLayers.findIndex(l => 
+      l.visible !== false && (l.sourceId === "nasa_gibs_cloud" || l.variableId === "nasa_cloud_cover" || (l as any).id === "nasa_gibs_cloud")
+    );
+
+    if (lightningIdx !== -1 && cloudIdx !== -1) {
+      try {
+        if (map.getLayer("live-lightning-circle-layer") && map.getLayer("nasa-gibs-viirs-layer")) {
+          if (cloudIdx < lightningIdx) {
+            // Cloud is higher in user stack -> place lightning UNDER cloud layer
+            map.moveLayer("live-lightning-glow-layer", "nasa-gibs-viirs-layer");
+            map.moveLayer("live-lightning-circle-layer", "nasa-gibs-viirs-layer");
+            if (map.getLayer("live-lightning-symbol-layer")) {
+              map.moveLayer("live-lightning-symbol-layer", "nasa-gibs-viirs-layer");
+            }
+          } else {
+            // Lightning is higher in user stack -> place lightning ON TOP of cloud layer
+            map.moveLayer("live-lightning-glow-layer");
+            map.moveLayer("live-lightning-circle-layer");
+            if (map.getLayer("live-lightning-symbol-layer")) {
+              map.moveLayer("live-lightning-symbol-layer");
+            }
+          }
+        }
+      } catch (err) {
+        // Safe catch for any layer style transition
+      }
+    }
+  }, [activeLayers]);
+
   // Synchronize Basemap Layer Visibility (Dark Tactical, Satellite, Ocean)
   useEffect(() => {
     const map = mapRef.current;
@@ -1313,11 +1384,100 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       const zoom = map.getZoom();
       const center = map.getCenter();
 
-      // Ensure canvas matches viewport bounds
-      ctx.globalAlpha = layerOpacity / 100;
+      // 1. Check for active raster weather field in activeLayers stack or activeLayer
+      const activeRasterInStack = activeLayers?.find(l => 
+        l.visible !== false && 
+        l.sourceId !== "eumetsat_mtg_li" && 
+        l.variableId !== "mtg_li_lightning" && 
+        (l as any).id !== "lightning" && 
+        (l as any).id !== "satellite_lightning" &&
+        l.sourceId !== "nasa_gibs_cloud" && 
+        l.variableId !== "nasa_cloud_cover" &&
+        (l as any).id !== "nasa_gibs_cloud"
+      );
 
-      // 1. SCIENTIFIC METEOROLOGICAL RASTER WEATHER FIELD RENDERING (Skipped if clean base map or lightning or NASA GIBS satellite selected or opacity 0)
-      if (activeLayer.id !== "none" && activeLayer.id !== "nasa_gibs_cloud" && (activeLayer as any)?.variableId !== "nasa_cloud_cover" && !isLightningActive && layerOpacity > 0) {
+      const hasRasterLayer = 
+        Boolean(activeRasterInStack) || 
+        (activeLayer.id !== "none" && activeLayer.id !== "nasa_gibs_cloud" && (activeLayer as any)?.variableId !== "nasa_cloud_cover" && activeLayer.id !== "lightning" && activeLayer.id !== "satellite_lightning" && activeLayer.id !== "eumetsat_mtg_li" && (activeLayer as any)?.variableId !== "mtg_li_lightning" && layerOpacity > 0);
+
+      // Determine target raster ID and opacity
+      const targetRasterId = activeRasterInStack
+        ? (activeRasterInStack.variableId === 'temp_2m' ? 'temperature' :
+           activeRasterInStack.variableId === 'wind_10m' ? 'wind' :
+           activeRasterInStack.variableId === 'mslp' ? 'pressure' :
+           activeRasterInStack.variableId === 'precip_accum' ? 'precipitation' :
+           activeRasterInStack.variableId === 'cloud_total' ? 'clouds' :
+           activeRasterInStack.variableId === 'rh_2m' ? 'humidity' :
+           activeRasterInStack.variableId === 'wave_height' ? 'waves' :
+           activeRasterInStack.variableId)
+        : activeLayer.id;
+
+      const targetRasterOpacity = activeRasterInStack?.opacity ?? layerOpacity;
+
+      // Determine layer stack ordering between Lightning and Raster
+      const lightningStackIdx = activeLayers?.findIndex(l => 
+        l.visible !== false && (l.sourceId === "eumetsat_mtg_li" || l.variableId === "mtg_li_lightning" || (l as any).id === "lightning" || (l as any).id === "satellite_lightning")
+      ) ?? -1;
+
+      const rasterStackIdx = activeLayers?.findIndex(l => 
+        l.visible !== false && l.sourceId !== "eumetsat_mtg_li" && l.variableId !== "mtg_li_lightning" && l.sourceId !== "nasa_gibs_cloud" && l.variableId !== "nasa_cloud_cover"
+      ) ?? -1;
+
+      const isLightningBelowRaster = (lightningStackIdx !== -1 && rasterStackIdx !== -1 && lightningStackIdx > rasterStackIdx);
+
+      const bounds = map.getBounds();
+      const west = bounds.getWest();
+      const east = bounds.getEast();
+      const south = bounds.getSouth();
+      const north = bounds.getNorth();
+
+      // Render lightning on canvas helper
+      const drawCanvasLightning = (alphaScale = 1.0) => {
+        if (!isLightningActive) return;
+        const geojson = eumetsatMtgService.getGeoJSON(activeCameras, lightningTimeFilter);
+        if (!geojson?.features || geojson.features.length === 0) return;
+
+        ctx.save();
+        for (let i = 0; i < geojson.features.length; i++) {
+          const f = geojson.features[i];
+          const coords = (f.geometry as any)?.coordinates;
+          if (!coords) continue;
+          const [lon, lat] = coords;
+          if (lat < south || lat > north || lon < west || lon > east) continue;
+          const pt = map.project([lon, lat]);
+          const props = f.properties as any;
+          const color = props?.color || "#FACC15";
+          const ageTier = props?.ageTier ?? 0;
+
+          // Flash ambient glow
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, ageTier === 0 ? 8 : 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.globalAlpha = (ageTier === 0 ? 0.6 : 0.25) * alphaScale;
+          ctx.fill();
+
+          // Flash core strike
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, ageTier === 0 ? 3.5 : 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 0.95 * alphaScale;
+          ctx.fill();
+          ctx.strokeStyle = "#FFFFFF";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        ctx.restore();
+      };
+
+      // If lightning is ordered below raster in user stack, render lightning first
+      if (isLightningActive && isLightningBelowRaster) {
+        drawCanvasLightning(1.0);
+      }
+
+      ctx.globalAlpha = targetRasterOpacity / 100;
+
+      // 1. SCIENTIFIC METEOROLOGICAL RASTER WEATHER FIELD RENDERING
+      if (hasRasterLayer && targetRasterOpacity > 0) {
         const valueCache = new Map<number, number>();
 
       const getLayerValueRaw = (layerId: string, lat: number, lon: number, hour: number) => {
@@ -1460,7 +1620,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         return palCtx.getImageData(0, 0, 256, 1).data;
       };
 
-      const paletteData = getPaletteRGBA(activeLayer.id, colorScaleName);
+      const paletteData = getPaletteRGBA(targetRasterId, colorScaleName);
 
       if (visualizationStyle !== "raw_pixel" && paletteData) {
         // Render continuous and discrete raster layers via bilinear geographic coordinate interpolation (Optimized to run at 60fps at 1:1 scale)
@@ -1549,7 +1709,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
               const lon = one_minus_tv * (one_minus_tu * lon00 + tu * lon01) + tv * (one_minus_tu * lon10 + tu * lon11);
 
               // Allow global raster coverage for weather models (or restricted to densityGrid for heatmap)
-              const isHeatmap = activeLayer.id === "heatmap_demo";
+              const isHeatmap = targetRasterId === "heatmap_demo";
               const isInside = isHeatmap
                 ? (lat >= GRID_LAT_MIN && lat <= GRID_LAT_MAX && lon >= GRID_LON_MIN && lon <= GRID_LON_MAX)
                 : (lat >= -85 && lat <= 85 && lon >= -180 && lon <= 180);
@@ -1559,7 +1719,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                 insideIranBuffer[bufferIdx] = 1;
 
                 // Retrieve value directly for heatmap or use Bilinear GRIB interpolation for weather metrics
-                const val = isHeatmap ? getDensityValue(lat, lon) : getBilinearGribValue(activeLayer.id, lat, lon, timelineHour);
+                const val = isHeatmap ? getDensityValue(lat, lon) : getBilinearGribValue(targetRasterId, lat, lon, timelineHour);
                 let pct = (val - minVal) / (maxVal - minVal);
                 pct = Math.max(0, Math.min(1, pct));
 
@@ -1646,7 +1806,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
               data[outIdx] = r_val;
               data[outIdx + 1] = g_val;
               data[outIdx + 2] = b_val;
-              data[outIdx + 3] = Math.round(a_val * (layerOpacity / 100));
+              data[outIdx + 3] = Math.round(a_val * (targetRasterOpacity / 100));
             }
           }
 
@@ -1710,14 +1870,14 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         for (let lat = startLat; lat <= endLat; lat += rawGribStep) {
           if (lat < -85 || lat > 85) continue;
           for (let lon = startLon; lon <= endLon; lon += rawGribStep) {
-            const isHeatmap = activeLayer.id === "heatmap_demo";
+            const isHeatmap = targetRasterId === "heatmap_demo";
             const isInside = isHeatmap
               ? (lat >= GRID_LAT_MIN && lat <= GRID_LAT_MAX && lon >= GRID_LON_MIN && lon <= GRID_LON_MAX)
               : (lat >= -85 && lat <= 85 && lon >= -180 && lon <= 180);
 
             if (!isInside) continue;
 
-            let val = getLayerValue(activeLayer.id, lat, lon, timelineHour);
+            let val = getLayerValue(targetRasterId, lat, lon, timelineHour);
             let pct = (val - minVal) / (maxVal - minVal);
             pct = Math.max(0, Math.min(1, pct));
 
@@ -1741,7 +1901,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         }
 
         gridData.forEach((cell) => {
-          const color = getMappedColor(activeLayer.id, cell.pct, colorScaleName);
+          const color = getMappedColor(targetRasterId, cell.pct, colorScaleName);
           ctx.fillStyle = color;
           ctx.fillRect(
             cell.x - cell.cellW / 2,
@@ -1766,11 +1926,16 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
             ctx.font = "8px var(--font-mono, monospace)";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(`${Math.round(cell.val)}${activeLayer.id === "temperature" ? "" : activeLayer.unit}`, cell.x, cell.y);
+            ctx.fillText(`${Math.round(cell.val)}${targetRasterId === "temperature" ? "" : activeLayer.unit}`, cell.x, cell.y);
           }
         });
       }
-      } // End of activeLayer !== "none" && layerOpacity > 0
+      } // End of hasRasterLayer && targetRasterOpacity > 0
+
+      // If lightning is ordered ON TOP of raster or no raster present, render lightning now
+      if (isLightningActive && !isLightningBelowRaster) {
+        drawCanvasLightning(1.0);
+      }
 
       // 2. DRAW GIS ITEMS PLOTTED BY THE USER
       ctx.globalAlpha = 1.0;
@@ -2021,7 +2186,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [activeLayer, layerOpacity, drawings, currentLinePoints, timelineHour, selectedId, visualizationStyle, colorScaleName, minVal, maxVal, showLiveLightning, isLightningActive, isNasaCloudActive]);
+  }, [activeLayer, layerOpacity, drawings, currentLinePoints, timelineHour, selectedId, visualizationStyle, colorScaleName, minVal, maxVal, showLiveLightning, isLightningActive, isNasaCloudActive, activeLayers]);
 
   // Scientific weather color mapping helper
   const getAtmosphericColor = (layerId: string, pct: number) => {
@@ -2116,7 +2281,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
               : "bg-[#131316] border-[#2D2D30] text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
           }`}
           id="btn-map-lock"
-          title={mapLocked ? "Unlock Map Navigation (فعال‌سازی حرکت)" : "Lock Map Navigation (قفل کردن نقشه)"}
+          title={mapLocked ? "Unlock Map Navigation" : "Lock Map Navigation"}
         >
           {mapLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
         </button>
@@ -2209,7 +2374,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                   : "bg-[#131316] border-[#2D2D30] text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
             }`}
             id="btn-basemap-switcher"
-            title="انتخاب سبک نقشه پایه (Basemap Layer)"
+            title="Select Basemap Style"
           >
             <Layers className="w-4 h-4" />
           </button>
@@ -2217,22 +2382,22 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
           {showBasemapMenu && (
             <div className="absolute right-10 top-0 bg-[#0f172a]/95 backdrop-blur-md border border-slate-700/80 rounded-lg p-2 shadow-2xl z-40 w-44 flex flex-col space-y-1">
               <div className="text-[10px] font-semibold text-slate-400 px-1 py-0.5 border-b border-slate-700/50 mb-1 flex items-center justify-between">
-                <span>نقشه پایه</span>
-                <span className="text-[9px] text-emerald-400 font-mono">بدون کلید ✓</span>
+                <span>Basemap</span>
+                <span className="text-[9px] text-emerald-400 font-mono">Keyless ✓</span>
               </div>
               <button
                 onClick={() => {
                   setBasemapMode("dark_tactical");
                   setShowBasemapMenu(false);
                 }}
-                className={`flex items-center space-x-2 space-x-reverse px-2 py-1.5 rounded text-xs font-medium text-right transition ${
+                className={`flex items-center space-x-2 px-2 py-1.5 rounded text-xs font-medium text-left transition ${
                   basemapMode === "dark_tactical"
                     ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
                     : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
                 }`}
               >
                 <div className="w-3 h-3 rounded-full bg-slate-900 border border-sky-400 shrink-0" />
-                <span className="truncate">تاریک تاکتیکال (پیش‌فرض)</span>
+                <span className="truncate">Dark Tactical (Default)</span>
               </button>
 
               <button
@@ -2240,14 +2405,14 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                   setBasemapMode("satellite");
                   setShowBasemapMenu(false);
                 }}
-                className={`flex items-center space-x-2 space-x-reverse px-2 py-1.5 rounded text-xs font-medium text-right transition ${
+                className={`flex items-center space-x-2 px-2 py-1.5 rounded text-xs font-medium text-left transition ${
                   basemapMode === "satellite"
                     ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
                     : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
                 }`}
               >
                 <div className="w-3 h-3 rounded-full bg-emerald-800 border border-emerald-400 shrink-0" />
-                <span className="truncate">ماهواره‌ای واقعی</span>
+                <span className="truncate">Satellite Imagery</span>
               </button>
 
               <button
@@ -2255,14 +2420,14 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
                   setBasemapMode("ocean");
                   setShowBasemapMenu(false);
                 }}
-                className={`flex items-center space-x-2 space-x-reverse px-2 py-1.5 rounded text-xs font-medium text-right transition ${
+                className={`flex items-center space-x-2 px-2 py-1.5 rounded text-xs font-medium text-left transition ${
                   basemapMode === "ocean"
                     ? "bg-sky-500/20 text-sky-400 border border-sky-500/40"
                     : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
                 }`}
               >
                 <div className="w-3 h-3 rounded-full bg-blue-900 border border-blue-400 shrink-0" />
-                <span className="truncate">اقیانوس و توپوگرافی</span>
+                <span className="truncate">Ocean & Bathymetry</span>
               </button>
             </div>
           )}

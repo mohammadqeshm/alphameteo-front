@@ -257,7 +257,7 @@ export const DrillDownNavigation: React.FC<DrillDownNavigationProps> = ({
   );
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-[#08090C] text-slate-200 select-none overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#1a1a1a] text-slate-200 select-none overflow-hidden">
       
       {/* 1. BREADCRUMB PROGRESS BAR */}
       {!isSearchActive && (
@@ -605,7 +605,7 @@ export const DrillDownNavigation: React.FC<DrillDownNavigationProps> = ({
                         </div>
                       </div>
 
-                      <span className="text-[10px] font-mono font-bold text-slate-400 bg-[#08090C] px-2 py-0.5 rounded border border-[#1A1C23]">
+                      <span className="text-[10px] font-mono font-bold text-slate-400 bg-[#1a1a1a] px-2 py-0.5 rounded border border-[#1A1C23]">
                         {lvl.shortLabel}
                       </span>
                     </div>

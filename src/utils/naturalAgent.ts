@@ -12,128 +12,105 @@ export interface NaturalLanguageAgentResult {
 
 // Built-in high-speed geographic knowledge base for prominent cities, regions, and climate landmarks
 export const GLOBAL_LOCATIONS: Record<string, { lat: number; lon: number; name: string; country: string; zoom: number }> = {
-  // Iran - Major Metropolises & Provincial Centers
-  "مشهد": { lat: 36.2972, lon: 59.6067, name: "مشهد", country: "ایران", zoom: 9 },
+  // Middle East & Major Regional Centers
   "mashhad": { lat: 36.2972, lon: 59.6067, name: "Mashhad", country: "Iran", zoom: 9 },
-  "تهران": { lat: 35.6892, lon: 51.3890, name: "تهران", country: "ایران", zoom: 9 },
   "tehran": { lat: 35.6892, lon: 51.3890, name: "Tehran", country: "Iran", zoom: 9 },
-  "شیراز": { lat: 29.5918, lon: 52.5837, name: "شیراز", country: "ایران", zoom: 9 },
   "shiraz": { lat: 29.5918, lon: 52.5837, name: "Shiraz", country: "Iran", zoom: 9 },
-  "اصفهان": { lat: 32.6546, lon: 51.6680, name: "اصفهان", country: "ایران", zoom: 9 },
   "esfahan": { lat: 32.6546, lon: 51.6680, name: "Isfahan", country: "Iran", zoom: 9 },
   "isfahan": { lat: 32.6546, lon: 51.6680, name: "Isfahan", country: "Iran", zoom: 9 },
-  "تبریز": { lat: 38.0962, lon: 46.2731, name: "تبریز", country: "ایران", zoom: 9 },
   "tabriz": { lat: 38.0962, lon: 46.2731, name: "Tabriz", country: "Iran", zoom: 9 },
-  "اهواز": { lat: 31.3183, lon: 48.6706, name: "اهواز", country: "ایران", zoom: 9 },
   "ahvaz": { lat: 31.3183, lon: 48.6706, name: "Ahvaz", country: "Iran", zoom: 9 },
-  "کیش": { lat: 26.5325, lon: 53.9840, name: "جزیره کیش", country: "ایران", zoom: 10 },
   "kish": { lat: 26.5325, lon: 53.9840, name: "Kish Island", country: "Iran", zoom: 10 },
-  "قشم": { lat: 26.9585, lon: 56.2721, name: "جزیره قشم", country: "ایران", zoom: 10 },
-  "بندرعباس": { lat: 27.1832, lon: 56.2666, name: "بندرعباس", country: "ایران", zoom: 9 },
-  "رشت": { lat: 37.2809, lon: 49.5924, name: "رشت (گیلان)", country: "ایران", zoom: 9 },
-  "ساری": { lat: 36.5659, lon: 53.0586, name: "ساری (مازندران)", country: "ایران", zoom: 9 },
-  "گرگان": { lat: 36.8430, lon: 54.4374, name: "گرگان (گلستان)", country: "ایران", zoom: 9 },
-  "ارومیه": { lat: 37.5527, lon: 45.0761, name: "ارومیه", country: "ایران", zoom: 9 },
-  "اردبیل": { lat: 38.2498, lon: 48.2933, name: "اردبیل", country: "ایران", zoom: 9 },
-  "کرمانشاه": { lat: 34.3277, lon: 47.0778, name: "کرمانشاه", country: "ایران", zoom: 9 },
-  "سنندج": { lat: 35.3219, lon: 46.9862, name: "سنندج (کردستان)", country: "ایران", zoom: 9 },
-  "همدان": { lat: 34.7983, lon: 48.5146, name: "همدان", country: "ایران", zoom: 9 },
-  "زنجان": { lat: 36.6736, lon: 48.4787, name: "زنجان", country: "ایران", zoom: 9 },
-  "قزوین": { lat: 36.2797, lon: 50.0049, name: "قزوین", country: "ایران", zoom: 9 },
-  "کرج": { lat: 35.8327, lon: 50.9915, name: "کرج (البرز)", country: "ایران", zoom: 9 },
-  "اراک": { lat: 34.0954, lon: 49.7013, name: "اراک (مرکزی)", country: "ایران", zoom: 9 },
-  "قم": { lat: 34.6401, lon: 50.8764, name: "قم", country: "ایران", zoom: 9 },
-  "خرم‌آباد": { lat: 33.4878, lon: 48.3558, name: "خرم‌آباد (لرستان)", country: "ایران", zoom: 9 },
-  "خرم اباد": { lat: 33.4878, lon: 48.3558, name: "خرم‌آباد (لرستان)", country: "ایران", zoom: 9 },
-  "ایلام": { lat: 33.6374, lon: 46.4227, name: "ایلام", country: "ایران", zoom: 9 },
-  "شهرکرد": { lat: 32.3256, lon: 50.8644, name: "شهرکرد (چهارمحال)", country: "ایران", zoom: 9 },
-  "یاسوج": { lat: 30.6684, lon: 51.5876, name: "یاسوج (کهگیلویه)", country: "ایران", zoom: 9 },
-  "بوشهر": { lat: 28.9234, lon: 50.8203, name: "بوشهر", country: "ایران", zoom: 9 },
-  "کرمان": { lat: 30.2839, lon: 57.0834, name: "کرمان", country: "ایران", zoom: 9 },
-  "یزد": { lat: 31.8974, lon: 54.3569, name: "یزد", country: "ایران", zoom: 9 },
-  "زاهدان": { lat: 29.4963, lon: 60.8629, name: "زاهدان (سیستان و بلوچستان)", country: "ایران", zoom: 9 },
-  "چابهار": { lat: 25.2969, lon: 60.6430, name: "چابهار (دریای مکران)", country: "ایران", zoom: 9.5 },
-  "سمنان": { lat: 35.5769, lon: 53.3970, name: "سمنان", country: "ایران", zoom: 9 },
-  "بیرجند": { lat: 32.8663, lon: 59.2211, name: "بیرجند (خراسان جنوبی)", country: "ایران", zoom: 9 },
-  "بجنورد": { lat: 37.4747, lon: 57.3290, name: "بجنورد (خراسان شمالی)", country: "ایران", zoom: 9 },
-  "دهلران": { lat: 32.6941, lon: 47.2679, name: "دهلران (ایلام)", country: "ایران", zoom: 9 },
-  "شوش": { lat: 32.1942, lon: 48.2436, name: "شوش (خوزستان)", country: "ایران", zoom: 9 },
-  "دماوند": { lat: 35.7178, lon: 52.0650, name: "قله دماوند", country: "ایران", zoom: 11 },
-  "کویر لوت": { lat: 30.5000, lon: 59.1000, name: "کویر لوت (گرم‌ترین سطح زمین)", country: "ایران", zoom: 8 },
-  "گندم بریان": { lat: 31.1000, lon: 57.8000, name: "گندم بریان (کویر لوت)", country: "ایران", zoom: 9 },
-  "دشت کویر": { lat: 34.5000, lon: 54.5000, name: "دشت کویر مرکزی", country: "ایران", zoom: 7.5 },
-  "خلیج فارس": { lat: 26.5000, lon: 52.0000, name: "خلیج فارس", country: "منطقه دریایی", zoom: 6.5 },
-  "دریای خزر": { lat: 39.5000, lon: 51.5000, name: "دریای خزر (کاسپین)", country: "منطقه دریایی", zoom: 6 },
-  "دریای عمان": { lat: 24.5000, lon: 59.0000, name: "دریای عمان", country: "اقیانوس هند", zoom: 6.5 },
+  "qeshm": { lat: 26.9585, lon: 56.2721, name: "Qeshm Island", country: "Iran", zoom: 10 },
+  "bandar abbas": { lat: 27.1832, lon: 56.2666, name: "Bandar Abbas", country: "Iran", zoom: 9 },
+  "rasht": { lat: 37.2809, lon: 49.5924, name: "Rasht", country: "Iran", zoom: 9 },
+  "sari": { lat: 36.5659, lon: 53.0586, name: "Sari", country: "Iran", zoom: 9 },
+  "gorgan": { lat: 36.8430, lon: 54.4374, name: "Gorgan", country: "Iran", zoom: 9 },
+  "urmia": { lat: 37.5527, lon: 45.0761, name: "Urmia", country: "Iran", zoom: 9 },
+  "ardabil": { lat: 38.2498, lon: 48.2933, name: "Ardabil", country: "Iran", zoom: 9 },
+  "kermanshah": { lat: 34.3277, lon: 47.0778, name: "Kermanshah", country: "Iran", zoom: 9 },
+  "sanandaj": { lat: 35.3219, lon: 46.9862, name: "Sanandaj", country: "Iran", zoom: 9 },
+  "hamedan": { lat: 34.7983, lon: 48.5146, name: "Hamedan", country: "Iran", zoom: 9 },
+  "zanjan": { lat: 36.6736, lon: 48.4787, name: "Zanjan", country: "Iran", zoom: 9 },
+  "qazvin": { lat: 36.2797, lon: 50.0049, name: "Qazvin", country: "Iran", zoom: 9 },
+  "karaj": { lat: 35.8327, lon: 50.9915, name: "Karaj", country: "Iran", zoom: 9 },
+  "arak": { lat: 34.0954, lon: 49.7013, name: "Arak", country: "Iran", zoom: 9 },
+  "qom": { lat: 34.6401, lon: 50.8764, name: "Qom", country: "Iran", zoom: 9 },
+  "khorramabad": { lat: 33.4878, lon: 48.3558, name: "Khorramabad", country: "Iran", zoom: 9 },
+  "ilam": { lat: 33.6374, lon: 46.4227, name: "Ilam", country: "Iran", zoom: 9 },
+  "shahrekord": { lat: 32.3256, lon: 50.8644, name: "Shahrekord", country: "Iran", zoom: 9 },
+  "yasuj": { lat: 30.6684, lon: 51.5876, name: "Yasuj", country: "Iran", zoom: 9 },
+  "bushehr": { lat: 28.9234, lon: 50.8203, name: "Bushehr", country: "Iran", zoom: 9 },
+  "kerman": { lat: 30.2839, lon: 57.0834, name: "Kerman", country: "Iran", zoom: 9 },
+  "yazd": { lat: 31.8974, lon: 54.3569, name: "Yazd", country: "Iran", zoom: 9 },
+  "zahedan": { lat: 29.4963, lon: 60.8629, name: "Zahedan", country: "Iran", zoom: 9 },
+  "chabahar": { lat: 25.2969, lon: 60.6430, name: "Chabahar", country: "Iran", zoom: 9.5 },
+  "semnan": { lat: 35.5769, lon: 53.3970, name: "Semnan", country: "Iran", zoom: 9 },
+  "birjand": { lat: 32.8663, lon: 59.2211, name: "Birjand", country: "Iran", zoom: 9 },
+  "bojnurd": { lat: 37.4747, lon: 57.3290, name: "Bojnurd", country: "Iran", zoom: 9 },
+  "dehloran": { lat: 32.6941, lon: 47.2679, name: "Dehloran", country: "Iran", zoom: 9 },
+  "shush": { lat: 32.1942, lon: 48.2436, name: "Shush", country: "Iran", zoom: 9 },
+  "damavand": { lat: 35.7178, lon: 52.0650, name: "Mount Damavand", country: "Iran", zoom: 11 },
+  "lut desert": { lat: 30.5000, lon: 59.1000, name: "Lut Desert (Hottest Land Surface)", country: "Iran", zoom: 8 },
+  "gandom beryan": { lat: 31.1000, lon: 57.8000, name: "Gandom Beryan (Lut Desert)", country: "Iran", zoom: 9 },
+  "dasht-e kavir": { lat: 34.5000, lon: 54.5000, name: "Dasht-e Kavir", country: "Iran", zoom: 7.5 },
+  "persian gulf": { lat: 26.5000, lon: 52.0000, name: "Persian Gulf", country: "Marine Sector", zoom: 6.5 },
+  "caspian sea": { lat: 39.5000, lon: 51.5000, name: "Caspian Sea", country: "Marine Sector", zoom: 6 },
+  "gulf of oman": { lat: 24.5000, lon: 59.0000, name: "Gulf of Oman", country: "Indian Ocean", zoom: 6.5 },
 
   // Climate Extremes & World Metropolises
-  "آتاکاما": { lat: -24.5000, lon: -69.2500, name: "صحرای آتاکاما (خشک‌ترین بیابان غیرقطبی جهان)", country: "شیلی", zoom: 7.5 },
   "atacama": { lat: -24.5000, lon: -69.2500, name: "Atacama Desert", country: "Chile", zoom: 7.5 },
-  "آریکا": { lat: -18.4783, lon: -70.3126, name: "شهر آریکا (خشک‌ترین شهر و منطقه مسکونی جهان)", country: "شیلی", zoom: 9 },
   "arica": { lat: -18.4783, lon: -70.3126, name: "Arica", country: "Chile", zoom: 9 },
-  "دره های خشک مک موردو": { lat: -77.5000, lon: 162.5000, name: "دره‌های خشک مک‌موردو (خشک‌ترین و بی‌باران‌ترین نقطه زمین)", country: "جنوبگان", zoom: 6 },
-  "مک موردو": { lat: -77.5000, lon: 162.5000, name: "دره‌های خشک مک‌موردو", country: "جنوبگان", zoom: 6 },
-  "دره مرگ": { lat: 36.5323, lon: -116.9325, name: "دره مرگ (Furnace Creek, Death Valley)", country: "ایالات متحده", zoom: 8.5 },
+  "mcmurdo dry valleys": { lat: -77.5000, lon: 162.5000, name: "McMurdo Dry Valleys", country: "Antarctica", zoom: 6 },
+  "mcmurdo": { lat: -77.5000, lon: 162.5000, name: "McMurdo Dry Valleys", country: "Antarctica", zoom: 6 },
   "death valley": { lat: 36.5323, lon: -116.9325, name: "Death Valley", country: "USA", zoom: 8.5 },
-  "وستوک": { lat: -78.4644, lon: 106.8373, name: "ایستگاه وستوک (سردترین نقطه کره زمین)", country: "جنوبگان", zoom: 5 },
-  "اویمیاکون": { lat: 63.4641, lon: 142.7737, name: "اویمیاکون (سردترین نقطه مسکونی کره زمین)", country: "روسیه (سیبری)", zoom: 8 },
-  "لندن": { lat: 51.5074, lon: -0.1278, name: "لندن", country: "بریتانیا", zoom: 9 },
+  "vostok": { lat: -78.4644, lon: 106.8373, name: "Vostok Station", country: "Antarctica", zoom: 5 },
+  "oymyakon": { lat: 63.4641, lon: 142.7737, name: "Oymyakon", country: "Russia (Siberia)", zoom: 8 },
   "london": { lat: 51.5074, lon: -0.1278, name: "London", country: "UK", zoom: 9 },
-  "پاریس": { lat: 48.8566, lon: 2.3522, name: "پاریس", country: "فرانسه", zoom: 9 },
   "paris": { lat: 48.8566, lon: 2.3522, name: "Paris", country: "France", zoom: 9 },
-  "نیویورک": { lat: 40.7128, lon: -74.0060, name: "نیویورک", country: "ایالات متحده", zoom: 9 },
   "new york": { lat: 40.7128, lon: -74.0060, name: "New York", country: "USA", zoom: 9 },
-  "واشنگتن": { lat: 38.9072, lon: -77.0369, name: "واشنگتن دی‌سی", country: "آمریکا", zoom: 9 },
-  "لس آنجلس": { lat: 34.0522, lon: -118.2437, name: "لس آنجلس", country: "آمریکا", zoom: 9 },
-  "توکیو": { lat: 35.6762, lon: 139.6503, name: "توکیو", country: "ژاپن", zoom: 9 },
+  "washington": { lat: 38.9072, lon: -77.0369, name: "Washington, D.C.", country: "USA", zoom: 9 },
+  "los angeles": { lat: 34.0522, lon: -118.2437, name: "Los Angeles", country: "USA", zoom: 9 },
   "tokyo": { lat: 35.6762, lon: 139.6503, name: "Tokyo", country: "Japan", zoom: 9 },
-  "دبی": { lat: 25.2048, lon: 55.2708, name: "دبی", country: "امارات متحده عربی", zoom: 9 },
   "dubai": { lat: 25.2048, lon: 55.2708, name: "Dubai", country: "UAE", zoom: 9 },
-  "ابوظبی": { lat: 24.4539, lon: 54.3773, name: "ابوظبی", country: "امارات", zoom: 9 },
-  "دوحه": { lat: 25.2854, lon: 51.5310, name: "دوحه", country: "قطر", zoom: 9 },
-  "ریاض": { lat: 24.7136, lon: 46.6753, name: "ریاض", country: "عربستان", zoom: 9 },
-  "مکه": { lat: 21.3891, lon: 39.8579, name: "مکه مکرمه", country: "عربستان", zoom: 9.5 },
-  "مدینه": { lat: 24.5247, lon: 39.5692, name: "مدینه منوره", country: "عربستان", zoom: 9.5 },
-  "استانبول": { lat: 41.0082, lon: 28.9784, name: "استانبول", country: "ترکیه", zoom: 9 },
+  "abu dhabi": { lat: 24.4539, lon: 54.3773, name: "Abu Dhabi", country: "UAE", zoom: 9 },
+  "doha": { lat: 25.2854, lon: 51.5310, name: "Doha", country: "Qatar", zoom: 9 },
+  "riyadh": { lat: 24.7136, lon: 46.6753, name: "Riyadh", country: "Saudi Arabia", zoom: 9 },
+  "mecca": { lat: 21.3891, lon: 39.8579, name: "Mecca", country: "Saudi Arabia", zoom: 9.5 },
+  "medina": { lat: 24.5247, lon: 39.5692, name: "Medina", country: "Saudi Arabia", zoom: 9.5 },
   "istanbul": { lat: 41.0082, lon: 28.9784, name: "Istanbul", country: "Turkey", zoom: 9 },
-  "آنکارا": { lat: 39.9334, lon: 32.8597, name: "آنکارا", country: "ترکیه", zoom: 9 },
-  "بغداد": { lat: 33.3152, lon: 44.3661, name: "بغداد", country: "عراق", zoom: 9 },
-  "بصره": { lat: 30.5085, lon: 47.7804, name: "بصره", country: "عراق", zoom: 9 },
-  "نجف": { lat: 31.9961, lon: 44.3298, name: "نجف اشرف", country: "عراق", zoom: 9 },
-  "کربلا": { lat: 32.6160, lon: 44.0249, name: "کربلای معلی", country: "عراق", zoom: 9 },
-  "مسکو": { lat: 55.7558, lon: 37.6173, name: "مسکو", country: "روسیه", zoom: 9 },
-  "سیدنی": { lat: -33.8688, lon: 151.2093, name: "سیدنی", country: "استرالیا", zoom: 9 },
-  "قاهره": { lat: 30.0444, lon: 31.2357, name: "قاهره", country: "مصر", zoom: 9 },
-  "پکن": { lat: 39.9042, lon: 116.4074, name: "پکن", country: "چین", zoom: 9 },
-  "شانگهای": { lat: 31.2304, lon: 121.4737, name: "شانگهای", country: "چین", zoom: 9 },
-  "برلین": { lat: 52.5200, lon: 13.4050, name: "برلین", country: "آلمان", zoom: 9 },
-  "رم": { lat: 41.9028, lon: 12.4964, name: "رم", country: "ایتالیا", zoom: 9 },
-  "مادرید": { lat: 40.4168, lon: -3.7038, name: "مادرید", country: "اسپانیا", zoom: 9 },
-  "آمستردام": { lat: 52.3676, lon: 4.9041, name: "آمستردام", country: "هلند", zoom: 9 },
-  "قطب جنوب": { lat: -82.8628, lon: 135.0000, name: "قطب جنوب (ایستگاه وستوک)", country: "جنوبگان", zoom: 4 },
-  "قطب شمال": { lat: 85.0000, lon: 0.0000, name: "اقیانوس منجمد شمالی", country: "قطب شمال", zoom: 4 },
+  "ankara": { lat: 39.9334, lon: 32.8597, name: "Ankara", country: "Turkey", zoom: 9 },
+  "baghdad": { lat: 33.3152, lon: 44.3661, name: "Baghdad", country: "Iraq", zoom: 9 },
+  "basra": { lat: 30.5085, lon: 47.7804, name: "Basra", country: "Iraq", zoom: 9 },
+  "najaf": { lat: 31.9961, lon: 44.3298, name: "Najaf", country: "Iraq", zoom: 9 },
+  "karbala": { lat: 32.6160, lon: 44.0249, name: "Karbala", country: "Iraq", zoom: 9 },
+  "moscow": { lat: 55.7558, lon: 37.6173, name: "Moscow", country: "Russia", zoom: 9 },
+  "sydney": { lat: -33.8688, lon: 151.2093, name: "Sydney", country: "Australia", zoom: 9 },
+  "cairo": { lat: 30.0444, lon: 31.2357, name: "Cairo", country: "Egypt", zoom: 9 },
+  "beijing": { lat: 39.9042, lon: 116.4074, name: "Beijing", country: "China", zoom: 9 },
+  "shanghai": { lat: 31.2304, lon: 121.4737, name: "Shanghai", country: "China", zoom: 9 },
+  "berlin": { lat: 52.5200, lon: 13.4050, name: "Berlin", country: "Germany", zoom: 9 },
+  "rome": { lat: 41.9028, lon: 12.4964, name: "Rome", country: "Italy", zoom: 9 },
+  "madrid": { lat: 40.4168, lon: -3.7038, name: "Madrid", country: "Spain", zoom: 9 },
+  "amsterdam": { lat: 52.3676, lon: 4.9041, name: "Amsterdam", country: "Netherlands", zoom: 9 },
+  "south pole": { lat: -82.8628, lon: 135.0000, name: "South Pole (Vostok Region)", country: "Antarctica", zoom: 4 },
+  "north pole": { lat: 85.0000, lon: 0.0000, name: "Arctic Ocean", country: "North Pole", zoom: 4 },
 };
 
-// Safe word-boundary match helper to prevent partial substring collisions (e.g. preventing "مسکونی" matching "مسکو")
+// Safe word-boundary match helper to prevent partial substring collisions
 function matchesExactLocationName(text: string, locationKey: string): boolean {
   const cleanKey = locationKey.trim().toLowerCase();
   if (cleanKey.length < 2) return false;
 
-  // For Latin characters
-  if (/^[a-z0-9\s]+$/i.test(cleanKey)) {
-    const regex = new RegExp(`(?:^|[\\s,،.?!-])${cleanKey}(?:$|[\\s,،.?!-])`, "i");
-    return regex.test(text);
-  }
-
-  // For Persian/Arabic characters, match as discrete token or preceded/followed by punctuation/space
-  const regex = new RegExp(`(?:^|[\\s,،.؟!؛:()«»"\\[\\]])${cleanKey}(?:$|[\\s,،.؟!؛:()«»"\\[\\]])`);
+  const escapedKey = cleanKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(?:^|[\\s,.?!;:\\-()"])${escapedKey}(?:$|[\\s,.?!;:\\-()"])`, "i");
   return regex.test(text);
 }
 
 // Async geocoder for any unknown city or location worldwide
 export async function lookupLocationWorldwide(query: string): Promise<{ lat: number; lon: number; name: string; country: string; zoom: number } | null> {
   const clean = query.trim().toLowerCase();
-  
+
   // 1. Check local catalog first with strict exact token matching
   for (const [key, loc] of Object.entries(GLOBAL_LOCATIONS)) {
     if (matchesExactLocationName(clean, key) || clean === key) {
@@ -179,69 +156,69 @@ export async function processClientAgentFallbackAsync(
   let targetLocation: { lat: number; lon: number; name: string; country: string; zoom: number } | null = null;
   let factualAnswer = "";
 
-  // CASE A: Driest Inhabited City or Driest Place on Earth (آتاکاما / آریکا / مک‌موردو)
-  if (lower.includes("خشک") || lower.includes("کم بارش") || lower.includes("بی باران") || lower.includes("کم‌باران") || lower.includes("driest")) {
-    if (lower.includes("مسکونی") || lower.includes("شهر") || lower.includes("شهرها") || lower.includes("inhabited") || lower.includes("زندگی")) {
-      targetLocation = GLOBAL_LOCATIONS["آریکا"];
-      factualAnswer = `### 🏜️ خشک‌ترین نقطه و منطقه مسکونی در جهان:
+  // CASE A: Driest Inhabited City or Driest Place on Earth
+  if (lower.includes("driest") || lower.includes("least rain") || lower.includes("arid")) {
+    if (lower.includes("inhabited") || lower.includes("city") || lower.includes("cities") || lower.includes("populated")) {
+      targetLocation = GLOBAL_LOCATIONS["arica"];
+      factualAnswer = `### 🏜️ Driest Inhabited City & Place on Earth:
 
-۱. **خشک‌ترین شهر و منطقه مسکونی جهان:**
-   - **شهر آریکا (Arica) در کشور شیلی:** شهر بندری آریکا در حاشیه صحرای آتاکاما به عنوان **خشک‌ترین شهر مسکونی روی کره زمین** ثبت شده است. میانگین بارش سالانه در این شهر تنها **۰.۷۶ میلی‌متر** است و در برهه‌هایی از تاریخ بیش از ۱۴ سال (۱۷۳ ماه متوالی) حتی یک قطره باران در آن نباریده است!
+1. **Driest Inhabited City on Earth:**
+   - **Arica, Chile:** Located along the edge of the Atacama Desert, Arica holds the record as the **driest permanently inhabited city on Earth**, with an average annual rainfall of just **0.76 mm** and historical stretches exceeding 14 years (173 consecutive months) without measurable rain.
 
-۲. **خشک‌ترین بیابان غیرقطبی جهان:**
-   - **صحرای آتاکاما (Atacama Desert - شیلی):** بخش‌های مرکزی این صحرا آنچنان خشک و خالی از رطوبت هستند که دانشمندان ناسا خاک آن را برای شبیه‌سازی شرایط سیاره مریخ آزمایش می‌کنند. برخی ایستگاه‌های هواشناسی در این صحرا هرگز بارندگی ثبت نکرده‌اند.
+2. **Driest Non-Polar Desert:**
+   - **Atacama Desert (Chile):** Parts of the hyper-arid core are so devoid of moisture that NASA uses its soils as an analog for Mars exploration.
 
-۳. **خشک‌ترین نقطه کل کره زمین (بدون سکونت):**
-   - **دره‌های خشک مک‌موردو (McMurdo Dry Valleys) در قاره جنوبگان:** با رطوبت نزدیک به صفر و بادهای کاتاباتیک شدید (تا ۳۲۰ کیلومتر در ساعت)، در این منطقه به مدت حدود **۲ میلیون سال** هیچ بارشی رخ نداده است.`;
+3. **Driest Place Overall (Uninhabited):**
+   - **McMurdo Dry Valleys (Antarctica):** With near-zero humidity and fierce katabatic winds (up to 320 km/h), this polar desert has seen virtually no precipitation for roughly **2 million years**.`;
     } else {
-      targetLocation = GLOBAL_LOCATIONS["آتاکاما"];
-      factualAnswer = `### 🏜️ خشک‌ترین مناطق کره زمین:
+      targetLocation = GLOBAL_LOCATIONS["atacama"];
+      factualAnswer = `### 🏜️ Driest Regions on Earth:
 
-۱. **خشک‌ترین نقطه کره زمین (قطبی):**
-   - **دره‌های خشک مک‌موردو (جنوبگان):** خشک‌ترین و کم‌رطوبت‌ترین منطقه روی زمین که بیش از ۲ میلیون سال است در آن بارشی رخ نداده است.
+1. **Driest Place on Earth (Polar):**
+   - **McMurdo Dry Valleys (Antarctica):** The lowest-humidity and driest environment on Earth, essentially ice-free and rain-free for ~2 million years.
 
-۲. **خشک‌ترین منطقه غیرقطبی و مسکونی جهان:**
-   - **صحرای آتاکاما و شهر آریکا (شیلی):** با میانگین بارش سالانه کمتر از ۱ میلی‌متر در سال. شهر **آریکا (Arica)** در شیلی کم‌باران‌ترین نقطه مسکونی زمین به شمار می‌آید.
+2. **Driest Non-Polar & Inhabited Region:**
+   - **Atacama Desert & Arica (Chile):** Averaging under 1 mm of precipitation annually; **Arica** is the driest inhabited city globally.
 
-۳. **خشک‌ترین مناطق ایران:**
-   - **دشت کویر و کویر لوت:** با میانگین بارش کمتر از ۲۵ تا ۵۰ میلی‌متر در سال، خشک‌ترین اقلیم‌های فلات ایران هستند.`;
+3. **Hyper-Arid Eurasian Basins:**
+   - **Dasht-e Kavir & Lut Desert (Iran):** Hyper-arid basins averaging under 25–50 mm of annual rainfall.`;
     }
   }
 
-  // CASE B: Hottest Point in Iran or World (کویر لوت / اهواز / دره مرگ)
-  else if (lower.includes("گرمترین") || lower.includes("گرم‌ترین") || lower.includes("داغ‌ترین") || lower.includes("بیشترین دما") || lower.includes("hottest")) {
-    if (lower.includes("ایران") || lower.includes("کشور")) {
-      targetLocation = GLOBAL_LOCATIONS["کویر لوت"];
-      factualAnswer = `### 🌡️ گرم‌ترین نقطه ایران و بیشترین دمای ثبت‌شده:
+  // CASE B: Hottest Point
+  else if (lower.includes("hottest") || lower.includes("warmest") || lower.includes("highest temp") || lower.includes("heat record")) {
+    if (lower.includes("iran") || lower.includes("surface")) {
+      targetLocation = GLOBAL_LOCATIONS["lut desert"];
+      factualAnswer = `### 🌡️ Highest Land Surface & Regional Temperature Records:
 
-۱. **رکورد دمای سطح زمین (ماهواره‌ای ناسا):**
-   - **کویر لوت (گندم‌بریان و ریگ یلان):** بر اساس سنجش رادیومتری ماهواره‌های Aqua و Terra ناسا، دمای تابشی سطح زمین در کویر لوت به **۸۰.۸ درجه سانتی‌گراد (۱۷۷.۴°F)** رسید که داغ‌ترین رکورد پوسته زمین در کل کره خاکی است.
+1. **Satellite Land Surface Temperature (NASA MODIS):**
+   - **Lut Desert (Gandom Beryan / Rig-e Yalan, Iran):** Radiometric measurements from NASA Aqua and Terra satellites recorded a land surface temperature of **80.8 °C (177.4 °F)**, tied for the hottest planetary crust reading observed.
 
-۲. **رکورد دمای هوای ایستگاهی (دماسنج سینوپتیک استاندارد):**
-   - **اهواز و شوش (خوزستان) و دهلران (ایلام):** در تیرماه ۱۳۹۶ (ژوئن ۲۰۱۷)، ایستگاه هواشناسی رسمی اهواز دمای **۵۴.۰ درجه سانتی‌گراد** را ثبت کرد که بالاترین دمای رسمی ثبت‌شده هوا در تاریخ ایران و آسیا است.`;
+2. **Standard Synoptic Air Temperature (WMO Shelter):**
+   - **Ahvaz, Shush & Dehloran (SW Iran):** In June 2017, the official synoptic station in Ahvaz recorded **54.0 °C**, among the highest reliably measured air temperatures in Asia.`;
     } else {
-      targetLocation = GLOBAL_LOCATIONS["دره مرگ"];
-      factualAnswer = `### 🌍 داغ‌ترین نقاط جهان:
+      targetLocation = GLOBAL_LOCATIONS["death valley"];
+      factualAnswer = `### 🌍 Hottest Locations on Earth:
 
-۱. **دره مرگ (Furnace Creek, Death Valley - کالیفرنیا، آمریکا):** دارای بالاترین دمای ثبت‌شده هوای دماسنجی استاندارد با **۵۴.۰ تا ۵۶.۷ درجه سانتی‌گراد**.
-۲. **کویر لوت (ایران):** با ثبت دمای سطحی **۸۰.۸ درجه سانتی‌گراد** توسط ماهواره‌های ناسا، داغ‌ترین پوسته خاکی سیاره زمین است.
-۳. **مطربه (کویت) و بصره (عراق):** با دمای ۵۳.۹ درجه سانتی‌گراد از داغ‌ترین شهرهای مسکونی جهان محسوب می‌شوند.`;
+1. **Death Valley (Furnace Creek, California, USA):** Holds the highest officially verified WMO shelter air temperature at **54.0–56.7 °C**.
+2. **Lut Desert (Iran):** Holds the satellite-derived land surface skin temperature record at **80.8 °C** via NASA Aqua/Terra radiometers.
+3. **Mitribah (Kuwait) & Basra (Iraq):** Frequently record extreme summer air temperatures up to **53.9 °C**.`;
     }
   }
 
-  // CASE C: Coldest Point in Iran or World (وستوک / اویمیاکون / سقز / اردبیل)
-  else if (lower.includes("سردترین") || lower.includes("خنک‌ترین") || lower.includes("کمترین دما") || lower.includes("coldest")) {
-    if (lower.includes("مسکونی") || lower.includes("شهر")) {
-      targetLocation = GLOBAL_LOCATIONS["اویمیاکون"];
-      factualAnswer = `### ❄️ سردترین نقطه مسکونی جهان:
+  // CASE C: Coldest Point
+  else if (lower.includes("coldest") || lower.includes("lowest temp") || lower.includes("freezing record")) {
+    if (lower.includes("inhabited") || lower.includes("city") || lower.includes("village")) {
+      targetLocation = GLOBAL_LOCATIONS["oymyakon"];
+      factualAnswer = `### ❄️ Coldest Permanently Inhabited Place on Earth:
 
-- **روستای اویمیاکون (Oymyakon) در سیبری روسیه:** به عنوان سردترین مکان مسکونی دائم روی زمین شناخته می‌شود که دمای رسمی **۶۷.۷- درجه سانتی‌گراد (۹۰- درجه فارنهایت)** را در سال ۱۹۳۳ به ثبت رساند. میانگین دمای ماه ژانویه در این منطقه حدود ۵۰- درجه سانتی‌گراد است.`;
+- **Oymyakon (Sakha Republic, Siberia, Russia):** Known as the coldest permanently inhabited settlement on Earth, recording an official **-67.7 °C (-90 °F)** in 1933, with January daily averages near **-50 °C**.`;
     } else {
-      targetLocation = GLOBAL_LOCATIONS["وستوک"];
-      factualAnswer = `### ❄️ سردترین نقاط کره زمین:
+      targetLocation = GLOBAL_LOCATIONS["vostok"];
+      factualAnswer = `### ❄️ Coldest Places on Earth:
 
-۱. **ایستگاه وستوک (Vostok Station - جنوبگان):** سردترین دمای ثبت‌شده طبیعی بر روی کره زمین به میزان **۸۹.۲- درجه سانتی‌گراد (۱۲۸.۶- درجه فارنهایت)** در ۲۱ ژوئیه ۱۹۸۳ در این ایستگاه ثبت شد.
-۲. **اویمیاکون (سیبری، روسیه):** با ۶۷.۷- درجه سانتی‌گراد سردترین نقطه مسکونی جهان است.`;
+1. **Vostok Station (Antarctica):** Recorded the lowest natural surface air temperature ever observed on Earth at **-89.2 °C (-128.6 °F)** on July 21, 1983.
+2. **Oymyakon (Siberia, Russia):** Coldest permanently inhabited settlement at **-67.7 °C**.`;
     }
   }
 
@@ -258,14 +235,14 @@ export async function processClientAgentFallbackAsync(
   // STEP 3: PATTERN EXTRACTION FOR EXPLICIT NAVIGATION COMMANDS
   if (!targetLocation) {
     const locationPatterns = [
-      /(?:برو|زوم کن|ببر|برو به|بریم|انتقال بده|حرکت کن|نمایش بده|نشون بده|fly to|go to|zoom to|show)\s+(?:به|روی|رو|سمت)?\s*([\u0600-\u06FF\w\s]+)/i,
-      /([\u0600-\u06FF\w\s]+)\s+(?:رو بیار|رو نشون بده|رو زوم کن|کجاست)/i
+      /(?:fly to|go to|zoom to|zoom in on|show|focus on|pan to|move to)\s+([a-z0-9\s,.-]+)/i,
+      /where is\s+([a-z0-9\s,.-]+)/i
     ];
 
     for (const pattern of locationPatterns) {
       const match = text.match(pattern);
       if (match && match[1]) {
-        const candidate = match[1].replace(/رو|روی|نقشه|شهر|کشور|منطقه|زوم|لطفا|مدل|لایه|ابر|بارش|باد|دما|گرمترین|خشکترین|نقطه/g, "").trim();
+        const candidate = match[1].replace(/\b(on the map|map|city|country|region|zoom|please|model|layer|cloud|precip|wind|temp)\b/gi, "").trim();
         if (candidate.length >= 2) {
           targetLocation = await lookupLocationWorldwide(candidate);
           if (targetLocation) break;
@@ -284,73 +261,76 @@ export async function processClientAgentFallbackAsync(
         locationName: `${targetLocation.name} (${targetLocation.country})`,
         zoomLevel: targetLocation.zoom || 8.5
       },
-      summary: `انتقال و زوم نقشه به ${targetLocation.name} (${targetLocation.country})`
+      summary: `Fly & zoom map to ${targetLocation.name} (${targetLocation.country})`
     });
-    actionConfirmations.push(`🗺️ با موفقیت بر روی **${targetLocation.name} (${targetLocation.country})** در مختصات (${targetLocation.lat.toFixed(2)}°, ${targetLocation.lon.toFixed(2)}°) زوم شد.`);
+    actionConfirmations.push(`🗺️ Centered and zoomed map to **${targetLocation.name} (${targetLocation.country})** at (${targetLocation.lat.toFixed(2)}°, ${targetLocation.lon.toFixed(2)}°).`);
   }
 
   // ----------------------------------------------------
   // STEP 4: WEATHER MODEL & LAYER INTENT PARSING
   // ----------------------------------------------------
-  const isGFS = lower.includes("gfs") || lower.includes("جی اف اس");
-  const isECMWF = lower.includes("ecmwf") || lower.includes("ای سی ام");
-  const isICON = lower.includes("icon") || lower.includes("آیکون");
+  const isGFS = lower.includes("gfs");
+  const isECMWF = lower.includes("ecmwf");
+  const isICON = lower.includes("icon");
   const selectedSourceId = isGFS ? "gfs_025" : isECMWF ? "ecmwf_ifs" : isICON ? "icon_global" : "gfs_025";
   const selectedSourceName = isGFS ? "NOAA GFS 0.25°" : isECMWF ? "ECMWF IFS 0.1°" : isICON ? "DWD ICON" : "NOAA GFS 0.25°";
 
-  if (lower.includes("دما") || lower.includes("temperature") || lower.includes("حرارت") || lower.includes("گرما")) {
+  if (lower.includes("temp") || lower.includes("temperature") || lower.includes("thermal") || lower.includes("heat")) {
     actions.push({
       name: "configureCatalogLayer",
       args: { sourceId: selectedSourceId, variableId: "temp_2m", levelId: "2m", opacity: 85, paletteId: "thermal" },
-      summary: `فعال‌سازی لایه دمای ۲ متری مدل ${selectedSourceName}`
+      summary: `Activate ${selectedSourceName} 2m Temperature layer`
     });
-    actionConfirmations.push(`🌡️ لایه دمای ۲ متری مدل **${selectedSourceName}** فعال گردید.`);
-  } else if (lower.includes("ابر") || lower.includes("cloud") || lower.includes("ابری")) {
+    actionConfirmations.push(`🌡️ Enabled **${selectedSourceName}** 2-meter temperature layer.`);
+  } else if (lower.includes("cloud")) {
     actions.push({
       name: "configureCatalogLayer",
       args: { sourceId: selectedSourceId, variableId: "cloud_total", levelId: "column", opacity: 85, paletteId: "neutral" },
-      summary: `فعال‌سازی لایه پوشش ابر مدل ${selectedSourceName}`
+      summary: `Activate ${selectedSourceName} Total Cloud Cover layer`
     });
-    actionConfirmations.push(`☁️ لایه پوشش کلی ابر از مدل **${selectedSourceName}** فعال شد.`);
-  } else if (lower.includes("باد") || lower.includes("wind") || lower.includes("توفان")) {
+    actionConfirmations.push(`☁️ Enabled **${selectedSourceName}** total cloud cover layer.`);
+  } else if (lower.includes("wind") || lower.includes("storm") || lower.includes("gust")) {
     actions.push({
       name: "configureCatalogLayer",
       args: { sourceId: selectedSourceId, variableId: "wind_10m", levelId: "10m", opacity: 85, paletteId: "wind" },
-      summary: `فعال‌سازی لایه بردار و جریان باد مدل ${selectedSourceName}`
+      summary: `Activate ${selectedSourceName} 10m Wind Streamlines layer`
     });
-    actionConfirmations.push(`💨 لایه خطوط جریان و سرعت باد از مدل **${selectedSourceName}** فعال گردید.`);
-  } else if (lower.includes("بارش") || lower.includes("باران") || lower.includes("precipitation") || lower.includes("rain")) {
+    actionConfirmations.push(`💨 Enabled **${selectedSourceName}** wind vector & streamlines layer.`);
+  } else if (lower.includes("precip") || lower.includes("rain")) {
     actions.push({
       name: "configureCatalogLayer",
       args: { sourceId: selectedSourceId, variableId: "precip_total", levelId: "surface", opacity: 85, paletteId: "precipitation" },
-      summary: `فعال‌سازی لایه بارش مدل ${selectedSourceName}`
+      summary: `Activate ${selectedSourceName} Precipitation layer`
     });
-    actionConfirmations.push(`🌧️ لایه شدت بارندگی از مدل **${selectedSourceName}** بر روی نقشه فعال شد.`);
+    actionConfirmations.push(`🌧️ Enabled **${selectedSourceName}** precipitation intensity layer.`);
   }
 
   // ----------------------------------------------------
   // STEP 5: TIMELINE STEP PARSING
   // ----------------------------------------------------
-  const dayMatch = text.match(/روز\s*(اول|دوم|سوم|چهارم|پنجم|ششم|هفتم|هشتم|نهم|دهم|۱|۲|۳|۴|۵|۶|۷|۸|۹|۱۰|\d+)/);
+  const dayMatch = lower.match(/day\s*(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|\d+)/i);
   if (dayMatch && dayMatch[1]) {
-    const dayStr = dayMatch[1];
+    const dayStr = dayMatch[1].toLowerCase();
     let dayNum = 1;
-    if (dayStr === "اول" || dayStr === "1" || dayStr === "۱") dayNum = 1;
-    else if (dayStr === "دوم" || dayStr === "2" || dayStr === "۲") dayNum = 2;
-    else if (dayStr === "سوم" || dayStr === "3" || dayStr === "۳") dayNum = 3;
-    else if (dayStr === "چهارم" || dayStr === "4" || dayStr === "۴") dayNum = 4;
-    else if (dayStr === "پنجم" || dayStr === "5" || dayStr === "۵") dayNum = 5;
-    else if (dayStr === "ششم" || dayStr === "6" || dayStr === "۶") dayNum = 6;
-    else if (dayStr === "هفتم" || dayStr === "7" || dayStr === "۷") dayNum = 7;
-    else if (!isNaN(parseInt(dayStr))) dayNum = parseInt(dayStr);
+    if (dayStr === "first" || dayStr === "1") dayNum = 1;
+    else if (dayStr === "second" || dayStr === "2") dayNum = 2;
+    else if (dayStr === "third" || dayStr === "3") dayNum = 3;
+    else if (dayStr === "fourth" || dayStr === "4") dayNum = 4;
+    else if (dayStr === "fifth" || dayStr === "5") dayNum = 5;
+    else if (dayStr === "sixth" || dayStr === "6") dayNum = 6;
+    else if (dayStr === "seventh" || dayStr === "7") dayNum = 7;
+    else if (dayStr === "eighth" || dayStr === "8") dayNum = 8;
+    else if (dayStr === "ninth" || dayStr === "9") dayNum = 9;
+    else if (dayStr === "tenth" || dayStr === "10") dayNum = 10;
+    else if (!isNaN(parseInt(dayStr, 10))) dayNum = parseInt(dayStr, 10);
 
     const targetHour = (dayNum - 1) * 24 + 12;
     actions.push({
       name: "setTimelineForecastHour",
       args: { hour: targetHour, autoPlay: false },
-      summary: `انتقال تایم‌لاین به پیش‌بینی روز ${dayStr} (+${targetHour}h)`
+      summary: `Jump timeline to Day ${dayNum} (+${targetHour}h)`
     });
-    actionConfirmations.push(`⏱️ نوار زمانی به **روز ${dayStr} (+${targetHour} ساعت)** منتقل شد.`);
+    actionConfirmations.push(`⏱️ Moved forecast timeline to **Day ${dayNum} (+${targetHour}h)**.`);
   }
 
   // Build final structured response
@@ -358,19 +338,19 @@ export async function processClientAgentFallbackAsync(
   if (factualAnswer) {
     finalReply += factualAnswer;
     if (actionConfirmations.length > 0) {
-      finalReply += `\n\n---\n### ✅ اقدامات اجراشده روی سامانه:\n` + actionConfirmations.map(c => `- ${c}`).join("\n");
+      finalReply += `\n\n---\n### ✅ Executed Workstation Actions:\n` + actionConfirmations.map(c => `- ${c}`).join("\n");
     }
   } else if (actionConfirmations.length > 0) {
-    finalReply = `### ✅ فرامین روی سامانه اجرا شدند:\n` + actionConfirmations.map(c => `- ${c}`).join("\n");
+    finalReply = `### ✅ Commands Executed on Workstation:\n` + actionConfirmations.map(c => `- ${c}`).join("\n");
   } else {
-    finalReply = `سلام! من دستیار هوشمند Alpha Meteo هستم.
+    finalReply = `Hello! I am the Alpha Meteo AI Agent.
 
-می‌توانید هم سوالات اقلیمی و علمی جهان را بپرسید و هم فرامین زوم روی مناطق، تغییر لایه‌ها و مدل‌های پیش‌بینی را همزمان صادر فرمایید:
+You can ask global climate and meteorological questions while simultaneously issuing map navigation, layer, and forecast model commands:
 
-🔹 **نمونه سوالات و فرامین همزمان:**
-- *"خشک‌ترین شهر مسکونی جهان کجاست و زوم کن روی اونجا"*
-- *"گرم‌ترین نقطه ایران کجاست و ببر روی نقشه"*
-- *"مدل GFS لایه ابر رو فعال کن و برو روز سوم"*`;
+🔹 **Sample Dual-Mode Commands:**
+- *"Where is the driest inhabited city on Earth and zoom to it"*
+- *"Enable the GFS temperature layer and fly to Tehran"*
+- *"Activate GFS clouds and jump to Day 3"*`;
   }
 
   return {

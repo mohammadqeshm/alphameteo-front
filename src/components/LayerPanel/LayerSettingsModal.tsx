@@ -62,7 +62,7 @@ export const LayerSettingsModal: React.FC<LayerSettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
-      <div className="bg-[#08090C] border border-[#1A1C23] rounded-xl w-full max-w-md overflow-hidden shadow-2xl text-slate-200">
+      <div className="bg-[#1a1a1a] border border-[#1A1C23] rounded-xl w-full max-w-md overflow-hidden shadow-2xl text-slate-200">
         
         {/* Header */}
         <div className="p-4 border-b border-[#1A1C23] flex items-center justify-between bg-[#0b0d13]">

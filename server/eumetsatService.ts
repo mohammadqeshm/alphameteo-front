@@ -206,7 +206,7 @@ export class EumetsatMtgService {
           properties: {
             id: 1,
             cameraCode: "OC1",
-            name: "Camera 1 (North-West / شمال‌غربی)",
+            name: "Camera 1 (North-West)",
             region: "Europe, UK, Scandinavia & North Atlantic",
             sensor: "1000x1170 px High-Speed CMOS",
             frameRate: "1000 fps",
@@ -225,7 +225,7 @@ export class EumetsatMtgService {
           properties: {
             id: 2,
             cameraCode: "OC2",
-            name: "Camera 2 (North-East / شمال‌شرقی)",
+            name: "Camera 2 (North-East)",
             region: "Middle East, Iran, Iraq, Caspian Sea & E. Europe",
             sensor: "1000x1170 px High-Speed CMOS",
             frameRate: "1000 fps",
@@ -244,7 +244,7 @@ export class EumetsatMtgService {
           properties: {
             id: 3,
             cameraCode: "OC3",
-            name: "Camera 3 (South-West / جنوب‌غربی)",
+            name: "Camera 3 (South-West)",
             region: "West Africa, Equatorial Atlantic & Brazil edge",
             sensor: "1000x1170 px High-Speed CMOS",
             frameRate: "1000 fps",
@@ -263,7 +263,7 @@ export class EumetsatMtgService {
           properties: {
             id: 4,
             cameraCode: "OC4",
-            name: "Camera 4 (South-East / جنوب‌شرقی)",
+            name: "Camera 4 (South-East)",
             region: "East Africa, Yemen, Indian Ocean & Horn of Africa",
             sensor: "1000x1170 px High-Speed CMOS",
             frameRate: "1000 fps",
@@ -465,26 +465,6 @@ export class EumetsatMtgService {
 
     const nowDate = new Date(now);
     const apiTimeUtc = nowDate.toISOString().substring(11, 19) + " UTC";
-    let apiTimeIran = "";
-    let apiDateShamsi = "";
-    try {
-      apiTimeIran = new Intl.DateTimeFormat("fa-IR", {
-        timeZone: "Asia/Tehran",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      }).format(nowDate);
-      apiDateShamsi = new Intl.DateTimeFormat("fa-IR", {
-        calendar: "persian",
-        dateStyle: "full",
-        timeZone: "Asia/Tehran"
-      }).format(nowDate);
-    } catch {
-      apiTimeIran = nowDate.toLocaleTimeString("en-GB", { timeZone: "Asia/Tehran" });
-      apiDateShamsi = nowDate.toLocaleDateString("fa-IR");
-    }
-
     const apiDateGregorian = nowDate.toLocaleDateString("en-US", {
       weekday: "short",
       year: "numeric",
@@ -492,22 +472,25 @@ export class EumetsatMtgService {
       day: "numeric",
       timeZone: "UTC"
     });
+    const apiTimeIran = nowDate.toLocaleTimeString("en-GB", {
+      timeZone: "UTC",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    });
+    const apiDateShamsi = apiDateGregorian;
 
     const lastDate = new Date(this.lastDetectionTime);
     const lastDetectionIso = lastDate.toISOString();
     const lastDetectionUtc = lastDetectionIso.substring(11, 19) + " UTC";
-    let lastDetectionIran = "";
-    try {
-      lastDetectionIran = new Intl.DateTimeFormat("fa-IR", {
-        timeZone: "Asia/Tehran",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      }).format(lastDate);
-    } catch {
-      lastDetectionIran = lastDate.toLocaleTimeString("en-GB", { timeZone: "Asia/Tehran" });
-    }
+    const lastDetectionIran = lastDate.toLocaleTimeString("en-GB", {
+      timeZone: "UTC",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false
+    });
     const lastDetectionSecondsAgo = Math.max(0, Math.round((now - this.lastDetectionTime) / 1000));
 
     return {

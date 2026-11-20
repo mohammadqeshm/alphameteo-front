@@ -55,7 +55,7 @@ export const ActiveLayerSettings: React.FC<ActiveLayerSettingsProps> = ({
   };
 
   return (
-    <div className="p-4 bg-[#08090C] border-t border-[#1A1C23] shrink-0 overflow-y-auto max-h-[55%] custom-scrollbar" id="active-layer-settings-box">
+    <div className="p-4 bg-[#1a1a1a] border-t border-[#1A1C23] shrink-0 overflow-y-auto max-h-[55%] custom-scrollbar" id="active-layer-settings-box">
       {/* Header */}
       <div className="flex justify-between items-start mb-3.5">
         <div className="flex flex-col">

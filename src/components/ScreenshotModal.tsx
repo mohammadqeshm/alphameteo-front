@@ -290,7 +290,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <span>پیش‌نمایش و خروجی اسکرین‌شات باکیفیت</span>
+                <span>High-Resolution Screenshot Preview & Export</span>
                 <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-400/20 font-mono font-bold">
                   {canvasRef.current ? `${canvasRef.current.width} × ${canvasRef.current.height} px` : "HD Capture"}
                 </span>
@@ -335,7 +335,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
                     <PenTool className="w-3.5 h-3.5 text-blue-400" />
-                    <span>قلم و علامت‌گذاری روی نقشه</span>
+                    <span>Annotation Pen & Markup</span>
                   </span>
                   <button
                     onClick={() => setDrawingMode(!drawingMode)}
@@ -345,7 +345,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
                         : "bg-[#181C28] text-slate-400 hover:text-white border border-[#222736]"
                     }`}
                   >
-                    {drawingMode ? "قلم فعال" : "فعال‌سازی قلم"}
+                    {drawingMode ? "Pen Active" : "Enable Pen"}
                   </button>
                 </div>
 
@@ -353,7 +353,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
                   <div className="space-y-2.5 pt-1 animate-in fade-in">
                     {/* Color selection */}
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400">رنگ قلم:</span>
+                      <span className="text-[10px] text-slate-400">Pen Color:</span>
                       <div className="flex items-center space-x-1.5">
                         {["#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#EC4899", "#FFFFFF"].map((c) => (
                           <button
@@ -370,7 +370,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
 
                     {/* Brush Size Slider */}
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400">ضخامت:</span>
+                      <span className="text-[10px] text-slate-400">Stroke Width:</span>
                       <input
                         type="range"
                         min="2"
@@ -388,7 +388,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
                         className="w-full py-1 rounded bg-[#181C28] hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-[#222736] hover:border-red-500/30 text-[10px] transition flex items-center justify-center gap-1 font-sans"
                       >
                         <RotateCcw className="w-3 h-3" />
-                        <span>پاک کردن رسم‌ها</span>
+                        <span>Clear Drawings</span>
                       </button>
                     )}
                   </div>
@@ -399,12 +399,12 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
               <div className="bg-[#10131C] border border-[#1A1F2C] rounded-xl p-3 space-y-2.5">
                 <span className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>لایه‌ها و راهنمای اطلاعات</span>
+                  <span>Overlays & Legend</span>
                 </span>
 
                 <div className="space-y-2">
                   <label className="flex items-center justify-between p-2 rounded bg-[#151924] hover:bg-[#1A1E2C] border border-[#202534] cursor-pointer transition">
-                    <span className="text-[10.5px] text-slate-300">نوار بنر مشخصات و موقعیت</span>
+                    <span className="text-[10.5px] text-slate-300">Location & Telemetry Banner</span>
                     <input
                       type="checkbox"
                       checked={includeMetadataBanner}
@@ -414,7 +414,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
                   </label>
 
                   <label className="flex items-center justify-between p-2 rounded bg-[#151924] hover:bg-[#1A1E2C] border border-[#202534] cursor-pointer transition">
-                    <span className="text-[10.5px] text-slate-300">راهنمای رنگی و مقیاس لایه (Legend)</span>
+                    <span className="text-[10.5px] text-slate-300">Color Scale & Layer Legend</span>
                     <input
                       type="checkbox"
                       checked={includeLegendOverlay}
@@ -429,7 +429,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
               <div className="bg-[#10131C] border border-[#1A1F2C] rounded-xl p-3 space-y-2.5">
                 <span className="text-[11px] font-bold text-slate-200 flex items-center gap-1.5">
                   <FileImage className="w-3.5 h-3.5 text-amber-400" />
-                  <span>فرمت و کیفیت خروجی</span>
+                  <span>Export Format & Quality</span>
                 </span>
 
                 <div className="grid grid-cols-3 gap-1.5">
@@ -450,7 +450,7 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
 
                 {outputFormat !== "png" && (
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[10px] text-slate-400">کیفیت فشرده‌سازی:</span>
+                    <span className="text-[10px] text-slate-400">Compression Quality:</span>
                     <input
                       type="range"
                       min="60"
@@ -472,14 +472,14 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
                 className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30"
               >
                 <Download className="w-4 h-4" />
-                <span>دانلود تصویر خروجی ({outputFormat.toUpperCase()})</span>
+                <span>Download Image ({outputFormat.toUpperCase()})</span>
               </button>
 
               <button
                 onClick={onClose}
                 className="w-full py-1.5 bg-[#141824] hover:bg-[#1C2130] text-slate-400 hover:text-white text-[11px] rounded-lg transition border border-[#1E2330]"
               >
-                بستن
+                Close
               </button>
             </div>
           </div>

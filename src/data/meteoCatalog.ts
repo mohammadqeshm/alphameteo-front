@@ -24,9 +24,9 @@ export class CategoriesCatalog {
     },
     {
       id: "live_obs",
-      name: "مشاهدات زنده (Live Observations)",
+      name: "Live Observations",
       iconName: "Zap",
-      description: "سامانه ماهواره‌ای رصد رعد و برق و صاعقه لحظه‌ای EUMETSAT MTG-LI (فضاپایه)",
+      description: "Space-based real-time lightning & satellite cloud observation feeds (EUMETSAT MTG-LI & NASA GIBS)",
       badge: "EUMETSAT Live",
       sourceCount: 1
     },
@@ -48,9 +48,9 @@ export class CategoriesCatalog {
     },
     {
       id: "lightning",
-      name: "رادار صاعقه و توفان تندری",
+      name: "Lightning & Thunderstorm Radar",
       iconName: "Zap",
-      description: "رادار منطقه‌ای البروق (۱۵ دقیقه گذشته) + ماهواره فضاپایه MTG-LI و رادار داپلر همرفت",
+      description: "Regional lightning strike detection (past 15 min) + spaceborne MTG-LI and convective Doppler radar",
       badge: "Live Radar",
       sourceCount: 3
     },
@@ -320,7 +320,7 @@ export const DATA_SOURCES: DataSourceModel[] = [
     temporalResolution: "1 ms (1,000 frames/sec)",
     forecastHorizon: "Real-time Live Stream (0.0° GEO)",
     updateFrequency: "Continuous (Real-time)",
-    description: "صاعقه‌نگار فضاپایه ماهواره متئوستم نسل ۳ (MTG-I1) با ۴ دوربین نوری نوار باریک ۷۷۷.۴ نانومتر اکسیژن اتمی برای ثبت صاعقه‌های درون ابر و ابر به زمین.",
+    description: "Meteosat Third Generation (MTG-I1) spaceborne Lightning Imager with 4 optical cameras in the 777.4 nm atomic oxygen narrowband capturing IC and CG flashes.",
     badge: "Official Live",
     isFavorite: true,
     supportedVariableIds: ["mtg_li_lightning"]
@@ -328,14 +328,14 @@ export const DATA_SOURCES: DataSourceModel[] = [
   {
     id: "nasa_gibs_cloud",
     categoryId: "live_obs",
-    name: "تصویر ماهواره‌ای زنده پوشش ابر (NASA GIBS)",
+    name: "Live Satellite Cloud Cover (NASA GIBS)",
     shortName: "NASA GIBS Cloud",
     provider: "NASA EOSDIS / GIBS & NOAA GOES",
     spatialResolution: "250m - 1km (Global Coverage)",
     temporalResolution: "10 min (GEO) / NRT Daily Composite",
     forecastHorizon: "Real-time Live Satellite Stream",
     updateFrequency: "Live & Continuous",
-    description: "تصاویر ماهواره‌ای زنده و واقعی پوشش ابر، سامانه‌های جوی، ابرهای همرفتی و طوفان‌ها در سراسر جهان از سرویس رسمی NASA GIBS و ماهواره‌های زمین‌آهنگ (GOES East/West, VIIRS TrueColor, Cloud Optical Thickness).",
+    description: "Live global satellite imagery of cloud cover, frontal systems, convective cells, and cyclones from NASA GIBS and geostationary satellites (GOES East/West, VIIRS TrueColor, Cloud Optical Thickness).",
     badge: "NASA Live",
     isFavorite: true,
     supportedVariableIds: ["nasa_cloud_cover"]
@@ -844,11 +844,11 @@ export const WEATHER_VARIABLES: WeatherVariable[] = [
   // MTG-LI Lightning variable
   {
     id: "mtg_li_lightning",
-    name: "رعد و برق و صاعقه لحظه‌ای MTG-LI (فضاپایه)",
+    name: "MTG-LI Spaceborne Lightning Detection",
     shortName: "MTG-LI Lightning",
     category: "Thunderstorm & Convection",
     unit: "flashes/min",
-    description: "تخلیه‌های الکتریکی ابر به زمین و درون ابر رصد شده با ۴ دوربین نوری ماهواره MTG-I1 متعلق به EUMETSAT با پوشش ۸۴٪ کره زمین در باند ۷۷۷.۴ نانومتر",
+    description: "Cloud-to-ground and intra-cloud optical lightning discharges observed by 4 optical cameras aboard EUMETSAT MTG-I1 covering 84% of the Earth disc at 777.4 nm.",
     iconName: "Zap",
     supportedLevelIds: ["column"],
     defaultLevelId: "column",
@@ -861,11 +861,11 @@ export const WEATHER_VARIABLES: WeatherVariable[] = [
   // NASA GIBS Satellite Cloud Cover variable
   {
     id: "nasa_cloud_cover",
-    name: "تصویر ماهواره پوشش ابر جهانی (NASA GIBS)",
+    name: "Global Satellite Cloud Imagery (NASA GIBS)",
     shortName: "NASA Cloud Imagery",
     category: "Satellite & Clouds",
     unit: "%",
-    description: "تصاویر با تفکیک بالا و زنده پوشش ابر و جبهه‌های طوفانی کره زمین از سرویس NASA GIBS شامل سنسورهای مدار قطبی VIIRS/MODIS و ماهواره‌های زمین‌آهنگ GOES-East و GOES-West با بروزرسانی زنده.",
+    description: "High-resolution live global cloud cover and frontal storm imagery from NASA GIBS including polar-orbiting VIIRS/MODIS sensors and GOES-East / GOES-West geostationary feeds.",
     iconName: "Cloud",
     supportedLevelIds: ["column"],
     defaultLevelId: "column",

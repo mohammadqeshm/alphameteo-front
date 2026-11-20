@@ -20,9 +20,9 @@ export const SidebarLayers: React.FC<SidebarLayersProps> = ({
   const [showWeatherLayers, setShowWeatherLayers] = useState(true);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-[#08090C] text-slate-200 select-none" id="layers-panel">
+    <div className="flex flex-col flex-1 min-h-0 bg-[#1a1a1a] text-slate-200 select-none" id="layers-panel">
       {/* Panel Header */}
-      <div className="p-4 border-b border-[#1A1C23] flex justify-between items-center bg-[#08090C]">
+      <div className="p-4 border-b border-[#1A1C23] flex justify-between items-center bg-[#1a1a1a]">
         <h2 className="text-xs font-bold tracking-widest text-slate-100 uppercase font-sans">LAYERS</h2>
         <button 
           onClick={onClose} 

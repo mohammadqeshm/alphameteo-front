@@ -168,7 +168,7 @@ export default function App() {
   const [heatmapRadius, setHeatmapRadius] = useState<number>(3.5);
   
   // Workspace Mode: Operational Map vs Analysis Canvas
-  const [workspaceMode, setWorkspaceMode] = useState<"map" | "canvas">("canvas");
+  const [workspaceMode, setWorkspaceMode] = useState<"map" | "canvas">("map");
   const [incomingCanvasSnapshot, setIncomingCanvasSnapshot] = useState<any>(null);
 
   // Split Screen Multi-Map State
@@ -304,17 +304,6 @@ export default function App() {
   }, []);
 
   // Extract exact date & time directly provided by the satellite API engine
-  const apiDateShamsi = lightningStats?.apiDateShamsi || (lightningStats?.apiTimestamp ? new Intl.DateTimeFormat('fa-IR', {
-    calendar: 'persian',
-    dateStyle: 'full',
-    timeZone: 'Asia/Tehran'
-  }).format(new Date(lightningStats.apiTimestamp)) : new Intl.DateTimeFormat('fa-IR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }).format(liveClock));
-
   const apiDateGregorian = lightningStats?.apiDateGregorian || (lightningStats?.apiTimestamp ? new Date(lightningStats.apiTimestamp).toLocaleDateString('en-US', {
     weekday: 'short',
     year: 'numeric',
@@ -329,27 +318,19 @@ export default function App() {
   }));
 
   const apiTimeUtc = lightningStats?.apiTimeUtc || (lightningStats?.apiTimestamp ? new Date(lightningStats.apiTimestamp).toISOString().slice(11, 19) + " UTC" : liveClock.toISOString().slice(11, 19) + " UTC");
-  const apiTimeIran = lightningStats?.apiTimeIran || (lightningStats?.apiTimestamp ? new Date(lightningStats.apiTimestamp).toLocaleTimeString('fa-IR', {
-    timeZone: 'Asia/Tehran',
+  const apiTimeLocal = lightningStats?.apiTimestamp ? new Date(lightningStats.apiTimestamp).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: false
-  }) : liveClock.toLocaleTimeString('fa-IR', {
+  }) + " LOC" : liveClock.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: false
-  }));
+  }) + " LOC";
 
   const lastDetectionTimeUtc = lightningStats?.lastDetectionUtc || (lightningStats?.lastDetectionTime ? new Date(lightningStats.lastDetectionTime).toISOString().slice(11, 19) + " UTC" : "--:--:-- UTC");
-  const lastDetectionIran = lightningStats?.lastDetectionIran || (lightningStats?.lastDetectionTime ? new Date(lightningStats.lastDetectionTime).toLocaleTimeString('fa-IR', {
-    timeZone: 'Asia/Tehran',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }) : "");
   const secondsAgo = lightningStats?.lastDetectionSecondsAgo ?? (lightningStats?.lastDetectionTime 
     ? Math.max(0, Math.floor((Date.now() - lightningStats.lastDetectionTime) / 1000))
     : 0);
@@ -915,7 +896,7 @@ export default function App() {
     <div className="h-screen w-screen flex flex-col antialiased text-xs text-slate-200 bg-[#060709] font-sans select-none" id="alpha-meteo-root">
       
       {/* 1. TOP HEADER NAVIGATION */}
-      <header className="h-14 bg-[#08090C] border-b border-[#1A1C23] flex items-center justify-between px-4 shrink-0 z-50 shadow-md" id="global-header">
+      <header className="h-14 bg-[#1a1a1a] border-b border-[#1A1C23] flex items-center justify-between px-4 shrink-0 z-50 shadow-md" id="global-header">
         <div className="flex items-center space-x-6">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => setWorkspaceMode("map")}>
@@ -972,7 +953,7 @@ export default function App() {
             
             {/* Search Suggestions List */}
             {suggestions.length > 0 && (
-              <div className="absolute top-10 left-0 right-0 bg-[#08090C] border border-[#1A1C23] rounded shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar" id="search-suggestions-container">
+              <div className="absolute top-10 left-0 right-0 bg-[#1a1a1a] border border-[#1A1C23] rounded shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar" id="search-suggestions-container">
                 {suggestions.map((station, i) => (
                   <div
                     key={i}
@@ -1114,7 +1095,7 @@ export default function App() {
 
       {/* Mobile Controls Collapsible Bar */}
       {showMobileControls && (
-        <div className="lg:hidden bg-[#08090C] border-b border-[#1A1C23] px-4 py-2.5 flex flex-wrap gap-3 items-center justify-between shrink-0 z-40" id="mobile-controls-bar">
+        <div className="lg:hidden bg-[#1a1a1a] border-b border-[#1A1C23] px-4 py-2.5 flex flex-wrap gap-3 items-center justify-between shrink-0 z-40" id="mobile-controls-bar">
           <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
             {/* Model Selector */}
             <div className="flex flex-col">
@@ -1187,7 +1168,7 @@ export default function App() {
       )}
 
       {/* 2. CORE INTERFACE CONTAINER (Sidebar + Map + Secondary panels) */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative min-w-0">
         {workspaceMode === "canvas" ? (
           <AnalysisCanvas
             onReturnToMap={() => setWorkspaceMode("map")}
@@ -1197,7 +1178,7 @@ export default function App() {
         ) : (
           <>
             {/* LEFT GIS TOOLBAR with Human-Readable Labels */}
-            <aside className="w-14 md:w-[72px] bg-[#08090C] border-r border-[#1A1C23] flex flex-col justify-between items-center py-2 shrink-0 z-40 shadow-lg max-md:absolute max-md:left-3 max-md:top-14 max-md:bottom-auto max-md:max-h-[calc(100vh-220px)] max-md:border max-md:rounded-lg max-md:shadow-2xl max-md:bg-[#08090C]/90 max-md:backdrop-blur-md max-md:py-3" id="left-gis-toolbar">
+            <aside className="w-14 md:w-[72px] bg-[#1a1a1a] border-r border-[#1A1C23] flex flex-col justify-between items-center py-2 shrink-0 z-40 shadow-lg max-md:absolute max-md:left-3 max-md:top-14 max-md:bottom-auto max-md:max-h-[calc(100vh-220px)] max-md:border max-md:rounded-lg max-md:shadow-2xl max-md:bg-[#1a1a1a]/90 max-md:backdrop-blur-md max-md:py-3" id="left-gis-toolbar">
           <div className="flex flex-col items-center w-full space-y-0.5 overflow-y-auto custom-scrollbar">
             <div className="text-[7.5px] text-slate-500 uppercase font-black tracking-widest mb-1 select-none text-center hidden md:block">GIS Tools</div>
             
@@ -1376,7 +1357,7 @@ export default function App() {
             <button
               onClick={handleSendToCanvas}
               className="w-10 md:w-14 py-1.5 rounded flex flex-col items-center transition text-cyan-400 hover:text-white hover:bg-cyan-950/40 border border-cyan-500/20"
-              title="ارسال نقشه فعلی به Analysis Canvas"
+              title="Send current map view to Analysis Canvas"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span className="text-[7.5px] font-bold tracking-tight hidden md:inline">To Canvas</span>
@@ -1388,7 +1369,7 @@ export default function App() {
                   ? "bg-blue-600 text-white shadow-md shadow-blue-500/30"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/40"
               }`}
-              title="ثبت اسکرین‌شات از ناحیه دلخواه نقشه"
+              title="Capture screenshot from selected map region"
             >
               <Camera className="w-3.5 h-3.5" />
               <span className="text-[7.5px] font-bold tracking-tight hidden md:inline">Screenshot</span>
@@ -1509,11 +1490,11 @@ export default function App() {
                             {isActive ? (
                               <span className="flex items-center space-x-1 text-[9px] font-bold text-blue-400 bg-blue-500/20 px-1.5 py-0.5 rounded border border-blue-400/30">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                <span>نقشه فعال</span>
+                                <span>Active Map</span>
                               </span>
                             ) : (
                               <span className="text-[9px] text-slate-500 hover:text-slate-300 transition">
-                                (کلیک برای فعال‌سازی)
+                                (Click to activate)
                               </span>
                             )}
                           </div>
@@ -1548,7 +1529,7 @@ export default function App() {
                                 setSplitLayout("single");
                               }}
                               className="p-1 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded transition"
-                              title="بزرگنمایی کامل این نقشه (Single View)"
+                              title="Maximize this map (Single View)"
                             >
                               <Maximize2 className="w-3.5 h-3.5" />
                             </button>
@@ -1602,7 +1583,7 @@ export default function App() {
 
               {/* AI Scientific Analysis Overlay brief (Displays absolute over map when computed) */}
               {analysisReport && (
-                <div className="absolute top-4 left-4 right-4 md:left-48 max-w-lg bg-[#08090C]/95 backdrop-blur-md border border-blue-500/40 rounded shadow-2xl p-4.5 z-40" id="ai-report-modal">
+                <div className="absolute top-4 left-4 right-4 md:left-48 max-w-lg bg-[#1a1a1a]/95 backdrop-blur-md border border-blue-500/40 rounded shadow-2xl p-4.5 z-40" id="ai-report-modal">
                   <div className="flex justify-between items-center border-b border-blue-500/20 pb-2 mb-3">
                     <div className="flex items-center space-x-2">
                       <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
@@ -1651,7 +1632,7 @@ export default function App() {
 
               {isAnalyzing && (
                 <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm z-40 flex items-center justify-center">
-                  <div className="bg-[#08090C] border border-[#1A1C23] rounded p-6 shadow-2xl flex flex-col items-center space-y-4 max-w-sm text-center">
+                  <div className="bg-[#1a1a1a] border border-[#1A1C23] rounded p-6 shadow-2xl flex flex-col items-center space-y-4 max-w-sm text-center">
                     <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider text-white">Synthesizing Physics Model</h4>
@@ -1665,7 +1646,7 @@ export default function App() {
 
               {/* HORIZONTAL COLOR LEGEND Overlay (Top Left on map) */}
               <div 
-                className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-[#08090C]/90 backdrop-blur-md rounded-lg border border-[#1A1C23] px-3 py-2 z-30 flex flex-col space-y-1.5 shadow-xl select-none w-auto min-w-[200px] max-w-[calc(100vw-70px)] sm:max-w-xs md:max-w-sm transition-all" 
+                className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-[#1a1a1a]/90 backdrop-blur-md rounded-lg border border-[#1A1C23] px-3 py-2 z-30 flex flex-col space-y-1.5 shadow-xl select-none w-auto min-w-[200px] max-w-[calc(100vw-70px)] sm:max-w-xs md:max-w-sm transition-all" 
                 id="map-color-legend"
                 dir="ltr"
               >
@@ -1695,64 +1676,61 @@ export default function App() {
               {/* DYNAMIC TIMELINE CONTROL PANEL (Bottom edge of map layout) */}
               {isLightningActive ? (
                 /* REAL-TIME EUMETSAT MTG-LI SATELLITE LIGHTNING TIMELINE HUD */
-                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#08090C]/95 backdrop-blur-md rounded-lg border border-amber-500/20 p-3 shadow-2xl flex flex-col space-y-2.5" id="timeline-scrubber-hud" dir="rtl">
+                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#1a1a1a]/95 backdrop-blur-md rounded-lg border border-amber-500/20 p-3 shadow-2xl flex flex-col space-y-2.5" id="timeline-scrubber-hud">
                   {/* Top Row: Live Indicator, Satellite Source, Exact Date & Exact Time (to the second) */}
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 pb-2 border-b border-[#1A1C23]">
                     {/* Live Source Badge */}
-                    <div className="flex items-center space-x-2 space-x-reverse select-none shrink-0">
-                      <div className="flex items-center space-x-1.5 space-x-reverse bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-md">
+                    <div className="flex items-center space-x-2 select-none shrink-0">
+                      <div className="flex items-center space-x-1.5 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-md">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                         <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-[10px] font-black text-emerald-400 font-mono tracking-wider">LIVE OBS • 1,000 FPS</span>
+                        <span className="text-[10px] font-black text-emerald-400 font-mono tracking-wider">SIMULATED STREAM • 1,000 FPS</span>
                       </div>
-                      <div className="flex items-center space-x-1.5 space-x-reverse bg-[#12141A] border border-[#212530] px-2.5 py-1 rounded-md">
+                      <div className="flex items-center space-x-1.5 bg-[#12141A] border border-[#212530] px-2.5 py-1 rounded-md">
                         <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
-                        <span className="text-[10px] font-bold text-slate-200">سنجنده صاعقه EUMETSAT MTG-I1 LI (0.0° GEO)</span>
+                        <span className="text-[10px] font-bold text-slate-200">EUMETSAT MTG-I1 LI Sensor (0.0° GEO)</span>
                       </div>
                     </div>
 
-                    {/* Exact Date & Time Directly From EUMETSAT API (Gregorian, Shamsi, UTC & Iran) */}
+                    {/* Exact Date & Time Directly From API Engine */}
                     <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold">
-                      {/* Exact Date from Satellite API */}
-                      <div className="flex items-center space-x-1.5 space-x-reverse bg-blue-950/40 text-blue-300 border border-blue-800/40 px-2.5 py-1 rounded-md shadow-sm" title="تاریخ رسمی دریافتی مستقیم از خروجی API ماهواره EUMETSAT">
+                      {/* Exact Date */}
+                      <div className="flex items-center space-x-1.5 bg-blue-950/40 text-blue-300 border border-blue-800/40 px-2.5 py-1 rounded-md shadow-sm" title="Date reported by lightning telemetry feed">
                         <Calendar className="w-3.5 h-3.5 text-blue-400" />
                         <span className="text-[11px] font-bold text-slate-200">
-                          {apiDateShamsi}
-                        </span>
-                        <span className="text-[10px] text-blue-400/80 border-r border-blue-800/50 pr-1.5 font-sans">
                           {apiDateGregorian}
                         </span>
                       </div>
 
-                      {/* Exact Satellite API Output Clock */}
-                      <div className="flex items-center space-x-1.5 space-x-reverse bg-amber-950/40 text-amber-300 border border-amber-800/40 px-2.5 py-1 rounded-md shadow-sm" title="زمان دقیق و رسمی ثبت‌شده در خروجی API (UTC و وقت ایران)">
+                      {/* Exact API Output Clock */}
+                      <div className="flex items-center space-x-1.5 bg-amber-950/40 text-amber-300 border border-amber-800/40 px-2.5 py-1 rounded-md shadow-sm" title="Timestamp recorded in telemetry feed (UTC and Local)">
                         <Clock className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-[9px] text-amber-400/80 font-sans border-l border-amber-800/50 pl-1.5">
+                        <span className="text-[9px] text-amber-400/80 font-sans border-r border-amber-800/50 pr-1.5">
                           API TIME:
                         </span>
                         <span className="text-[11px] font-black tracking-wider text-amber-300">
                           {apiTimeUtc}
                         </span>
-                        <span className="text-[10px] text-amber-400/80 border-r border-amber-800/50 pr-1.5">
-                          {apiTimeIran}
+                        <span className="text-[10px] text-amber-400/80 border-l border-amber-800/50 pl-1.5">
+                          {apiTimeLocal}
                         </span>
                       </div>
 
-                      {/* Last Detection Time directly from API */}
-                      <div className="flex items-center space-x-1 space-x-reverse bg-[#141824] text-slate-300 border border-[#23293D] px-2.5 py-1 rounded-md text-[10px]" title="زمان تخلیه الکتریکی ثبت‌شده توسط دوربین‌های اپتیکال ماهواره در خروجی API">
+                      {/* Last Detection Time */}
+                      <div className="flex items-center space-x-1 bg-[#141824] text-slate-300 border border-[#23293D] px-2.5 py-1 rounded-md text-[10px]" title="Latest electrical discharge pulse recorded by telemetry feed">
                         <Activity className="w-3 h-3 text-emerald-400" />
-                        <span>آخرین پالس API:</span>
+                        <span>Last Pulse:</span>
                         <span className="text-emerald-400 font-bold">
-                          {secondsAgo <= 2 ? "هم‌اکنون (زنده)" : `${secondsAgo} ثانیه پیش`}
+                          {secondsAgo <= 2 ? "Just now" : `${secondsAgo}s ago`}
                         </span>
                         <span className="text-slate-400 font-mono">({lastDetectionTimeUtc})</span>
                       </div>
                     </div>
 
                     {/* Stats & Instant Refresh */}
-                    <div className="flex items-center space-x-2 space-x-reverse text-[10px] font-mono shrink-0">
+                    <div className="flex items-center space-x-2 text-[10px] font-mono shrink-0">
                       <span className="bg-[#12141A] text-slate-400 px-2 py-0.5 rounded border border-[#212530]">
-                        تعداد صاعقه‌ها: <strong className="text-amber-400">{lightningStats?.totalActiveFlashes ?? 0}</strong>
+                        Active Flashes: <strong className="text-amber-400">{lightningStats?.totalActiveFlashes ?? 0}</strong>
                       </span>
                       <button
                         onClick={async () => {
@@ -1760,20 +1738,20 @@ export default function App() {
                             await eumetsatMtgService.refreshData();
                           } catch (e) {}
                         }}
-                        className="flex items-center space-x-1 space-x-reverse bg-[#12141A] hover:bg-[#1A1D27] text-slate-300 hover:text-white px-2 py-0.5 rounded border border-[#212530] transition cursor-pointer"
-                        title="بروزرسانی داده‌ها از API ماهواره"
+                        className="flex items-center space-x-1 bg-[#12141A] hover:bg-[#1A1D27] text-slate-300 hover:text-white px-2 py-0.5 rounded border border-[#212530] transition cursor-pointer"
+                        title="Refresh telemetry from API"
                       >
                         <RefreshCw className="w-3 h-3 text-emerald-400" />
-                        <span>تازه‌سازی API</span>
+                        <span>Refresh API</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Second Row: Time Filtering Shortcuts & Sensor Specifications */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-0.5">
-                    <div className="flex items-center space-x-2 space-x-reverse w-full sm:w-auto">
-                      <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">فیلتر بازه زمانی رصد:</span>
-                      <div className="flex items-center space-x-1 space-x-reverse bg-[#12141A] p-0.5 rounded-md border border-[#212530]">
+                    <div className="flex items-center space-x-2 w-full sm:w-auto">
+                      <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">Observation Window:</span>
+                      <div className="flex items-center space-x-1 bg-[#12141A] p-0.5 rounded-md border border-[#212530]">
                         <button
                           onClick={() => setLightningTimeFilter("2m")}
                           className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
@@ -1782,7 +1760,7 @@ export default function App() {
                               : "text-slate-400 hover:text-white"
                           }`}
                         >
-                          ⚡ ۲ دقیقه اخیر (تازه‌ترین)
+                          ⚡ Last 2m (Latest)
                         </button>
                         <button
                           onClick={() => setLightningTimeFilter("5m")}
@@ -1792,7 +1770,7 @@ export default function App() {
                               : "text-slate-400 hover:text-white"
                           }`}
                         >
-                          ۵ دقیقه اخیر
+                          Last 5m
                         </button>
                         <button
                           onClick={() => setLightningTimeFilter("15m")}
@@ -1802,7 +1780,7 @@ export default function App() {
                               : "text-slate-400 hover:text-white"
                           }`}
                         >
-                          ۱۵ دقیقه اخیر
+                          Last 15m
                         </button>
                         <button
                           onClick={() => setLightningTimeFilter("all")}
@@ -1812,24 +1790,24 @@ export default function App() {
                               : "text-slate-400 hover:text-white"
                           }`}
                         >
-                          ۳۰ دقیقه کامل (کل بافر زنده)
+                          Full 30m (All Buffer)
                         </button>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-3 space-x-reverse text-[9px] text-slate-400 font-mono w-full sm:w-auto justify-between sm:justify-end">
+                    <div className="flex items-center space-x-3 text-[9px] text-slate-400 font-mono w-full sm:w-auto justify-between sm:justify-end">
                       <span className="text-slate-400">
-                        پوشش فعال: <span className="text-slate-300 font-bold">اروپا، ایران، خاورمیانه، آفریقا (OC1 - OC4)</span>
+                        Active Coverage: <span className="text-slate-300 font-bold">Europe, Middle East, Africa (OC1 - OC4)</span>
                       </span>
                       <span className="bg-emerald-950/40 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/30">
-                        کانال نوری ۷۷۷.۴nm اکسیژن
+                        777.4nm O2 Optical Channel
                       </span>
                     </div>
                   </div>
                 </div>
               ) : (
                 /* FORECAST TIMELINE CONTROL PANEL (Bottom edge of map layout) */
-                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#08090C]/95 backdrop-blur-md rounded-lg border border-[#1A1C23] p-3 shadow-2xl flex flex-col space-y-3" id="timeline-scrubber-hud">
+                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#1a1a1a]/95 backdrop-blur-md rounded-lg border border-[#1A1C23] p-3 shadow-2xl flex flex-col space-y-3" id="timeline-scrubber-hud">
                   {/* Top Row: Title, Playback buttons, and Step Size */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-2">
                     <div className="flex items-center space-x-2 select-none shrink-0 w-full sm:w-auto justify-between sm:justify-start">
@@ -1984,11 +1962,11 @@ export default function App() {
         )}
 
         {/* RIGHT AREA (Sidebar Panel + Far Right Global Dock in a single container) */}
-        <aside className="flex h-full shrink-0 border-l border-[#1A1C23] z-30 bg-[#08090C] overflow-hidden max-md:absolute max-md:right-0 max-md:top-0 max-md:bottom-0 max-md:h-full max-md:border-l-0 max-md:shadow-2xl" id="right-side-container">
+        <aside className="flex h-full shrink-0 border-l border-[#1A1C23] z-30 bg-[#1a1a1a] overflow-hidden max-md:absolute max-md:right-0 max-md:top-0 max-md:bottom-0 max-md:h-full max-md:border-l-0 max-md:shadow-2xl" id="right-side-container">
           {/* Collapsible Config & Selection Panel */}
           {showLeftDrawer && (
             <div 
-              className="bg-[#08090C] flex flex-col h-full overflow-hidden relative border-r border-[#1A1C23] max-w-[calc(100vw-56px)]" 
+              className="bg-[#1a1a1a] flex flex-col h-full overflow-hidden relative border-r border-[#1A1C23] max-w-[calc(100vw-56px)]" 
               id="right-sidebar-panel"
               style={{ width: `${drawerWidth}px` }}
             >
@@ -2201,7 +2179,7 @@ export default function App() {
           )}
 
           {/* 3. FAR RIGHT GLOBAL UTILITY NAVIGATION PANEL BAR */}
-          <div className="w-14 bg-[#08090C] flex flex-col items-center py-2 space-y-1.5 shrink-0 h-full border-l border-[#1A1C23]/50" id="far-right-global-dock">
+          <div className="w-14 bg-[#1a1a1a] flex flex-col items-center py-2 space-y-1.5 shrink-0 h-full border-l border-[#1A1C23]/50" id="far-right-global-dock">
             <div className="text-[7.5px] text-slate-500 uppercase font-black tracking-widest mb-1 select-none text-center">GIS Dock</div>
 
             {/* Layers tab */}
@@ -2261,7 +2239,7 @@ export default function App() {
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
-              title="تنظیمات لایه‌ها / Layer Settings"
+              title="Layer Settings"
             >
               <Sliders className="w-3.5 h-3.5" />
               <span className="text-[7.5px] font-medium tracking-tight">Style</span>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ActiveLayer, PresetWorkstation, WeatherVariable, DataSourceModel } from '../../types';
+import { ActiveLayer, PresetWorkstation, WeatherVariable, DataSourceModel, CustomCompositeLayer } from '../../types';
 import {
   DATA_SOURCES,
   WEATHER_VARIABLES,
@@ -7,6 +7,7 @@ import {
   PRESET_WORKSTATIONS,
   COLOR_PALETTES
 } from '../../data/meteoCatalog';
+import { CustomCompositeLayerModal } from './CustomCompositeLayerModal';
 import {
   Search,
   X,
@@ -29,7 +30,13 @@ import {
   Calendar,
   Layers,
   ChevronDown,
-  Globe
+  Globe,
+  Plus,
+  Sparkles,
+  Edit2,
+  Trash2,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 
 interface LayerManagementPanelProps {
@@ -43,7 +50,7 @@ interface LayerManagementPanelProps {
   onClosePanel: () => void;
 }
 
-type MainCategory = 'models' | 'observations' | 'climate' | 'favorites';
+type MainCategory = 'models' | 'observations' | 'climate' | 'favorites' | 'composite';
 
 export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
   activeLayers,
@@ -95,7 +102,176 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
     }
   }, [starredVarIds]);
 
-  // 6. Level Selection Modal State
+  // 6. Custom Composite Layers
+  const DEFAULT_CUSTOM_COMPOSITES: CustomCompositeLayer[] = [
+    {
+      id: 'composite_convection_storm',
+      name: 'Convection & Thunderstorm (Lightning + Clouds)',
+      description: 'EUMETSAT MTG-LI lightning feed overlaid on NASA GIBS satellite cloud cover',
+      createdAt: Date.now() - 3600000,
+      subLayers: [
+        {
+          id: 'sub_mtg_1',
+          sourceId: 'eumetsat_mtg_li',
+          sourceName: 'EUMETSAT MTG-I1',
+          variableId: 'mtg_li_lightning',
+          variableName: 'Live Lightning (MTG-LI)',
+          variableUnit: 'flashes',
+          levelId: 'surface',
+          levelName: 'Surface',
+          opacity: 100,
+          blendMode: 'normal'
+        },
+        {
+          id: 'sub_nasa_2',
+          sourceId: 'nasa_gibs_cloud',
+          sourceName: 'NASA GIBS Satellite',
+          variableId: 'nasa_cloud_cover',
+          variableName: 'Satellite Cloud Cover (NASA GIBS)',
+          variableUnit: '%',
+          levelId: 'toa',
+          levelName: 'Top of Atmosphere',
+          opacity: 85,
+          blendMode: 'normal'
+        }
+      ]
+    },
+    {
+      id: 'composite_severe_system',
+      name: 'Multi-Layer Storm System (Lightning + Clouds + Wind)',
+      description: 'Combined lightning activity, satellite cloud cover, and 10m surface wind vectors',
+      createdAt: Date.now() - 1800000,
+      subLayers: [
+        {
+          id: 'sub_mtg_3',
+          sourceId: 'eumetsat_mtg_li',
+          sourceName: 'EUMETSAT MTG-I1',
+          variableId: 'mtg_li_lightning',
+          variableName: 'Live Lightning (MTG-LI)',
+          variableUnit: 'flashes',
+          levelId: 'surface',
+          levelName: 'Surface',
+          opacity: 100,
+          blendMode: 'normal'
+        },
+        {
+          id: 'sub_nasa_4',
+          sourceId: 'nasa_gibs_cloud',
+          sourceName: 'NASA GIBS Satellite',
+          variableId: 'nasa_cloud_cover',
+          variableName: 'Satellite Cloud Cover (NASA GIBS)',
+          variableUnit: '%',
+          levelId: 'toa',
+          levelName: 'Top of Atmosphere',
+          opacity: 80,
+          blendMode: 'normal'
+        },
+        {
+          id: 'sub_wind_5',
+          sourceId: 'gfs_025',
+          sourceName: 'GFS 0.25°',
+          variableId: 'wind_10m',
+          variableName: 'Wind Speed & Vectors (10m)',
+          variableUnit: 'kt',
+          levelId: '10m',
+          levelName: '10 meters',
+          opacity: 85,
+          blendMode: 'normal'
+        }
+      ]
+    }
+  ];
+
+  const [customComposites, setCustomComposites] = useState<CustomCompositeLayer[]>(() => {
+    try {
+      const saved = localStorage.getItem('alpha_meteo_custom_composite_layers');
+      return saved ? JSON.parse(saved) : DEFAULT_CUSTOM_COMPOSITES;
+    } catch {
+      return DEFAULT_CUSTOM_COMPOSITES;
+    }
+  });
+
+  const [isCompositeModalOpen, setIsCompositeModalOpen] = useState<boolean>(false);
+  const [editingComposite, setEditingComposite] = useState<CustomCompositeLayer | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('alpha_meteo_custom_composite_layers', JSON.stringify(customComposites));
+    } catch (e) {
+      console.error("Failed to save custom composite layers", e);
+    }
+  }, [customComposites]);
+
+  // Activate all sub-layers in a composite layer according to their stack order
+  const handleActivateComposite = (composite: CustomCompositeLayer) => {
+    const newLayers: ActiveLayer[] = composite.subLayers.map((sub, idx) => {
+      const variable = WEATHER_VARIABLES.find(v => v.id === sub.variableId);
+      const source = DATA_SOURCES.find(s => s.id === sub.sourceId) || DATA_SOURCES[0];
+      const level = VERTICAL_LEVELS.find(l => l.id === sub.levelId) || VERTICAL_LEVELS[0];
+      const palette = COLOR_PALETTES.find(p => p.id === (sub.paletteId || variable?.defaultPaletteId)) || COLOR_PALETTES[0];
+
+      return {
+        instanceId: `comp_${composite.id}_${sub.variableId}_${Date.now()}_${idx}`,
+        categoryId: source.categoryId || 'composite',
+        sourceId: sub.sourceId,
+        sourceName: sub.sourceName || source.shortName || source.name,
+        variableId: sub.variableId,
+        variableName: sub.variableName || variable?.name || sub.variableId,
+        variableUnit: sub.variableUnit || variable?.unit || '',
+        levelId: level.id,
+        levelName: level.name,
+        visualizationId: sub.visualizationId || variable?.defaultVisualizationId || 'smooth_gradient',
+        visualizationName: 'Smooth Gradient',
+        paletteId: palette.id,
+        paletteColors: palette.colors,
+        opacity: sub.opacity ?? 85,
+        visible: true,
+        locked: false,
+        zIndex: composite.subLayers.length - idx,
+        brightness: 100,
+        contrast: 100,
+        saturation: 100,
+        invertPalette: false,
+        blendMode: sub.blendMode || 'normal',
+        timelineSync: 'main',
+        customLabel: `${composite.name}: ${sub.variableName}`,
+        minVal: variable?.min ?? -50,
+        maxVal: variable?.max ?? 50,
+        dateCreated: Date.now() + idx
+      };
+    });
+
+    onClearAllLayers();
+    onReorderLayers(newLayers);
+  };
+
+  const isCompositeActive = (composite: CustomCompositeLayer) => {
+    if (activeLayers.length === 0 || composite.subLayers.length === 0) return false;
+    return composite.subLayers.every(sub =>
+      activeLayers.some(al => al.variableId === sub.variableId || al.sourceId === sub.sourceId)
+    );
+  };
+
+  const handleSaveComposite = (composite: CustomCompositeLayer, andActivate?: boolean) => {
+    setCustomComposites(prev => {
+      const exists = prev.some(c => c.id === composite.id);
+      if (exists) {
+        return prev.map(c => c.id === composite.id ? composite : c);
+      }
+      return [composite, ...prev];
+    });
+
+    if (andActivate) {
+      handleActivateComposite(composite);
+    }
+  };
+
+  const handleDeleteComposite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCustomComposites(prev => prev.filter(c => c.id !== id));
+  };
+
+  // 7. Level Selection Modal State
   const [levelModalTarget, setLevelModalTarget] = useState<{
     source: DataSourceModel;
     variable: WeatherVariable;
@@ -103,7 +279,7 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
 
   const [selectedLevelForModal, setSelectedLevelForModal] = useState<string>('2m');
 
-  // 7. Category Custom Dropdown Menu State & Ref
+  // 8. Category Custom Dropdown Menu State & Ref
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState<boolean>(false);
   const categoryMenuRef = useRef<HTMLDivElement>(null);
 
@@ -121,6 +297,7 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
     { id: 'models' as MainCategory, label: 'NWP', icon: Globe, iconColor: 'text-blue-400' },
     { id: 'observations' as MainCategory, label: 'LIVE', icon: Radio, iconColor: 'text-emerald-400' },
     { id: 'climate' as MainCategory, label: 'CLIMATE', icon: Calendar, iconColor: 'text-purple-400' },
+    { id: 'composite' as MainCategory, label: `COMPOSITE (${customComposites.length})`, icon: Sparkles, iconColor: 'text-cyan-400' },
     { id: 'favorites' as MainCategory, label: `STARS (${starredVarIds.length})`, icon: Star, iconColor: 'text-amber-400 fill-amber-400' }
   ];
 
@@ -423,6 +600,20 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
           </div>
         </div>
 
+        {/* Action Button: Create Custom Composite Layer */}
+        <button
+          type="button"
+          onClick={() => {
+            setEditingComposite(null);
+            setIsCompositeModalOpen(true);
+          }}
+          className="w-full flex items-center justify-center space-x-1.5 bg-gradient-to-r from-blue-600/20 via-cyan-600/20 to-blue-600/20 hover:from-blue-600/35 hover:to-cyan-600/35 text-cyan-300 border border-cyan-500/35 hover:border-cyan-400 py-1.5 px-3 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer"
+          title="Build a custom composite layer by combining multiple parameters with stack ordering"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Create New Composite Layer</span>
+        </button>
+
       </div>
 
       {/* MAIN CONTENT CONTAINER */}
@@ -542,7 +733,142 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
           </div>
         )}
 
+        {/* F: COMPOSITE - CUSTOM COMPOSITE LAYERS */}
+        {!searchQuery && activeCategory === 'composite' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <div>
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>My Composite Layers ({customComposites.length})</span>
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">
+                  Combine multiple layers with custom render priority
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingComposite(null);
+                  setIsCompositeModalOpen(true);
+                }}
+                className="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-3 h-3" />
+                <span>New Layer</span>
+              </button>
+            </div>
+
+            {customComposites.length === 0 ? (
+              <div className="text-center py-12 px-4 border border-dashed border-[#2b2b2b] rounded-xl bg-[#141414] text-slate-400 text-xs">
+                <Layers className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                <p className="font-bold text-slate-300">No custom composite layers yet</p>
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Click "New Layer" to combine lightning, satellite clouds, wind, and more with custom stack ordering.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {customComposites.map((composite) => {
+                  const isActive = isCompositeActive(composite);
+
+                  return (
+                    <div
+                      key={composite.id}
+                      onClick={() => handleActivateComposite(composite)}
+                      className={`group relative p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all duration-150 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-blue-950/40 via-[#13192E] to-[#111422] border-blue-500/70 shadow-lg shadow-blue-950/20 ring-1 ring-blue-500/30'
+                          : 'bg-[#111422] border-[#1D2235] hover:border-slate-600 hover:bg-[#15192B]'
+                      }`}
+                    >
+                      {/* Active Indicator Bar */}
+                      {isActive && (
+                        <div className="absolute left-0 top-2 bottom-2 w-1 bg-blue-500 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                      )}
+
+                      <div className="flex items-center space-x-3 min-w-0 flex-1 pl-1">
+                        <div className={`p-2 rounded-lg border shrink-0 transition-colors ${
+                          isActive
+                            ? 'bg-blue-500/20 text-blue-300 border-blue-400/40 shadow-sm'
+                            : 'bg-[#181D2E] text-slate-400 border-[#252C42] group-hover:text-slate-200'
+                        }`}>
+                          <Layers className="w-4 h-4" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs font-bold truncate text-slate-100 group-hover:text-white transition">
+                              {composite.name}
+                            </span>
+                            {isActive && (
+                              <span className="flex items-center space-x-1 text-[9px] font-extrabold uppercase tracking-wider text-blue-400 bg-blue-500/15 border border-blue-500/30 px-1.5 py-0.5 rounded-full shrink-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                                <span>ON</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center space-x-1.5 mt-1 text-[10px]">
+                            <span className="bg-[#191F33] text-cyan-400 font-mono px-1.5 py-0.5 rounded border border-[#272F48] shrink-0 font-medium">
+                              COMPOSITE
+                            </span>
+                            <span className="bg-[#191F33] text-slate-300 font-mono px-1.5 py-0.5 rounded border border-[#272F48] shrink-0 font-medium">
+                              {composite.subLayers.length} Layers
+                            </span>
+                            {composite.subLayers.length > 0 && (
+                              <span className="bg-[#191F33] text-slate-400 font-mono px-1.5 py-0.5 rounded border border-[#272F48] shrink-0 truncate max-w-[130px]">
+                                {composite.subLayers[0].variableName}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Side Action Buttons */}
+                      <div className="flex items-center space-x-1 shrink-0 ml-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingComposite(composite);
+                            setIsCompositeModalOpen(true);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-white hover:bg-[#1D2338] rounded-md transition"
+                          title="Edit composite layer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteComposite(composite.id, e)}
+                          className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-[#1D2338] rounded-md transition"
+                          title="Delete composite layer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
+
+      {/* CUSTOM COMPOSITE LAYER BUILDER MODAL */}
+      <CustomCompositeLayerModal
+        isOpen={isCompositeModalOpen}
+        onClose={() => {
+          setIsCompositeModalOpen(false);
+          setEditingComposite(null);
+        }}
+        onSave={handleSaveComposite}
+        initialComposite={editingComposite}
+      />
 
       {/* LEVEL PICKER MODAL */}
       {levelModalTarget && (

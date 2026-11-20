@@ -347,7 +347,7 @@ export const AnalysisCanvas: React.FC<AnalysisCanvasProps> = ({
   }, [selectedIds, clipboardItems, doc.items, handleUndo, handleRedo, pushHistory]);
 
   return (
-    <div className="flex-1 w-full h-full flex flex-col overflow-hidden bg-[#060709] relative select-none">
+    <div className="flex-1 w-full h-full flex flex-col overflow-hidden bg-[#060709] relative select-none min-w-0">
       {/* Top Canvas Toolbar (Hidden in presentation mode) */}
       {!isPresentationMode && (
         <CanvasToolbar

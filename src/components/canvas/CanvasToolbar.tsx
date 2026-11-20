@@ -66,12 +66,15 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
   onExportPng,
 }) => {
   return (
-    <div className="h-11 bg-[#0A0D14] border-b border-[#1A1F2C] px-3 flex items-center justify-between shrink-0 select-none z-30 shadow-md">
+    <div className="h-11 min-h-[44px] max-h-[44px] bg-[#0A0D14] border-b border-[#1A1F2C] px-2 sm:px-3 flex items-center justify-between shrink-0 select-none z-30 shadow-md min-w-0 w-full overflow-x-auto overflow-y-hidden no-scrollbar gap-2 flex-nowrap">
       {/* Left: Document Name & Template Picker */}
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 shrink min-w-0">
+        <div className="flex items-center space-x-1.5 shrink min-w-0">
           <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 shrink-0" />
-          <span className="font-bold text-xs text-white truncate max-w-[200px]">
+          <span
+            className="font-bold text-xs text-white truncate max-w-[70px] xs:max-w-[110px] sm:max-w-[150px] md:max-w-[190px]"
+            title={document.name}
+          >
             {document.name}
           </span>
         </div>
@@ -80,17 +83,18 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         <select
           onChange={(e) => onSelectTemplate(e.target.value)}
           defaultValue=""
-          className="bg-[#121622] hover:bg-[#181D2C] text-slate-300 border border-[#1A1F2C] rounded px-2 py-1 text-[10px] outline-none transition"
+          className="bg-[#121622] hover:bg-[#181D2C] text-slate-300 border border-[#1A1F2C] rounded px-1.5 py-1 text-[10px] outline-none transition shrink max-w-[85px] xs:max-w-[115px] sm:max-w-[150px] md:max-w-[190px] truncate"
+          title="Select Workspace Template"
         >
           <option value="" disabled>Load Template...</option>
-          <option value="hormozgan">Hormozgan Convective Outlook (Default)</option>
-          <option value="model_comparison">ECMWF vs GFS Synoptic Comparison</option>
-          <option value="blank">Blank Infinite Canvas</option>
+          <option value="hormozgan">Hormozgan Outlook</option>
+          <option value="model_comparison">ECMWF vs GFS Comparison</option>
+          <option value="blank">Blank Canvas</option>
         </select>
       </div>
 
       {/* Center: Tools Palette */}
-      <div className="flex items-center bg-[#07090E] border border-[#181E2C] rounded-lg p-0.5 space-x-0.5">
+      <div className="flex items-center bg-[#07090E] border border-[#181E2C] rounded-lg p-0.5 space-x-0.5 shrink-0">
         <button
           onClick={() => onSelectTool("select")}
           className={`p-1.5 rounded transition ${
@@ -111,16 +115,17 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           <Hand className="w-3.5 h-3.5" />
         </button>
 
-        <div className="w-px h-4 bg-[#181E2C] mx-1" />
+        <div className="w-px h-4 bg-[#181E2C] mx-0.5 sm:mx-1" />
 
         {/* Add Object Modal button */}
         <button
           onClick={onOpenAddModal}
-          className="flex items-center space-x-1.5 px-2 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-semibold transition shadow-sm"
+          className="flex items-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-2 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-[11px] font-semibold transition shadow-sm shrink-0"
           title="Insert New Weather Item"
         >
           <Plus className="w-3 h-3" />
-          <span>Add Item</span>
+          <span className="hidden sm:inline">Add</span>
+          <span className="hidden md:inline">&nbsp;Item</span>
         </button>
 
         {/* Quick Add Palette shortcut */}
@@ -132,7 +137,7 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
           <Command className="w-3.5 h-3.5" />
         </button>
 
-        <div className="w-px h-4 bg-[#181E2C] mx-1" />
+        <div className="w-px h-4 bg-[#181E2C] mx-0.5 sm:mx-1" />
 
         {/* Direct quick-add items */}
         <button
@@ -177,9 +182,9 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
       </div>
 
       {/* Right: History, Sync Groups, Zoom & Export */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 sm:space-x-1.5 shrink-0 ml-auto">
         {/* Undo / Redo */}
-        <div className="flex items-center space-x-1 border-r border-[#1A1F2C] pr-2">
+        <div className="flex items-center space-x-0.5 border-r border-[#1A1F2C] pr-1 sm:pr-1.5">
           <button
             onClick={onUndo}
             disabled={!canUndo}
@@ -201,15 +206,16 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         {/* Sync Groups modal trigger */}
         <button
           onClick={onOpenSyncModal}
-          className="flex items-center space-x-1 px-2 py-1 rounded bg-[#121622] hover:bg-[#181D2C] border border-[#1A1F2C] text-slate-300 text-[10px] font-mono transition"
+          className="flex items-center space-x-1 px-1.5 sm:px-2 py-1 rounded bg-[#121622] hover:bg-[#181D2C] border border-[#1A1F2C] text-slate-300 text-[10px] font-mono transition shrink-0"
           title="Manage Map Sync Groups"
         >
           <Link2 className="w-3 h-3 text-cyan-400" />
-          <span>Sync ({document.syncGroups.length})</span>
+          <span className="hidden md:inline">Sync </span>
+          <span>({document.syncGroups.length})</span>
         </button>
 
         {/* Zoom controls */}
-        <div className="flex items-center bg-[#07090E] border border-[#181E2C] rounded p-0.5 space-x-0.5">
+        <div className="flex items-center bg-[#07090E] border border-[#181E2C] rounded p-0.5 space-x-0.5 shrink-0">
           <button
             onClick={onZoomOut}
             className="p-1 text-slate-400 hover:text-white rounded transition"
@@ -243,7 +249,7 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         {/* Presentation Mode */}
         <button
           onClick={onTogglePresentation}
-          className={`p-1.5 rounded transition ${
+          className={`p-1.5 rounded transition shrink-0 ${
             isPresentationMode ? "bg-amber-500/20 text-amber-300" : "text-slate-400 hover:text-white hover:bg-[#121622]"
           }`}
           title={isPresentationMode ? "Exit Presentation Mode" : "Briefing / Presentation Mode"}
@@ -254,11 +260,11 @@ export const CanvasToolbar: React.FC<CanvasToolbarProps> = ({
         {/* Export to PNG */}
         <button
           onClick={onExportPng}
-          className="flex items-center space-x-1.5 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium transition"
+          className="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium transition shrink-0"
           title="Export Canvas to High-Res PNG"
         >
           <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Export</span>
+          <span className="hidden lg:inline">Export</span>
         </button>
       </div>
     </div>
