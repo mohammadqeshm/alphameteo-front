@@ -132,38 +132,35 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
     }
   };
 
-  // Global Mouse Move
-  const handleMouseMove = (e: React.MouseEvent) => {
+  // Shared move & end helpers for Mouse + Touch
+  const moveAtPoint = (clientX: number, clientY: number) => {
     if (isPanning) {
       onUpdateViewport({
         ...document.viewport,
-        x: e.clientX - panStart.x,
-        y: e.clientY - panStart.y
+        x: clientX - panStart.x,
+        y: clientY - panStart.y
       });
       return;
     }
 
     if (selectionBox) {
-      const canvasCoord = screenToCanvas(e.clientX, e.clientY);
+      const canvasCoord = screenToCanvas(clientX, clientY);
       setSelectionBox(prev => prev ? { ...prev, currentX: canvasCoord.x, currentY: canvasCoord.y } : null);
       return;
     }
 
     if (isDraggingItems && selectedIds.length > 0) {
-      const canvasCoord = screenToCanvas(e.clientX, e.clientY);
+      const canvasCoord = screenToCanvas(clientX, clientY);
       const deltaX = canvasCoord.x - dragStartPos.x;
       const deltaY = canvasCoord.y - dragStartPos.y;
 
-      // Update positions for all selected items
       selectedIds.forEach(id => {
         const initial = initialItemPositions[id];
         if (initial) {
-          // Snap to 10px grid
           const snappedX = Math.round((initial.x + deltaX) / 10) * 10;
           const snappedY = Math.round((initial.y + deltaY) / 10) * 10;
           onUpdateItem(id, { x: snappedX, y: snappedY });
 
-          // If item is a frame, also move all children belonging to this frame
           const item = document.items.find(it => it.id === id);
           if (item && item.type === "frame") {
             const children = document.items.filter(it => it.frameId === id);
@@ -183,7 +180,7 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
     }
 
     if (resizingHandle && resizingItemId && initialResizeBox) {
-      const canvasCoord = screenToCanvas(e.clientX, e.clientY);
+      const canvasCoord = screenToCanvas(clientX, clientY);
       const dx = canvasCoord.x - dragStartPos.x;
       const dy = canvasCoord.y - dragStartPos.y;
 
@@ -218,12 +215,16 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
     }
   };
 
-  // Global Mouse Up
+  // Global Mouse Move
+  const handleMouseMove = (e: React.MouseEvent) => {
+    moveAtPoint(e.clientX, e.clientY);
+  };
+
+  // Global Mouse / Touch Up
   const handleMouseUp = () => {
     if (isPanning) setIsPanning(false);
 
     if (selectionBox) {
-      // Find items intersecting selection box
       const minX = Math.min(selectionBox.startX, selectionBox.currentX);
       const maxX = Math.max(selectionBox.startX, selectionBox.currentX);
       const minY = Math.min(selectionBox.startY, selectionBox.currentY);
@@ -247,12 +248,28 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
     }
   };
 
-  // Item mouse down for selection and dragging
-  const handleItemMouseDown = (e: React.MouseEvent, item: CanvasItem) => {
-    if (item.isLocked || isSpacePressed || activeTool === "hand") return;
-    e.stopPropagation();
+  // Touch handlers for background panning / marquee / dragging / resizing
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) return;
+    const touch = e.touches[0];
+    if (activeTool === "hand" || e.target === containerRef.current) {
+      if (e.target === containerRef.current && activeTool !== "hand") {
+        onSelectIds([]);
+      }
+      setIsPanning(true);
+      setPanStart({ x: touch.clientX - document.viewport.x, y: touch.clientY - document.viewport.y });
+    }
+  };
 
-    if (e.shiftKey) {
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) return;
+    if (isPanning || selectionBox || isDraggingItems || resizingHandle) {
+      moveAtPoint(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  };
+
+  const beginItemDrag = (clientX: number, clientY: number, item: CanvasItem, shiftKey = false) => {
+    if (shiftKey) {
       if (selectedIds.includes(item.id)) {
         onSelectIds(selectedIds.filter(id => id !== item.id));
       } else {
@@ -264,19 +281,17 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
       }
     }
 
-    const canvasCoord = screenToCanvas(e.clientX, e.clientY);
+    const canvasCoord = screenToCanvas(clientX, clientY);
     setIsDraggingItems(true);
     setDragStartPos(canvasCoord);
 
-    // Save positions of all items in current selection
     const positions: Record<string, { x: number; y: number }> = {};
-    const itemsToTrack = selectedIds.includes(item.id) 
+    const itemsToTrack = selectedIds.includes(item.id)
       ? document.items.filter(it => selectedIds.includes(it.id))
       : [item];
 
     itemsToTrack.forEach(it => {
       positions[it.id] = { x: it.x, y: it.y };
-      // Also track children if frame
       if (it.type === "frame") {
         document.items.filter(c => c.frameId === it.id).forEach(c => {
           positions[c.id] = { x: c.x, y: c.y };
@@ -287,13 +302,36 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
     setInitialItemPositions(positions);
   };
 
-  // Handle resize handle mouse down
+  // Item mouse/touch down for selection and dragging
+  const handleItemMouseDown = (e: React.MouseEvent, item: CanvasItem) => {
+    if (item.isLocked || isSpacePressed || activeTool === "hand") return;
+    e.stopPropagation();
+    beginItemDrag(e.clientX, e.clientY, item, e.shiftKey);
+  };
+
+  const handleItemTouchStart = (e: React.TouchEvent, item: CanvasItem) => {
+    if (item.isLocked || activeTool === "hand" || e.touches.length === 0) return;
+    e.stopPropagation();
+    beginItemDrag(e.touches[0].clientX, e.touches[0].clientY, item, false);
+  };
+
+  // Handle resize handle mouse/touch down
   const handleResizeStart = (e: React.MouseEvent, item: CanvasItem, handle: string) => {
     if (item.isLocked) return;
     e.stopPropagation();
     setResizingHandle(handle);
     setResizingItemId(item.id);
     const canvasCoord = screenToCanvas(e.clientX, e.clientY);
+    setDragStartPos(canvasCoord);
+    setInitialResizeBox({ x: item.x, y: item.y, width: item.width, height: item.height });
+  };
+
+  const handleResizeTouchStart = (e: React.TouchEvent, item: CanvasItem, handle: string) => {
+    if (item.isLocked || e.touches.length === 0) return;
+    e.stopPropagation();
+    setResizingHandle(handle);
+    setResizingItemId(item.id);
+    const canvasCoord = screenToCanvas(e.touches[0].clientX, e.touches[0].clientY);
     setDragStartPos(canvasCoord);
     setInitialResizeBox({ x: item.x, y: item.y, width: item.width, height: item.height });
   };
@@ -305,7 +343,11 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className={`flex-1 w-full h-full relative overflow-hidden bg-[#060709] select-none ${
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleMouseUp}
+      onTouchCancel={handleMouseUp}
+      className={`flex-1 w-full h-full relative overflow-hidden bg-[#060709] select-none touch-none ${
         isSpacePressed || activeTool === "hand" ? "cursor-grab active:cursor-grabbing" : "cursor-default"
       }`}
       style={{
@@ -328,6 +370,7 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
             <div
               key={item.id}
               onMouseDown={(e) => handleItemMouseDown(e, item)}
+              onTouchStart={(e) => handleItemTouchStart(e, item)}
               className="absolute pointer-events-auto"
               style={{
                 left: `${item.x}px`,
@@ -356,6 +399,7 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
             <div
               key={item.id}
               onMouseDown={(e) => handleItemMouseDown(e, item)}
+              onTouchStart={(e) => handleItemTouchStart(e, item)}
               className={`absolute pointer-events-auto transition-shadow ${
                 isSelected ? "ring-2 ring-cyan-400 ring-offset-2 ring-offset-black/50" : ""
               }`}
@@ -435,14 +479,14 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
               {/* 8-Point Resize Handles (shown when selected and not in presentation mode) */}
               {isSelected && !isPresentationMode && !item.isLocked && (
                 <>
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "nw")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute -top-1.5 -left-1.5 cursor-nwse-resize z-50 shadow-md" />
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "n")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute -top-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize z-50 shadow-md" />
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "ne")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute -top-1.5 -right-1.5 cursor-nesw-resize z-50 shadow-md" />
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "e")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute top-1/2 -translate-y-1/2 -right-1.5 cursor-ew-resize z-50 shadow-md" />
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "se")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute -bottom-1.5 -right-1.5 cursor-nwse-resize z-50 shadow-md" />
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "s")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute -bottom-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize z-50 shadow-md" />
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "sw")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute -bottom-1.5 -left-1.5 cursor-nesw-resize z-50 shadow-md" />
-                  <div onMouseDown={(e) => handleResizeStart(e, item, "w")} className="w-2.5 h-2.5 bg-cyan-400 rounded-xs absolute top-1/2 -translate-y-1/2 -left-1.5 cursor-ew-resize z-50 shadow-md" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "nw")} onTouchStart={(e) => handleResizeTouchStart(e, item, "nw")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute -top-1.5 -left-1.5 cursor-nwse-resize z-50 shadow-md touch-none" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "n")} onTouchStart={(e) => handleResizeTouchStart(e, item, "n")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute -top-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize z-50 shadow-md touch-none" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "ne")} onTouchStart={(e) => handleResizeTouchStart(e, item, "ne")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute -top-1.5 -right-1.5 cursor-nesw-resize z-50 shadow-md touch-none" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "e")} onTouchStart={(e) => handleResizeTouchStart(e, item, "e")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute top-1/2 -translate-y-1/2 -right-1.5 cursor-ew-resize z-50 shadow-md touch-none" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "se")} onTouchStart={(e) => handleResizeTouchStart(e, item, "se")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute -bottom-1.5 -right-1.5 cursor-nwse-resize z-50 shadow-md touch-none" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "s")} onTouchStart={(e) => handleResizeTouchStart(e, item, "s")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute -bottom-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize z-50 shadow-md touch-none" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "sw")} onTouchStart={(e) => handleResizeTouchStart(e, item, "sw")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute -bottom-1.5 -left-1.5 cursor-nesw-resize z-50 shadow-md touch-none" />
+                  <div onMouseDown={(e) => handleResizeStart(e, item, "w")} onTouchStart={(e) => handleResizeTouchStart(e, item, "w")} className="w-3 h-3 sm:w-2.5 sm:h-2.5 bg-cyan-400 rounded-xs absolute top-1/2 -translate-y-1/2 -left-1.5 cursor-ew-resize z-50 shadow-md touch-none" />
                 </>
               )}
             </div>
@@ -464,9 +508,9 @@ export const CanvasViewport: React.FC<CanvasViewportProps> = ({
       </div>
 
       {/* Viewport Floating Coordinates & Zoom Indicator */}
-      <div className="absolute bottom-3 right-4 bg-[#0A0D14]/90 backdrop-blur-md px-3 py-1.5 rounded border border-[#1A1F2C] text-[10px] font-mono text-slate-400 flex items-center space-x-3 pointer-events-none select-none z-40 shadow-xl">
-        <span>X: {Math.round(document.viewport.x)} Y: {Math.round(document.viewport.y)}</span>
-        <span>·</span>
+      <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-4 bg-[#0A0D14]/90 backdrop-blur-md px-2.5 sm:px-3 py-1 sm:py-1.5 rounded border border-[#1A1F2C] text-[9.5px] sm:text-[10px] font-mono text-slate-400 flex items-center space-x-2 sm:space-x-3 pointer-events-none select-none z-40 shadow-xl">
+        <span className="hidden sm:inline">X: {Math.round(document.viewport.x)} Y: {Math.round(document.viewport.y)}</span>
+        <span className="hidden sm:inline">·</span>
         <span className="text-cyan-400 font-bold">{Math.round(document.viewport.zoom * 100)}%</span>
         <span>·</span>
         <span>{document.items.length} items</span>

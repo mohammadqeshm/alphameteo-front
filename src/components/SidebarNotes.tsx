@@ -24,7 +24,8 @@ import {
   Clock,
   Edit3,
   Check,
-  Eye
+  Eye,
+  X
 } from "lucide-react";
 
 export interface Note {
@@ -42,6 +43,7 @@ interface SidebarNotesProps {
   currentCoords: Coordinate;
   activeLayer: WeatherLayer;
   onCoordsChange: (coords: Coordinate) => void;
+  onClosePanel?: () => void;
 }
 
 // Helper to extract text snippet from HTML
@@ -78,6 +80,7 @@ export const SidebarNotes: React.FC<SidebarNotesProps> = ({
   currentCoords,
   activeLayer,
   onCoordsChange,
+  onClosePanel,
 }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   // Initially null so editor is not open immediately by default
@@ -382,25 +385,37 @@ export const SidebarNotes: React.FC<SidebarNotesProps> = ({
           </div>
         </div>
 
-        {activeNoteId ? (
-          <button
-            onClick={() => setActiveNoteId(null)}
-            className="px-2.5 py-1 bg-[#12141C] hover:bg-[#1A1E2B] text-slate-300 text-[10.5px] font-bold rounded border border-[#232736] flex items-center space-x-1 transition"
-            title="Back to notes list"
-          >
-            <ArrowLeft className="w-3 h-3 text-slate-400" />
-            <span>Notes List</span>
-          </button>
-        ) : (
-          <button
-            onClick={createNewNote}
-            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10.5px] font-bold rounded flex items-center space-x-1 transition shadow-sm"
-            title="Create new note"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Note</span>
-          </button>
-        )}
+        <div className="flex items-center space-x-1.5 shrink-0">
+          {activeNoteId ? (
+            <button
+              onClick={() => setActiveNoteId(null)}
+              className="px-2.5 py-1 bg-[#12141C] hover:bg-[#1A1E2B] text-slate-300 text-[10.5px] font-bold rounded border border-[#232736] flex items-center space-x-1 transition"
+              title="Back to notes list"
+            >
+              <ArrowLeft className="w-3 h-3 text-slate-400" />
+              <span>Notes List</span>
+            </button>
+          ) : (
+            <button
+              onClick={createNewNote}
+              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10.5px] font-bold rounded flex items-center space-x-1 transition shadow-sm"
+              title="Create new note"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Note</span>
+            </button>
+          )}
+          {onClosePanel && (
+            <button
+              type="button"
+              onClick={onClosePanel}
+              className="md:hidden p-1.5 rounded bg-[#12141C] border border-[#232736] text-slate-400 hover:text-white transition"
+              title="Close Panel"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* VIEW 1: VERTICAL NOTES LIST (Default when no activeNoteId) */}

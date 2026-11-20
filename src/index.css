@@ -6,6 +6,18 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #060709;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Custom scrollbars for high-density sidebars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
@@ -46,8 +58,17 @@ input[type=range]::-webkit-slider-thumb {
   box-shadow: 0 0 6px rgba(0,0,0,0.4);
 }
 
+@media (pointer: coarse) {
+  input[type=range]::-webkit-slider-thumb {
+    height: 16px;
+    width: 16px;
+    margin-top: -5px;
+  }
+}
+
 /* Meteo focus pulsing marker */
 .custom-meteo-marker {
   cursor: pointer;
 }
+
 

@@ -103,30 +103,40 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
     });
   };
 
-  const handleMouseDown = (e: React.MouseEvent, handle: string) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const beginDrag = (clientX: number, clientY: number, handle: string) => {
     if (isCapturing) return;
     setIsDragging(true);
     setDragHandle(handle);
-    setDragStart({ x: e.clientX, y: e.clientY });
+    setDragStart({ x: clientX, y: clientY });
     setInitialCrop(crop);
   };
 
+  const handleMouseDown = (e: React.MouseEvent, handle: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    beginDrag(e.clientX, e.clientY, handle);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, handle: string) => {
+    e.stopPropagation();
+    if (e.touches.length === 0) return;
+    beginDrag(e.touches[0].clientX, e.touches[0].clientY, handle);
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const updateCropFromPoint = (clientX: number, clientY: number) => {
       if (!isDragging || !containerRef.current) return;
 
       const bounds = containerRef.current.getBoundingClientRect();
-      const dx = e.clientX - dragStart.x;
-      const dy = e.clientY - dragStart.y;
+      const dx = clientX - dragStart.x;
+      const dy = clientY - dragStart.y;
 
-      const minW = 160;
-      const minH = 120;
+      const minW = Math.min(160, Math.max(80, bounds.width * 0.45));
+      const minH = Math.min(120, Math.max(80, bounds.height * 0.35));
       const maxW = bounds.width;
       const maxH = bounds.height;
 
-      setCrop((prev) => {
+      setCrop(() => {
         let newX = initialCrop.x;
         let newY = initialCrop.y;
         let newW = initialCrop.width;
@@ -185,19 +195,35 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
       });
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => {
+      updateCropFromPoint(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging || e.touches.length === 0) return;
+      e.preventDefault();
+      updateCropFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const handleDragEnd = () => {
       setIsDragging(false);
       setDragHandle(null);
     };
 
     if (isDragging) {
       window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("mouseup", handleDragEnd);
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+      window.addEventListener("touchend", handleDragEnd);
+      window.addEventListener("touchcancel", handleDragEnd);
     }
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseup", handleDragEnd);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleDragEnd);
+      window.removeEventListener("touchcancel", handleDragEnd);
     };
   }, [isDragging, dragHandle, dragStart, initialCrop]);
 
@@ -247,10 +273,10 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
       </svg>
 
       {/* Top Bar: Resolution Presets Selector */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-[#090C12]/95 backdrop-blur-md border border-blue-500/30 rounded-xl px-3 py-1.5 shadow-2xl flex items-center gap-1.5 z-40 text-xs select-none">
-        <span className="text-[11px] font-bold text-blue-300 ml-1.5 flex items-center gap-1">
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 max-w-[calc(100%-1rem)] overflow-x-auto no-scrollbar bg-[#090C12]/95 backdrop-blur-md border border-blue-500/30 rounded-xl px-2.5 sm:px-3 py-1.5 shadow-2xl flex items-center gap-1.5 z-40 text-xs select-none">
+        <span className="text-[10.5px] sm:text-[11px] font-bold text-blue-300 ml-1 flex items-center gap-1 whitespace-nowrap shrink-0">
           <Monitor className="w-3.5 h-3.5 text-blue-400" />
-          <span>Output Resolution:</span>
+          <span className="hidden sm:inline">Output Resolution:</span>
         </span>
 
         {SCREENSHOT_PRESETS.map((preset) => {
@@ -260,7 +286,7 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
               key={preset.id}
               onClick={() => handleSelectPreset(preset.id)}
               disabled={isCapturing}
-              className={`px-2.5 py-1 rounded-lg text-[10.5px] font-sans transition-all flex items-center gap-1 cursor-pointer ${
+              className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[10.5px] font-sans transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0 ${
                 isSelected
                   ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-600/30"
                   : "bg-[#141824] text-slate-300 hover:text-white hover:bg-slate-800 border border-[#1F2536]"
@@ -280,8 +306,9 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
           width: `${crop.width}px`,
           height: `${crop.height}px`,
         }}
-        className="absolute top-0 left-0 border-2 border-blue-400 rounded shadow-2xl ring-4 ring-blue-500/20 box-border pointer-events-auto cursor-move flex flex-col justify-between"
+        className="absolute top-0 left-0 border-2 border-blue-400 rounded shadow-2xl ring-4 ring-blue-500/20 box-border pointer-events-auto cursor-move flex flex-col justify-between touch-none"
         onMouseDown={(e) => handleMouseDown(e, "move")}
+        onTouchStart={(e) => handleTouchStart(e, "move")}
       >
         {/* Rule of thirds grid lines inside */}
         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40">
@@ -297,12 +324,13 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
         </div>
 
         {/* Top Info Banner on Crop Box */}
-        <div className="bg-blue-950/85 backdrop-blur-md border-b border-blue-500/30 text-blue-200 px-3 py-1.5 text-[10.5px] font-mono flex items-center justify-between rounded-t shrink-0">
-          <span className="flex items-center gap-1.5 font-bold">
-            <Crop className="w-3.5 h-3.5 text-blue-400" />
-            <span>Selected Screenshot Region</span>
+        <div className="bg-blue-950/85 backdrop-blur-md border-b border-blue-500/30 text-blue-200 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[10.5px] font-mono flex items-center justify-between gap-2 rounded-t shrink-0">
+          <span className="flex items-center gap-1.5 font-bold truncate">
+            <Crop className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span className="hidden sm:inline">Selected Screenshot Region</span>
+            <span className="sm:hidden">Crop Region</span>
           </span>
-          <span className="bg-blue-500/20 px-2 py-0.5 rounded border border-blue-400/30 font-bold text-blue-300">
+          <span className="bg-blue-500/20 px-1.5 sm:px-2 py-0.5 rounded border border-blue-400/30 font-bold text-blue-300 whitespace-nowrap shrink-0">
             {displayResolution}
           </span>
         </div>
@@ -314,18 +342,19 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
 
         {/* Bottom Floating Control Bar */}
         <div
-          className="bg-[#0A0D14]/95 backdrop-blur-md border-t border-blue-500/30 p-2.5 flex items-center justify-between gap-2 rounded-b shrink-0 z-30"
+          className="bg-[#0A0D14]/95 backdrop-blur-md border-t border-blue-500/30 p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 rounded-b shrink-0 z-30"
           onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
         >
-          <div className="text-[10px] text-slate-400 font-sans hidden sm:block">
+          <div className="text-[10px] text-slate-400 font-sans hidden md:block">
             Drag corners to resize selection or click Full Map to capture the entire viewport.
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 ml-auto">
             <button
               onClick={handleFullMap}
               disabled={isCapturing}
-              className="px-2.5 py-1.5 bg-[#181D2A] hover:bg-blue-900/40 text-blue-300 hover:text-white rounded-lg text-[10.5px] font-sans transition border border-blue-700/50 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              className="px-2 sm:px-2.5 py-1.5 bg-[#181D2A] hover:bg-blue-900/40 text-blue-300 hover:text-white rounded-lg text-[10px] sm:text-[10.5px] font-sans transition border border-blue-700/50 flex items-center gap-1 cursor-pointer disabled:opacity-50"
               title="Expand crop box to full map viewport"
             >
               <Maximize2 className="w-3 h-3 text-blue-400" />
@@ -335,7 +364,7 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
             <button
               onClick={onCancel}
               disabled={isCapturing}
-              className="px-2.5 py-1.5 bg-[#181D2A] hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-[10.5px] font-sans transition border border-slate-700 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              className="px-2 sm:px-2.5 py-1.5 bg-[#181D2A] hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-[10px] sm:text-[10.5px] font-sans transition border border-slate-700 flex items-center gap-1 cursor-pointer disabled:opacity-50"
             >
               <X className="w-3 h-3 text-slate-400" />
               <span>Cancel</span>
@@ -344,17 +373,18 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
             <button
               onClick={handleExecuteCapture}
               disabled={isCapturing}
-              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[11px] font-bold transition shadow-lg shadow-blue-600/40 flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="px-2.5 sm:px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10.5px] sm:text-[11px] font-bold transition shadow-lg shadow-blue-600/40 flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
             >
               {isCapturing ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                  <span>Rendering & Capturing...</span>
+                  <span>Capturing...</span>
                 </>
               ) : (
                 <>
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Capture Screenshot</span>
+                  <span className="sm:hidden">Capture</span>
+                  <span className="hidden sm:inline">Capture Screenshot</span>
                 </>
               )}
             </button>
@@ -363,38 +393,46 @@ export const ScreenshotCropper: React.FC<ScreenshotCropperProps> = ({
 
         {/* Corner Resize Handles */}
         <div
-          className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
+          className="absolute -top-2 -left-2 w-4 h-4 sm:w-3.5 sm:h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nwse-resize shadow-md hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "nw")}
+          onTouchStart={(e) => handleTouchStart(e, "nw")}
         />
         <div
-          className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
+          className="absolute -top-2 -right-2 w-4 h-4 sm:w-3.5 sm:h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nesw-resize shadow-md hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "ne")}
+          onTouchStart={(e) => handleTouchStart(e, "ne")}
         />
         <div
-          className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
+          className="absolute -bottom-2 -left-2 w-4 h-4 sm:w-3.5 sm:h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nesw-resize shadow-md hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "sw")}
+          onTouchStart={(e) => handleTouchStart(e, "sw")}
         />
         <div
-          className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
+          className="absolute -bottom-2 -right-2 w-4 h-4 sm:w-3.5 sm:h-3.5 bg-blue-500 border-2 border-white rounded-sm cursor-nwse-resize shadow-md hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "se")}
+          onTouchStart={(e) => handleTouchStart(e, "se")}
         />
 
         {/* Edge Middle Handles */}
         <div
-          className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-blue-400 border border-white rounded-full cursor-ew-resize hover:scale-125 transition-transform"
+          className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3.5 h-3.5 sm:w-3 sm:h-3 bg-blue-400 border border-white rounded-full cursor-ew-resize hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "w")}
+          onTouchStart={(e) => handleTouchStart(e, "w")}
         />
         <div
-          className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-blue-400 border border-white rounded-full cursor-ew-resize hover:scale-125 transition-transform"
+          className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3.5 h-3.5 sm:w-3 sm:h-3 bg-blue-400 border border-white rounded-full cursor-ew-resize hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "e")}
+          onTouchStart={(e) => handleTouchStart(e, "e")}
         />
         <div
-          className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-blue-400 border border-white rounded-full cursor-ns-resize hover:scale-125 transition-transform"
+          className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 sm:w-3 sm:h-3 bg-blue-400 border border-white rounded-full cursor-ns-resize hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "n")}
+          onTouchStart={(e) => handleTouchStart(e, "n")}
         />
         <div
-          className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-blue-400 border border-white rounded-full cursor-ns-resize hover:scale-125 transition-transform"
+          className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 sm:w-3 sm:h-3 bg-blue-400 border border-white rounded-full cursor-ns-resize hover:scale-125 transition-transform touch-none"
           onMouseDown={(e) => handleMouseDown(e, "s")}
+          onTouchStart={(e) => handleTouchStart(e, "s")}
         />
       </div>
     </div>

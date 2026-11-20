@@ -139,6 +139,7 @@ interface MeteoMapProps {
   onToggleCoverageBoundary?: (show: boolean) => void;
   lightningTimeFilter?: "all" | "15m" | "5m" | "2m";
   activeLayers?: ActiveLayer[];
+  hasTopLegend?: boolean;
 }
 
 export const MeteoMap: React.FC<MeteoMapProps> = ({
@@ -167,6 +168,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
   onToggleCoverageBoundary: propsOnToggleCoverageBoundary,
   lightningTimeFilter = "all",
   activeLayers,
+  hasTopLegend = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -1020,7 +1022,16 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       map.on("click", "live-lightning-circle-layer", onStrikeClick);
     });
 
+    // Observe container size changes (e.g., sidebar drawer open/resize, split screen toggle, mobile controls bar)
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    });
+    resizeObserver.observe(mapContainerRef.current);
+
     return () => {
+      resizeObserver.disconnect();
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -2271,7 +2282,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       />
 
       {/* Map Control Floating HUD (Top Right) */}
-      <div className="absolute top-16 right-4 flex flex-col space-y-2 z-30" id="map-controls-hud">
+      <div className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 flex flex-col space-y-1 sm:space-y-1.5 z-30" id="map-controls-hud">
         {/* Map Lock Button */}
         <button
           onClick={() => onMapLockToggle(!mapLocked)}
@@ -2380,7 +2391,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
           </button>
 
           {showBasemapMenu && (
-            <div className="absolute right-10 top-0 bg-[#0f172a]/95 backdrop-blur-md border border-slate-700/80 rounded-lg p-2 shadow-2xl z-40 w-44 flex flex-col space-y-1">
+            <div className="absolute right-9 sm:right-10 bottom-0 bg-[#0f172a]/95 backdrop-blur-md border border-slate-700/80 rounded-lg p-2 shadow-2xl z-40 w-44 max-w-[calc(100vw-4.5rem)] flex flex-col space-y-1">
               <div className="text-[10px] font-semibold text-slate-400 px-1 py-0.5 border-b border-slate-700/50 mb-1 flex items-center justify-between">
                 <span>Basemap</span>
                 <span className="text-[9px] text-emerald-400 font-mono">Keyless ✓</span>
@@ -2437,7 +2448,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       {/* Floating Drawing Tool Status Indicator */}
       {activeTool !== "select" && (
         <div
-          className="absolute top-16 left-4 bg-[#131316]/95 backdrop-blur-md p-3 rounded-lg border border-[#2D2D30] text-xs flex flex-col space-y-2 z-30 shadow-lg min-w-[260px]"
+          className={`absolute ${hasTopLegend ? "top-[84px] md:top-[92px]" : "top-2.5"} left-2.5 sm:left-3.5 bg-[#131316]/95 backdrop-blur-md p-2.5 sm:p-3 rounded-lg border border-[#2D2D30] text-xs flex flex-col space-y-2 z-30 shadow-lg w-[calc(100%-4.25rem)] max-w-[260px] sm:max-w-[290px]`}
           id="active-tool-status"
         >
           <div className="flex items-center justify-between">
@@ -2522,7 +2533,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
         
         return (
           <div
-            className="absolute top-16 left-4 bg-[#131316]/95 backdrop-blur-md p-3 rounded-lg border border-[#2D2D30] text-xs flex flex-col space-y-3 z-30 shadow-lg min-w-[280px]"
+            className={`absolute ${hasTopLegend ? "top-[84px] md:top-[92px]" : "top-2.5"} left-2.5 sm:left-3.5 bg-[#131316]/95 backdrop-blur-md p-2.5 sm:p-3 rounded-lg border border-[#2D2D30] text-xs flex flex-col space-y-3 z-30 shadow-lg w-[calc(100%-4.25rem)] max-w-[260px] sm:max-w-[290px]`}
             id="selected-item-hud"
           >
             <div className="flex items-center justify-between border-b border-[#2D2D30]/60 pb-2">
@@ -2648,7 +2659,7 @@ export const MeteoMap: React.FC<MeteoMapProps> = ({
       {/* NASA GIBS Live Satellite Cloud Cover Floating HUD */}
       {isNasaCloudActive && (
         <div
-          className="absolute bottom-16 right-4 bg-[#0F1117]/95 backdrop-blur-md border border-sky-500/40 rounded-xl p-3 text-xs flex flex-col space-y-2.5 z-30 shadow-2xl min-w-[290px] max-w-[340px] text-left font-sans"
+          className="absolute bottom-24 sm:bottom-16 left-2.5 right-2.5 sm:left-auto sm:right-4 bg-[#0F1117]/95 backdrop-blur-md border border-sky-500/40 rounded-xl p-2.5 sm:p-3 text-xs flex flex-col space-y-2.5 z-30 shadow-2xl w-auto sm:w-[320px] max-h-[42dvh] overflow-y-auto custom-scrollbar text-left font-sans"
           id="nasa-gibs-hud"
         >
           {/* Header */}

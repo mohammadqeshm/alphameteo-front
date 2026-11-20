@@ -15,7 +15,8 @@ import {
   Clock,
   LayoutGrid,
   Zap,
-  Terminal
+  Terminal,
+  X
 } from "lucide-react";
 
 interface SidebarChatProps {
@@ -23,6 +24,7 @@ interface SidebarChatProps {
   messages: ChatMessage[];
   onSendMessage: (text: string) => void;
   isSending: boolean;
+  onClosePanel?: () => void;
 }
 
 export const SidebarChat: React.FC<SidebarChatProps> = ({
@@ -30,6 +32,7 @@ export const SidebarChat: React.FC<SidebarChatProps> = ({
   messages,
   onSendMessage,
   isSending,
+  onClosePanel,
 }) => {
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -77,12 +80,24 @@ export const SidebarChat: React.FC<SidebarChatProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="text-[9px] text-emerald-400 font-mono font-semibold">ONLINE</span>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[9px] text-emerald-400 font-mono font-semibold">ONLINE</span>
+            </div>
+            {onClosePanel && (
+              <button
+                type="button"
+                onClick={onClosePanel}
+                className="md:hidden p-1.5 rounded bg-[#12141A] border border-[#212530] text-slate-400 hover:text-white transition"
+                title="Close Panel"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 

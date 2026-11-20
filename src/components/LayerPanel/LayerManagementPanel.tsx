@@ -556,6 +556,7 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
               {activeCategory === 'models' && <Globe className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
               {activeCategory === 'observations' && <Radio className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
               {activeCategory === 'climate' && <Calendar className="w-3.5 h-3.5 text-purple-400 shrink-0" />}
+              {activeCategory === 'composite' && <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />}
               {activeCategory === 'favorites' && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />}
 
               <span className="truncate max-w-[80px]">
@@ -598,6 +599,16 @@ export const LayerManagementPanel: React.FC<LayerManagementPanelProps> = ({
               </div>
             )}
           </div>
+
+          {/* Mobile Drawer Close Button */}
+          <button
+            type="button"
+            onClick={onClosePanel}
+            className="md:hidden p-2 rounded-lg bg-[#141724] hover:bg-[#191D2D] text-slate-400 hover:text-white border border-[#23283B] transition shrink-0"
+            title="Close Panel"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* Action Button: Create Custom Composite Layer */}

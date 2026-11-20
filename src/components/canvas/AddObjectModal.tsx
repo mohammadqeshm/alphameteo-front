@@ -29,8 +29,8 @@ export const AddObjectModal: React.FC<AddObjectModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs select-none">
-      <div className="w-[680px] max-w-[95vw] max-h-[85vh] bg-[#0A0D14] border border-[#1A1F2C] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs select-none p-2 sm:p-4">
+      <div className="w-[680px] max-w-full max-h-[90dvh] bg-[#0A0D14] border border-[#1A1F2C] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Modal Header */}
         <div className="h-12 bg-[#0E121B] border-b border-[#1A1F2C] px-4 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2">
@@ -77,7 +77,7 @@ export const AddObjectModal: React.FC<AddObjectModalProps> = ({
         {/* Catalog Body */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-[#06080C]">
           {activeTab === "maps" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { title: "ECMWF 500 hPa Geopotential", layer: "pressure", level: "500hPa", model: "ECMWF HRES", desc: "Mid-tropospheric wave pattern, troughs, and cut-off lows" },
                 { title: "GFS 850 hPa Theta-E & Moisture", layer: "temperature", level: "850hPa", model: "GFS Global", desc: "Low-level thermodynamic moisture tongue and frontal boundaries" },
@@ -124,7 +124,7 @@ export const AddObjectModal: React.FC<AddObjectModalProps> = ({
           )}
 
           {activeTab === "indices" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { id: "mjo", title: "MJO Wheeler-Hendon Phase Diagram", agency: "BOM Australia", desc: "Real-time 8-phase diagram tracking tropical convective waves" },
                 { id: "iod", title: "Indian Ocean Dipole (DMI)", agency: "BOM / ECMWF", desc: "Western vs Eastern Indian Ocean SST anomaly dipole" },
@@ -167,7 +167,7 @@ export const AddObjectModal: React.FC<AddObjectModalProps> = ({
           )}
 
           {activeTab === "charts" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { type: "sounding", title: "Thermodynamic Skew-T Sounding", desc: "Atmospheric profile with CAPE, CIN, LCL, shear, and wind barbs" },
                 { type: "meteogram", title: "7-Day High-Resolution Meteogram", desc: "Multi-parameter curve: Temp, Dewpoint, Precipitation bars, MSLP" },
@@ -207,7 +207,7 @@ export const AddObjectModal: React.FC<AddObjectModalProps> = ({
           )}
 
           {activeTab === "annotations" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { shape: "sticky_note", color: "#F59E0B", title: "Priority Forecaster Sticky Note", desc: "Quick observation or watch note with customizable alert tint" },
                 { shape: "convective_watch", color: "#EF4444", title: "Severe Convective Watch Polygon", desc: "Red striped alert polygon designating thunderstorm risk area" },
@@ -248,7 +248,7 @@ export const AddObjectModal: React.FC<AddObjectModalProps> = ({
           )}
 
           {activeTab === "text" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { role: "body", title: "Synoptic Reasoning Block", desc: "Multi-paragraph markdown analysis notes with headers and bullet points" },
                 { role: "callout", title: "Hazard Alert Callout", desc: "High-contrast highlighted callout block for immediate forecaster actions" },
@@ -288,7 +288,7 @@ export const AddObjectModal: React.FC<AddObjectModalProps> = ({
           )}
 
           {activeTab === "frames" && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { theme: "cyan", title: "Synoptic Overview Frame", desc: "Cyan themed container for large-scale upper-air & surface charts" },
                 { theme: "amber", title: "Mesoscale Hazards Frame", desc: "Amber themed container for radar, lightning, and soundings" },

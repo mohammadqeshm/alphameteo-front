@@ -195,27 +195,27 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
     }
   };
 
-  // Canvas Drawing Handlers
-  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Canvas Drawing Handlers (Mouse & Touch)
+  const getPointCoords = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
     };
   };
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const beginStrokeAt = (clientX: number, clientY: number) => {
     if (!drawingMode) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const coords = getCanvasCoords(e);
+    const coords = getPointCoords(clientX, clientY);
     ctx.beginPath();
     ctx.moveTo(coords.x, coords.y);
     ctx.strokeStyle = brushColor;
@@ -226,16 +226,36 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
     setHasDrawings(true);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const moveStrokeTo = (clientX: number, clientY: number) => {
     if (!isDrawing || !drawingMode) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const coords = getCanvasCoords(e);
+    const coords = getPointCoords(clientX, clientY);
     ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    beginStrokeAt(e.clientX, e.clientY);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    moveStrokeTo(e.clientX, e.clientY);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!drawingMode || e.touches.length === 0) return;
+    e.preventDefault();
+    beginStrokeAt(e.touches[0].clientX, e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !drawingMode || e.touches.length === 0) return;
+    e.preventDefault();
+    moveStrokeTo(e.touches[0].clientX, e.touches[0].clientY);
   };
 
   const stopDrawing = () => {
@@ -280,22 +300,22 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="bg-[#0B0D13] border border-[#1E2330] rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-2 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-[#0B0D13] border border-[#1E2330] rounded-xl sm:rounded-2xl w-full max-w-5xl h-[94dvh] sm:h-[90dvh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="h-14 bg-[#0E1118] border-b border-[#1A1F2C] px-5 flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+        <div className="min-h-[3.25rem] py-2 bg-[#0E1118] border-b border-[#1A1F2C] px-3 sm:px-5 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
               <Camera className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                <span>High-Resolution Screenshot Preview & Export</span>
-                <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-400/20 font-mono font-bold">
+            <div className="min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-100 flex items-center gap-2 flex-wrap">
+                <span className="truncate">Screenshot Preview & Export</span>
+                <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-400/20 font-mono font-bold shrink-0">
                   {canvasRef.current ? `${canvasRef.current.width} × ${canvasRef.current.height} px` : "HD Capture"}
                 </span>
               </h3>
-              <p className="text-[10px] text-slate-400 font-mono">
+              <p className="text-[10px] text-slate-400 font-mono truncate">
                 {metadata.locationName} • {metadata.activeLayer.name} (+{metadata.forecastStep}h)
               </p>
             </div>
@@ -303,16 +323,16 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-[#141824] hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition border border-[#1E2330]"
+            className="w-8 h-8 rounded-lg bg-[#141824] hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition border border-[#1E2330] shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Body (Left: Toolbar / Controls, Right: Live Canvas Preview) */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Modal Body (Top/Left: Live Canvas Preview, Bottom/Right: Controls) */}
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
           {/* Canvas Preview Area */}
-          <div className="flex-1 bg-[#040507] p-4 flex items-center justify-center overflow-auto relative select-none">
+          <div className="flex-1 min-h-0 max-h-[45dvh] md:max-h-none bg-[#040507] p-2.5 sm:p-4 flex items-center justify-center overflow-auto relative select-none">
             <div className="relative max-w-full max-h-full flex items-center justify-center rounded-xl overflow-hidden border border-[#1E2330] shadow-2xl bg-black">
               <canvas
                 ref={canvasRef}
@@ -320,15 +340,19 @@ export const ScreenshotModal: React.FC<ScreenshotModalProps> = ({
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
                 onMouseLeave={stopDrawing}
-                className={`max-w-full max-h-[70vh] object-contain ${
-                  drawingMode ? "cursor-crosshair" : "cursor-default"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={stopDrawing}
+                onTouchCancel={stopDrawing}
+                className={`max-w-full max-h-[40dvh] md:max-h-[72dvh] object-contain ${
+                  drawingMode ? "cursor-crosshair touch-none" : "cursor-default"
                 }`}
               />
             </div>
           </div>
 
           {/* Right/Side Settings & Tools Panel */}
-          <div className="w-full md:w-80 bg-[#0A0C12] border-t md:border-t-0 md:border-l border-[#1A1F2C] p-4 flex flex-col justify-between shrink-0 space-y-4 overflow-y-auto custom-scrollbar">
+          <div className="flex-1 md:flex-none md:w-80 min-h-0 bg-[#0A0C12] border-t md:border-t-0 md:border-l border-[#1A1F2C] p-3 sm:p-4 flex flex-col justify-between shrink-0 space-y-4 overflow-y-auto custom-scrollbar">
             <div className="space-y-4">
               {/* Drawing Tools Toolset */}
               <div className="bg-[#10131C] border border-[#1A1F2C] rounded-xl p-3 space-y-2.5">

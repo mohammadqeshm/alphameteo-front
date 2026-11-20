@@ -324,6 +324,16 @@ export const CustomCompositeLayerModal: React.FC<CustomCompositeLayerModalProps>
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState<boolean>(false);
   const [hoverCoords, setHoverCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [mobileView, setMobileView] = useState<'config' | 'preview'>('config');
+
+  useEffect(() => {
+    if (mobileView === 'preview') {
+      const id = requestAnimationFrame(() => {
+        mapRef.current?.resize();
+      });
+      return () => cancelAnimationFrame(id);
+    }
+  }, [mobileView]);
 
   // Update initial fields if initialComposite changes
   useEffect(() => {
@@ -785,40 +795,70 @@ export const CustomCompositeLayerModal: React.FC<CustomCompositeLayerModalProps>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-6xl h-[90vh] bg-[#1a1a1a] border border-[#2b2b2b] rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-100"
+        className="w-full max-w-6xl h-[94dvh] sm:h-[90dvh] bg-[#1a1a1a] border border-[#2b2b2b] rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-100"
       >
         {/* Top Header */}
-        <div className="px-5 py-3.5 bg-[#212121] border-b border-[#2e2e2e] flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600/30 to-cyan-500/20 border border-blue-500/40 text-blue-400">
-              <Sparkles className="w-5 h-5" />
+        <div className="px-3.5 sm:px-5 py-3 sm:py-3.5 bg-[#212121] border-b border-[#2e2e2e] flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-gradient-to-br from-blue-600/30 to-cyan-500/20 border border-blue-500/40 text-blue-400 shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>{initialComposite ? 'Edit Custom Composite Layer' : 'Custom Composite Layer Builder'}</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+            <div className="min-w-0">
+              <h2 className="text-xs sm:text-sm font-bold text-white flex items-center flex-wrap gap-1.5 sm:gap-2">
+                <span className="truncate">{initialComposite ? 'Edit Custom Composite Layer' : 'Custom Composite Layer Builder'}</span>
+                <span className="text-[9px] sm:text-[10px] font-mono px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0 hidden sm:inline-block">
                   Real Map Preview
                 </span>
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">
+              <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate hidden sm:block">
                 Configure and drag-and-drop layers on the left with live MapLibre preview on the right
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Main Body - Split Two Columns */}
-        <div className="flex-1 flex flex-col-reverse md:flex-row min-h-0 overflow-hidden">
+        {/* Mobile View Switcher (<md) */}
+        <div className="md:hidden bg-[#16181f] border-b border-[#2b2b2b] px-3 py-2 flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setMobileView('config')}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              mobileView === 'config'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-[#222222] text-slate-400 hover:text-white border border-[#303030]'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>Configure ({subLayers.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileView('preview')}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+              mobileView === 'preview'
+                ? 'bg-cyan-600 text-white shadow-sm'
+                : 'bg-[#222222] text-slate-400 hover:text-white border border-[#303030]'
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>Live Map Preview</span>
+          </button>
+        </div>
+
+        {/* Modal Main Body - Split Two Columns on Desktop, Tabbed Full-Height on Mobile */}
+        <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
           
           {/* LEFT SIDE: LAYER CONTROLS & SUB-LAYERS LIST */}
           <div 
-            className="w-full md:w-[48%] lg:w-[45%] flex flex-col border-t md:border-t-0 md:border-r border-[#2b2b2b] bg-[#1a1a1a] overflow-hidden"
+            className={`${
+              mobileView === 'config' ? 'flex-1 flex' : 'hidden md:flex'
+            } w-full md:w-[48%] lg:w-[45%] flex-col md:border-r border-[#2b2b2b] bg-[#1a1a1a] overflow-hidden min-h-0`}
           >
             {/* Scrollable Configuration */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
@@ -1036,7 +1076,7 @@ export const CustomCompositeLayerModal: React.FC<CustomCompositeLayerModalProps>
             </div>
 
             {/* Left Column Footer Actions */}
-            <div className="p-3.5 bg-[#212121] border-t border-[#2e2e2e] flex items-center justify-between gap-2 shrink-0">
+            <div className="p-3 sm:p-3.5 bg-[#212121] border-t border-[#2e2e2e] flex flex-wrap items-center justify-between gap-2 shrink-0">
               <button
                 type="button"
                 onClick={onClose}
@@ -1045,7 +1085,7 @@ export const CustomCompositeLayerModal: React.FC<CustomCompositeLayerModalProps>
                 Cancel
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 ml-auto">
                 <button
                   type="button"
                   onClick={() => handleSubmit(false)}
@@ -1057,26 +1097,28 @@ export const CustomCompositeLayerModal: React.FC<CustomCompositeLayerModalProps>
                 <button
                   type="button"
                   onClick={() => handleSubmit(true)}
-                  className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg text-xs font-bold shadow-md shadow-blue-900/40 transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 sm:px-4 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg text-xs font-bold shadow-md shadow-blue-900/40 transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>Save & Activate Now</span>
+                  <span>Save & Activate</span>
                 </button>
               </div>
             </div>
           </div>
 
           {/* RIGHT SIDE: REAL MAPLIBRE LIVE MAP PREVIEW */}
-          <div className="flex-1 flex flex-col bg-[#111318] relative overflow-hidden min-h-[300px]">
+          <div className={`${
+            mobileView === 'preview' ? 'flex-1 flex' : 'hidden md:flex'
+          } flex-col bg-[#111318] relative overflow-hidden min-h-[260px]`}>
             
             {/* Top Preview Map HUD Header */}
-            <div className="p-3 bg-[#191c24]/90 backdrop-blur-md border-b border-[#252a38] flex items-center justify-between z-20">
-              <div className="flex items-center space-x-2">
-                <Compass className="w-4 h-4 text-cyan-400 animate-spin-slow" />
-                <span className="text-xs font-bold text-slate-100">
-                  Live MapLibre Preview & Stack Order
+            <div className="p-2.5 sm:p-3 bg-[#191c24]/90 backdrop-blur-md border-b border-[#252a38] flex items-center justify-between gap-2 z-20 shrink-0">
+              <div className="flex items-center space-x-2 min-w-0">
+                <Compass className="w-4 h-4 text-cyan-400 animate-spin-slow shrink-0" />
+                <span className="text-xs font-bold text-slate-100 truncate">
+                  Live MapLibre Preview
                 </span>
-                <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.2 rounded font-bold">
+                <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.2 rounded font-bold shrink-0 hidden sm:inline-block">
                   WebGL 3D Map
                 </span>
               </div>

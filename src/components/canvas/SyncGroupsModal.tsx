@@ -46,8 +46,8 @@ export const SyncGroupsModal: React.FC<SyncGroupsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs select-none">
-      <div className="w-[520px] max-w-[95vw] bg-[#0A0D14] border border-[#1A1F2C] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs select-none p-2 sm:p-4">
+      <div className="w-[520px] max-w-full max-h-[90dvh] bg-[#0A0D14] border border-[#1A1F2C] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="h-12 bg-[#0E121B] border-b border-[#1A1F2C] px-4 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2">
             <Link2 className="w-4 h-4 text-cyan-400" />
@@ -60,18 +60,18 @@ export const SyncGroupsModal: React.FC<SyncGroupsModalProps> = ({
           </button>
         </div>
 
-        <div className="p-4 space-y-4 bg-[#06080C] max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div className="p-3 sm:p-4 space-y-4 bg-[#06080C] flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <p className="text-xs text-slate-400 leading-relaxed">
             By default, canvas map cards are independent. Assigning map cards to a Sync Group links their pan/zoom coordinates and forecast valid times so multi-model comparisons stay in lockstep.
           </p>
 
           {/* New Group Creator */}
-          <div className="flex items-center space-x-2 bg-[#0C101A] p-2.5 rounded-lg border border-[#1A2234]">
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 bg-[#0C101A] p-2.5 rounded-lg border border-[#1A2234]">
             <input
               type="color"
               value={newGroupColor}
               onChange={(e) => setNewGroupColor(e.target.value)}
-              className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer"
+              className="w-7 h-7 rounded border-0 bg-transparent cursor-pointer shrink-0"
             />
             <input
               type="text"
@@ -79,11 +79,11 @@ export const SyncGroupsModal: React.FC<SyncGroupsModalProps> = ({
               onChange={(e) => setNewGroupName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreateGroup()}
               placeholder="e.g. Hormozgan Mesoscale Box"
-              className="flex-1 bg-[#121622] text-xs text-white px-2.5 py-1.5 rounded border border-[#1A1F2C] outline-none placeholder-slate-600"
+              className="flex-1 min-w-[140px] bg-[#121622] text-xs text-white px-2.5 py-1.5 rounded border border-[#1A1F2C] outline-none placeholder-slate-600"
             />
             <button
               onClick={handleCreateGroup}
-              className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-xs font-semibold flex items-center space-x-1"
+              className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-xs font-semibold flex items-center space-x-1 shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create</span>
@@ -100,14 +100,14 @@ export const SyncGroupsModal: React.FC<SyncGroupsModalProps> = ({
               syncGroups.map(group => (
                 <div
                   key={group.id}
-                  className="p-3 bg-[#0C101A] border border-[#1A2234] rounded-lg flex items-center justify-between"
+                  className="p-3 bg-[#0C101A] border border-[#1A2234] rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
                 >
-                  <div className="flex items-center space-x-2.5">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: group.color }} />
-                    <span className="font-semibold text-xs text-slate-200">{group.name}</span>
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: group.color }} />
+                    <span className="font-semibold text-xs text-slate-200 truncate">{group.name}</span>
                   </div>
 
-                  <div className="flex items-center space-x-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
                     {/* Toggle Coords Sync */}
                     <button
                       onClick={() => handleToggleSyncCoords(group.id)}
@@ -135,7 +135,7 @@ export const SyncGroupsModal: React.FC<SyncGroupsModalProps> = ({
                     {/* Delete */}
                     <button
                       onClick={() => handleDeleteGroup(group.id)}
-                      className="p-1 text-slate-500 hover:text-red-400 rounded transition"
+                      className="p-1 text-slate-500 hover:text-red-400 rounded transition ml-auto sm:ml-0"
                       title="Delete Sync Group"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

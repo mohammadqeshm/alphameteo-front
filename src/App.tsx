@@ -45,6 +45,8 @@ import {
   ChevronsRight,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Activity,
   Info,
   X,
@@ -352,6 +354,8 @@ export default function App() {
   const [activeTool, setActiveTool] = useState<ToolbarTool>("select");
   const [showLeftDrawer, setShowLeftDrawer] = useState<boolean>(true);
   const [showMobileControls, setShowMobileControls] = useState<boolean>(false);
+  const [showMobileGisTools, setShowMobileGisTools] = useState<boolean>(false);
+  const [isTimelineCollapsed, setIsTimelineCollapsed] = useState<boolean>(false);
 
   // 3. Timeline Scrubber state
   const [timelineHour, setTimelineHour] = useState<number>(15); // Default +15h GFS step
@@ -893,137 +897,139 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col antialiased text-xs text-slate-200 bg-[#060709] font-sans select-none" id="alpha-meteo-root">
+    <div className="h-[100dvh] w-full overflow-hidden flex flex-col antialiased text-xs text-slate-200 bg-[#060709] font-sans select-none" id="alpha-meteo-root">
       
       {/* 1. TOP HEADER NAVIGATION */}
-      <header className="h-14 bg-[#1a1a1a] border-b border-[#1A1C23] flex items-center justify-between px-4 shrink-0 z-50 shadow-md" id="global-header">
-        <div className="flex items-center space-x-6">
+      <header className="h-12 sm:h-14 bg-[#1a1a1a] border-b border-[#1A1C23] flex items-center justify-between px-2.5 sm:px-4 gap-2 shrink-0 z-50 shadow-md" id="global-header">
+        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 min-w-0 flex-1">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => setWorkspaceMode("map")}>
-            <div className="w-11 h-11 rounded-xl overflow-hidden bg-gradient-to-br from-[#12141A] to-[#0A0B0E] flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-md border border-[#1A1C23]">
+          <div className="flex items-center space-x-2 sm:space-x-2.5 group cursor-pointer shrink-0" onClick={() => setWorkspaceMode("map")}>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl overflow-hidden bg-gradient-to-br from-[#12141A] to-[#0A0B0E] flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-md border border-[#1A1C23] shrink-0">
               <img
                 src={brandLogo}
                 alt="Alpha Meteo Logo"
-                className="w-8.5 h-8.5 object-contain transition-transform duration-300 group-hover:rotate-6"
+                className="w-6 h-6 sm:w-7 sm:h-7 object-contain transition-transform duration-300 group-hover:rotate-6"
                 referrerPolicy="no-referrer"
               />
             </div>
-            <span className="text-white font-sans font-black tracking-wider text-sm uppercase">
+            <span className="hidden sm:inline text-white font-sans font-black tracking-wider text-xs sm:text-sm uppercase whitespace-nowrap">
               ALPHA <span className="text-blue-500 font-normal">METEO</span>
             </span>
           </div>
 
           {/* Top-Level Workspace Mode Switcher (Operational Map vs Analysis Canvas) */}
-          <div className="flex items-center bg-[#10131B] border border-[#212636] rounded-lg p-0.5 space-x-0.5 shadow-inner" id="workspace-mode-switcher">
+          <div className="flex items-center bg-[#10131B] border border-[#212636] rounded-lg p-0.5 space-x-0.5 shadow-inner shrink-0" id="workspace-mode-switcher">
             <button
               onClick={() => setWorkspaceMode("map")}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+              className={`flex items-center space-x-1 sm:space-x-1.5 px-2 lg:px-3 py-1 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-semibold transition whitespace-nowrap ${
                 workspaceMode === "map"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                   : "text-slate-400 hover:text-slate-200 hover:bg-[#181D2A]"
               }`}
             >
-              <Compass className="w-3.5 h-3.5" />
-              <span>Operational Map</span>
+              <Compass className="w-3.5 h-3.5 shrink-0" />
+              <span className="lg:hidden">Map</span>
+              <span className="hidden lg:inline">Operational Map</span>
             </button>
             <button
               onClick={() => setWorkspaceMode("canvas")}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+              className={`flex items-center space-x-1 sm:space-x-1.5 px-2 lg:px-3 py-1 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-semibold transition whitespace-nowrap ${
                 workspaceMode === "canvas"
                   ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/20"
                   : "text-slate-400 hover:text-slate-200 hover:bg-[#181D2A]"
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Analysis Canvas</span>
+              <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+              <span className="lg:hidden">Canvas</span>
+              <span className="hidden lg:inline">Analysis Canvas</span>
             </button>
           </div>
 
-          {/* Search box with autocomplete suggestions */}
-          <div className="relative hidden md:block">
+          {/* Search box with autocomplete suggestions (Tablet & Desktop) */}
+          <div className="relative hidden md:block shrink-0">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="bg-[#12141A] hover:bg-[#181B24] focus:bg-[#090A0E] text-slate-200 rounded border border-[#212530] pl-3 pr-9 py-1.5 focus:outline-none focus:border-blue-500 w-52 text-xs transition font-medium placeholder-slate-600"
+              className="bg-[#12141A] hover:bg-[#181B24] focus:bg-[#090A0E] text-slate-200 rounded border border-[#212530] pl-2.5 pr-8 py-1.5 focus:outline-none focus:border-blue-500 w-36 xl:w-44 2xl:w-52 text-xs transition font-medium placeholder-slate-600"
               placeholder="Search location..."
               id="station-search-input"
             />
-            <Search className="w-3.5 h-3.5 absolute right-3 top-2.5 text-slate-500 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-slate-500 pointer-events-none" />
             
             {/* Search Suggestions List */}
             {suggestions.length > 0 && (
-              <div className="absolute top-10 left-0 right-0 bg-[#1a1a1a] border border-[#1A1C23] rounded shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar" id="search-suggestions-container">
+              <div className="absolute top-10 left-0 w-64 sm:w-72 bg-[#1a1a1a] border border-[#1A1C23] rounded shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar" id="search-suggestions-container">
                 {suggestions.map((station, i) => (
                   <div
                     key={i}
                     onClick={() => handleSelectStation(station)}
                     className="p-2.5 hover:bg-blue-600/10 cursor-pointer text-slate-300 hover:text-white flex justify-between items-center transition border-b border-[#1A1C23]/30 text-[11px]"
                   >
-                    <span className="font-semibold">{station.name}, <span className="text-slate-500 font-normal">{station.country}</span></span>
-                    <span className="font-mono text-[9px] text-slate-500">{station.lat.toFixed(1)}°N, {station.lon.toFixed(1)}°E</span>
+                    <span className="font-semibold truncate pr-2">{station.name}, <span className="text-slate-500 font-normal">{station.country}</span></span>
+                    <span className="font-mono text-[9px] text-slate-500 shrink-0">{station.lat.toFixed(1)}°N, {station.lon.toFixed(1)}°E</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Location details readout */}
-          <div className="hidden sm:flex flex-col border-l border-[#1F222F] pl-4">
-            <div className="flex items-center space-x-1.5">
-              <span className="font-bold text-slate-200 text-xs truncate max-w-[130px]">{locationName}</span>
+          {/* Location details readout (Shown cleanly at xl+ without overflowing) */}
+          <div className="hidden xl:flex flex-col border-l border-[#1F222F] pl-3 min-w-0 max-w-[165px] 2xl:max-w-[215px] overflow-hidden">
+            <div className="flex items-center space-x-1.5 min-w-0">
+              <span className="font-bold text-slate-200 text-xs truncate">{locationName}</span>
               <button 
                 onClick={handleToggleFavorite}
-                className="text-slate-500 hover:text-yellow-500 transition duration-150"
+                className="text-slate-500 hover:text-yellow-500 transition duration-150 shrink-0"
                 title="Toggle Favorite Location"
               >
                 <Star className={`w-3.5 h-3.5 ${favorites.some(f => f.name === locationName) ? "fill-yellow-500 text-yellow-500" : ""}`} />
               </button>
             </div>
-            <div className="flex items-center space-x-1 text-[9px] text-slate-500 font-mono">
-              <span>{currentCoords.lat.toFixed(4)}° N, {currentCoords.lon.toFixed(4)}° E</span>
-              <span>•</span>
-              <span>Elev: {currentCoords.elevation}m</span>
+            <div className="text-[9px] text-slate-500 font-mono truncate">
+              {currentCoords.lat.toFixed(2)}°N, {currentCoords.lon.toFixed(2)}°E • {currentCoords.elevation}m
             </div>
           </div>
         </div>
 
-        {/* Dynamic selectors matching top bar controls - Desktop Only */}
-        <div className="flex items-center space-x-4">
-          <div className="hidden lg:flex items-center space-x-4">
+        {/* Dynamic selectors matching top bar controls - Wide Desktop */}
+        <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+          <div className="hidden xl:flex items-center space-x-2.5 2xl:space-x-4">
             {/* Model Selector */}
             <div className="flex flex-col">
               <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Model</span>
-              <div className="bg-[#12141A] border border-[#212530] rounded px-2.5 py-0.5 flex items-center space-x-1.5">
+              <div className="bg-[#12141A] border border-[#212530] rounded px-2 py-0.5 flex items-center space-x-1.5 whitespace-nowrap">
                 <span className="text-xs font-bold text-slate-300">GFS 0.25°</span>
                 <span className="bg-blue-600/20 text-blue-400 font-black px-1 rounded text-[8px] border border-blue-500/30">+2</span>
               </div>
             </div>
 
-            {/* Run Selector */}
-            <div className="flex flex-col">
+            {/* Run Selector (Wide 2xl+ screens; also accessible in collapsible drawer on smaller viewports) */}
+            <div className="hidden 2xl:flex flex-col">
               <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Run</span>
-              <div className="bg-[#12141A] border border-[#212530] rounded px-2.5 py-0.5">
+              <div className="bg-[#12141A] border border-[#212530] rounded px-2.5 py-0.5 whitespace-nowrap">
                 <span className="text-xs font-bold text-slate-300">{formatForecastDate(0, { includeYear: true, onlyDate: true })} 00Z</span>
               </div>
             </div>
 
             {/* Valid Scrubber Display */}
             <div className="flex flex-col">
-              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Valid Forecast Time</span>
+              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Valid Time</span>
               <div className="flex items-center bg-[#12141A] border border-[#212530] rounded overflow-hidden">
                 <button 
                   onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
                   className="px-2 py-0.5 hover:bg-[#1A1D27] text-slate-400 border-r border-[#212530] transition text-sm font-bold"
+                  title="Previous Step"
                 >
                   ‹
                 </button>
-                <div className="px-3 py-0.5 flex items-center font-mono text-xs font-bold text-slate-200">
+                <div className="px-2.5 py-0.5 flex items-center font-mono text-xs font-bold text-slate-200 whitespace-nowrap">
                   <span>{formatForecastDate(timelineHour, { includeYear: false })}</span>
                 </div>
                 <button 
                   onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
                   className="px-2 py-0.5 hover:bg-[#1A1D27] text-slate-400 border-l border-[#212530] transition text-sm font-bold"
+                  title="Next Step"
                 >
                   ›
                 </button>
@@ -1032,25 +1038,25 @@ export default function App() {
 
             {/* Playback controller */}
             <div className="flex flex-col">
-              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Playback</span>
+              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Loop</span>
               <div className="flex items-center bg-[#12141A] border border-[#212530] rounded overflow-hidden h-[23px]">
                 <button 
                   onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
-                  className="px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
+                  className="hidden 2xl:inline-flex items-center px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
                   title="Previous Step"
                 >
                   ‹
                 </button>
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="px-3 h-full hover:bg-[#1A1D27] text-blue-400 border-x border-[#212530] transition flex items-center justify-center"
+                  className="px-2.5 h-full hover:bg-[#1A1D27] text-blue-400 2xl:border-x border-[#212530] transition flex items-center justify-center"
                   title={isPlaying ? "Pause" : "Play Forecast Loop"}
                 >
                   {isPlaying ? <Pause className="w-3 h-3 text-amber-500 fill-amber-500" /> : <Play className="w-3 h-3 text-emerald-500 fill-emerald-500" />}
                 </button>
                 <button 
                   onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
-                  className="px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
+                  className="hidden 2xl:inline-flex items-center px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
                   title="Next Step"
                 >
                   ›
@@ -1059,24 +1065,24 @@ export default function App() {
             </div>
           </div>
 
-          {/* Mobile controls toggle */}
-          <div className="flex lg:hidden items-center space-x-2">
+          {/* Mobile & Compact Laptop Controls Toggle */}
+          <div className="flex xl:hidden items-center">
             <button
               onClick={() => setShowMobileControls(!showMobileControls)}
-              className={`p-2 rounded border transition ${
+              className={`p-1.5 sm:p-2 rounded border transition ${
                 showMobileControls
-                  ? "bg-blue-600/20 text-blue-400 border-blue-500/50 animate-pulse"
+                  ? "bg-blue-600/20 text-blue-400 border-blue-500/50"
                   : "bg-[#12141A] border-[#212530] text-slate-400 hover:text-white"
               }`}
-              title="Toggle Forecast Controls"
+              title="Toggle Search & Forecast Controls"
             >
               <SlidersHorizontal className="w-4 h-4" />
             </button>
           </div>
 
           {/* User controls icons */}
-          <div className="flex items-center space-x-2 text-slate-400 border-l border-[#1F222F] pl-4 max-sm:pl-2">
-            <button onClick={handleExportScreenshot} className="hover:text-slate-200 p-1.5 rounded hover:bg-[#12141A] transition" title="Download Meteorological Layout GRIB">
+          <div className="flex items-center space-x-1 sm:space-x-1.5 text-slate-400 border-l border-[#1F222F] pl-2 sm:pl-3">
+            <button onClick={handleExportScreenshot} className="hover:text-slate-200 p-1.5 rounded hover:bg-[#12141A] transition" title="Capture Map Screenshot">
               <Download className="w-4 h-4" />
             </button>
             <button className="hover:text-slate-200 p-1.5 rounded hover:bg-[#12141A] relative transition max-sm:hidden" title="System Alerts">
@@ -1093,75 +1099,124 @@ export default function App() {
         </div>
       </header>
 
-      {/* Mobile Controls Collapsible Bar */}
+      {/* Mobile, Tablet & Compact-Laptop Controls Collapsible Bar */}
       {showMobileControls && (
-        <div className="lg:hidden bg-[#1a1a1a] border-b border-[#1A1C23] px-4 py-2.5 flex flex-wrap gap-3 items-center justify-between shrink-0 z-40" id="mobile-controls-bar">
-          <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
-            {/* Model Selector */}
-            <div className="flex flex-col">
-              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Model</span>
-              <div className="bg-[#12141A] border border-[#212530] rounded px-2 py-0.5 flex items-center space-x-1.5">
-                <span className="text-xs font-bold text-slate-300">GFS 0.25°</span>
-                <span className="bg-blue-600/20 text-blue-400 font-black px-1 rounded text-[8px] border border-blue-500/30">+2</span>
+        <div className="xl:hidden bg-[#1a1a1a] border-b border-[#1A1C23] px-3 sm:px-4 py-2.5 flex flex-col gap-2.5 shrink-0 z-40" id="mobile-controls-bar">
+          {/* Location Search & Active Station Readout (visible on mobile/tablet/compact-laptop) */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            <div className="relative flex-1 md:hidden">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full bg-[#12141A] hover:bg-[#181B24] focus:bg-[#090A0E] text-slate-200 rounded border border-[#212530] pl-3 pr-9 py-1.5 focus:outline-none focus:border-blue-500 text-xs transition font-medium placeholder-slate-600"
+                placeholder="Search station or city..."
+                id="mobile-station-search-input"
+              />
+              <Search className="w-3.5 h-3.5 absolute right-3 top-2.5 text-slate-500 pointer-events-none" />
+
+              {suggestions.length > 0 && (
+                <div className="absolute top-9 left-0 right-0 bg-[#1a1a1a] border border-[#1A1C23] rounded shadow-2xl z-50 overflow-hidden max-h-52 overflow-y-auto custom-scrollbar">
+                  {suggestions.map((station, i) => (
+                    <div
+                      key={i}
+                      onClick={() => handleSelectStation(station)}
+                      className="p-2.5 hover:bg-blue-600/10 cursor-pointer text-slate-300 hover:text-white flex justify-between items-center transition border-b border-[#1A1C23]/30 text-[11px]"
+                    >
+                      <span className="font-semibold truncate pr-2">{station.name}, <span className="text-slate-500 font-normal">{station.country}</span></span>
+                      <span className="font-mono text-[9px] text-slate-500 shrink-0">{station.lat.toFixed(1)}°N, {station.lon.toFixed(1)}°E</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between sm:justify-end gap-2 bg-[#12141A] border border-[#212530] rounded px-2.5 py-1">
+              <div className="flex items-center space-x-1.5 min-w-0">
+                <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span className="font-bold text-slate-200 text-xs truncate max-w-[160px]">{locationName}</span>
+                <span className="text-[9px] text-slate-500 font-mono hidden xs:inline">
+                  ({currentCoords.lat.toFixed(2)}°, {currentCoords.lon.toFixed(2)}°)
+                </span>
+              </div>
+              <button
+                onClick={handleToggleFavorite}
+                className="text-slate-500 hover:text-yellow-500 transition shrink-0"
+                title="Toggle Favorite Location"
+              >
+                <Star className={`w-3.5 h-3.5 ${favorites.some(f => f.name === locationName) ? "fill-yellow-500 text-yellow-500" : ""}`} />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2.5 items-center justify-between">
+            <div className="flex items-center space-x-2.5 sm:space-x-3">
+              {/* Model Selector */}
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Model</span>
+                <div className="bg-[#12141A] border border-[#212530] rounded px-2 py-0.5 flex items-center space-x-1.5">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-300">GFS 0.25°</span>
+                  <span className="bg-blue-600/20 text-blue-400 font-black px-1 rounded text-[8px] border border-blue-500/30">+2</span>
+                </div>
+              </div>
+
+              {/* Run Selector */}
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Run</span>
+                <div className="bg-[#12141A] border border-[#212530] rounded px-2 py-0.5">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-300">{formatForecastDate(0, { onlyDate: true, isShort: true })} 00Z</span>
+                </div>
+              </div>
+
+              {/* Playback controller */}
+              <div className="flex flex-col">
+                <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Playback</span>
+                <div className="flex items-center bg-[#12141A] border border-[#212530] rounded overflow-hidden h-[23px]">
+                  <button 
+                    onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
+                    className="px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
+                    title="Previous Step"
+                  >
+                    ‹
+                  </button>
+                  <button 
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="px-2.5 h-full hover:bg-[#1A1D27] text-blue-400 border-x border-[#212530] transition flex items-center justify-center"
+                    title={isPlaying ? "Pause" : "Play Forecast Loop"}
+                  >
+                    {isPlaying ? <Pause className="w-3 h-3 text-amber-500 fill-amber-500" /> : <Play className="w-3 h-3 text-emerald-500 fill-emerald-500" />}
+                  </button>
+                  <button 
+                    onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
+                    className="px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
+                    title="Next Step"
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Run Selector */}
-            <div className="flex flex-col">
-              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Run</span>
-              <div className="bg-[#12141A] border border-[#212530] rounded px-2 py-0.5">
-                <span className="text-xs font-bold text-slate-300">{formatForecastDate(0, { onlyDate: true, isShort: true })} 00Z</span>
-              </div>
-            </div>
-
-            {/* Playback controller */}
-            <div className="flex flex-col">
-              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Playback</span>
-              <div className="flex items-center bg-[#12141A] border border-[#212530] rounded overflow-hidden h-[23px]">
+            {/* Valid Scrubber Display */}
+            <div className="flex flex-col w-full sm:w-auto">
+              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Valid Forecast Time</span>
+              <div className="flex items-center bg-[#12141A] border border-[#212530] rounded overflow-hidden w-full sm:w-auto justify-between">
                 <button 
                   onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
-                  className="px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
-                  title="Previous Step"
+                  className="px-3 py-0.5 hover:bg-[#1A1D27] text-slate-400 border-r border-[#212530] transition text-sm font-bold"
                 >
                   ‹
                 </button>
-                <button 
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="px-3 h-full hover:bg-[#1A1D27] text-blue-400 border-x border-[#212530] transition flex items-center justify-center"
-                  title={isPlaying ? "Pause" : "Play Forecast Loop"}
-                >
-                  {isPlaying ? <Pause className="w-3 h-3 text-amber-500 fill-amber-500" /> : <Play className="w-3 h-3 text-emerald-500 fill-emerald-500" />}
-                </button>
+                <div className="px-3 py-0.5 flex items-center font-mono text-[11px] sm:text-xs font-bold text-slate-200 flex-1 justify-center">
+                  <span>{formatForecastDate(timelineHour, { includeYear: false })}</span>
+                </div>
                 <button 
                   onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
-                  className="px-2 h-full hover:bg-[#1A1D27] text-slate-400 transition"
-                  title="Next Step"
+                  className="px-3 py-0.5 hover:bg-[#1A1D27] text-slate-400 border-l border-[#212530] transition text-sm font-bold"
                 >
                   ›
                 </button>
               </div>
-            </div>
-          </div>
-
-          {/* Valid Scrubber Display */}
-          <div className="flex flex-col w-full sm:w-auto">
-            <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans mb-0.5">Valid Forecast Time</span>
-            <div className="flex items-center bg-[#12141A] border border-[#212530] rounded overflow-hidden w-full sm:w-auto justify-between">
-              <button 
-                onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
-                className="px-3 py-0.5 hover:bg-[#1A1D27] text-slate-400 border-r border-[#212530] transition text-sm font-bold"
-              >
-                ‹
-              </button>
-              <div className="px-3 py-0.5 flex items-center font-mono text-xs font-bold text-slate-200 flex-1 justify-center">
-                <span>{formatForecastDate(timelineHour, { includeYear: false })}</span>
-              </div>
-              <button 
-                onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
-                className="px-3 py-0.5 hover:bg-[#1A1D27] text-slate-400 border-l border-[#212530] transition text-sm font-bold"
-              >
-                ›
-              </button>
             </div>
           </div>
         </div>
@@ -1177,9 +1232,28 @@ export default function App() {
           />
         ) : (
           <>
+            {/* MOBILE GIS TOOLS TOGGLE BUTTON (aligned with top-left map legend) */}
+            <button
+              onClick={() => setShowMobileGisTools(!showMobileGisTools)}
+              className={`md:hidden absolute left-2.5 top-[52px] sm:top-[56px] z-40 w-9 h-9 rounded-lg border flex items-center justify-center shadow-xl transition backdrop-blur-md ${
+                showMobileGisTools || activeTool !== "select"
+                  ? "bg-blue-600 text-white border-blue-400/50"
+                  : "bg-[#1a1a1a]/95 text-slate-300 border-[#252834] hover:text-white"
+              }`}
+              title={showMobileGisTools ? "Hide GIS Toolbar" : "Show GIS Toolbar"}
+              id="mobile-gis-toggle-btn"
+            >
+              {showMobileGisTools ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+            </button>
+
             {/* LEFT GIS TOOLBAR with Human-Readable Labels */}
-            <aside className="w-14 md:w-[72px] bg-[#1a1a1a] border-r border-[#1A1C23] flex flex-col justify-between items-center py-2 shrink-0 z-40 shadow-lg max-md:absolute max-md:left-3 max-md:top-14 max-md:bottom-auto max-md:max-h-[calc(100vh-220px)] max-md:border max-md:rounded-lg max-md:shadow-2xl max-md:bg-[#1a1a1a]/90 max-md:backdrop-blur-md max-md:py-3" id="left-gis-toolbar">
-          <div className="flex flex-col items-center w-full space-y-0.5 overflow-y-auto custom-scrollbar">
+            <aside
+              className={`w-12 md:w-[72px] bg-[#1a1a1a] border-r border-[#1A1C23] flex-col justify-between items-center py-2 shrink-0 z-40 shadow-lg max-md:absolute max-md:left-2.5 max-md:top-[94px] sm:max-md:top-[98px] max-md:bottom-auto max-md:max-h-[calc(100dvh-14.5rem)] max-md:border max-md:rounded-lg max-md:shadow-2xl max-md:bg-[#1a1a1a]/95 max-md:backdrop-blur-md max-md:py-2 ${
+                showMobileGisTools ? "flex" : "hidden md:flex"
+              }`}
+              id="left-gis-toolbar"
+            >
+          <div className="flex flex-col items-center w-full space-y-0.5 flex-1 min-h-0 overflow-y-auto no-scrollbar">
             <div className="text-[7.5px] text-slate-500 uppercase font-black tracking-widest mb-1 select-none text-center hidden md:block">GIS Tools</div>
             
             {/* Pointer select tool */}
@@ -1353,7 +1427,7 @@ export default function App() {
           </div>
 
           {/* Lower Toolbar tools */}
-          <div className="flex flex-col items-center w-full space-y-1.5 border-t border-[#1A1C23] pt-2">
+          <div className="flex flex-col items-center w-full space-y-1.5 border-t border-[#1A1C23] pt-2 shrink-0">
             <button
               onClick={handleSendToCanvas}
               className="w-10 md:w-14 py-1.5 rounded flex flex-col items-center transition text-cyan-400 hover:text-white hover:bg-cyan-950/40 border border-cyan-500/20"
@@ -1382,18 +1456,18 @@ export default function App() {
         </aside>
 
         {/* CENTRAL AREA & RIGHT SIDE PANEL (Vertical Stack of Parameter tabs + Horizontal Flex of map + right bar) */}
-        <div className="flex-1 flex flex-col overflow-hidden h-full">
+        <div className="flex-1 flex flex-col overflow-hidden h-full min-w-0">
           
           {/* HORIZONTAL METEOROLOGICAL PARAMETERS TAB STRIP (Spans across the entire main screen width) */}
-          <nav className="h-11 bg-[#0D0E12] border-b border-[#1A1C23] flex items-center px-4 justify-between shrink-0 z-30" id="weather-tabs-strip">
-            <ul className="flex space-x-2 text-xs font-bold h-full items-center text-slate-400 overflow-x-auto custom-scrollbar">
+          <nav className="relative h-10 sm:h-11 bg-[#0D0E12] border-b border-[#1A1C23] flex items-center px-2 sm:px-4 gap-2 justify-between shrink-0 z-[45] min-w-0" id="weather-tabs-strip">
+            <ul className="flex flex-1 min-w-0 space-x-1 sm:space-x-2 text-xs font-bold h-full items-center text-slate-400 overflow-x-auto no-scrollbar">
               {WEATHER_LAYERS.map((layer) => {
                 const isSelected = activeLayer.id === layer.id;
                 return (
                   <li
                     key={layer.id}
                     onClick={() => setActiveLayer(layer)}
-                    className={`h-full flex items-center cursor-pointer px-3 text-nowrap transition-all border-b-2 tracking-wide font-sans text-[11px] ${
+                    className={`h-full flex items-center cursor-pointer px-2 sm:px-3 text-nowrap shrink-0 transition-all border-b-2 tracking-wide font-sans text-[11px] ${
                       isSelected
                         ? "border-blue-500 text-blue-400 font-extrabold"
                         : "border-transparent text-slate-400 hover:text-slate-200"
@@ -1403,13 +1477,13 @@ export default function App() {
                   </li>
                 );
               })}
-              <li className="h-full flex items-center cursor-pointer px-3 text-nowrap border-b-2 border-transparent text-slate-500 hover:text-slate-300 font-sans text-[11px]">
+              <li className="h-full flex items-center cursor-pointer px-2 sm:px-3 text-nowrap shrink-0 border-b-2 border-transparent text-slate-500 hover:text-slate-300 font-sans text-[11px]">
                 More ▾
               </li>
             </ul>
             
             {/* Unit conversions & settings inside tabs */}
-            <div className="flex items-center space-x-3 text-slate-400 shrink-0 select-none">
+            <div className="flex items-center space-x-1.5 sm:space-x-3 text-slate-400 shrink-0 select-none">
               <SplitControls
                 splitLayout={splitLayout}
                 onSelectLayout={(mode) => setSplitLayout(mode)}
@@ -1420,10 +1494,10 @@ export default function App() {
                 activePaneTitle={activePane.title}
                 activePaneLayerName={activeLayer.name}
               />
-              <div className="flex items-center bg-[#07080B] px-2.5 py-0.5 rounded border border-[#1A1C23] text-[10px] font-mono font-bold">
+              <div className="hidden sm:flex items-center bg-[#07080B] px-2.5 py-0.5 rounded border border-[#1A1C23] text-[10px] font-mono font-bold">
                 <span>°C ▾</span>
               </div>
-              <button className="hover:text-white transition duration-150">
+              <button className="hidden sm:inline-flex hover:text-white transition duration-150">
                 <GearIcon className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300" />
               </button>
             </div>
@@ -1447,26 +1521,30 @@ export default function App() {
               {/* Render MapLibre Instance(s) based on Split Layout */}
               <div className={`flex-1 h-full w-full relative z-10 ${
                 splitLayout === "single"
-                  ? "flex flex-col"
+                  ? "flex flex-col overflow-hidden"
                   : splitLayout === "dual"
-                  ? "grid grid-cols-1 md:grid-cols-2 gap-1 bg-[#030406] p-1"
+                  ? "grid grid-cols-1 md:grid-cols-2 md:grid-rows-1 gap-1 bg-[#030406] p-1 overflow-y-auto md:overflow-hidden"
                   : splitLayout === "triple"
-                  ? "grid grid-cols-2 grid-rows-2 gap-1 bg-[#030406] p-1"
-                  : "grid grid-cols-2 grid-rows-2 gap-1 bg-[#030406] p-1"
+                  ? "grid grid-cols-1 sm:grid-cols-2 sm:grid-rows-2 gap-1 bg-[#030406] p-1 overflow-y-auto sm:overflow-hidden"
+                  : "grid grid-cols-1 sm:grid-cols-2 sm:grid-rows-2 gap-1 bg-[#030406] p-1 overflow-y-auto sm:overflow-hidden"
               }`}>
                 {panes.slice(0, splitLayout === "single" ? 1 : splitLayout === "dual" ? 2 : splitLayout === "triple" ? 3 : 4).map((pane, paneIdx) => {
                   const isActive = activePaneIndex === paneIdx;
                   
-                  // Grid span logic for triple mode (pane 2 spans full width on bottom)
+                  // Grid span logic for triple mode (pane 2 spans full width on bottom on sm+)
                   const gridClass = splitLayout === "triple" && paneIdx === 2
-                    ? "col-span-2 row-span-1"
+                    ? "sm:col-span-2 sm:row-span-1"
+                    : "";
+
+                  const minHeightClass = splitLayout !== "single"
+                    ? "min-h-[230px] sm:min-h-0"
                     : "";
 
                   return (
                     <div
                       key={pane.id}
                       onClick={() => setActivePaneIndex(paneIdx)}
-                      className={`relative flex flex-col h-full w-full overflow-hidden transition-all duration-150 rounded ${gridClass} ${
+                      className={`relative flex flex-col h-full w-full overflow-hidden transition-all duration-150 rounded ${gridClass} ${minHeightClass} ${
                         splitLayout !== "single"
                           ? isActive
                             ? "border-2 border-blue-500 shadow-xl shadow-blue-950/50 ring-1 ring-blue-500/50"
@@ -1476,31 +1554,32 @@ export default function App() {
                     >
                       {/* Pane Header Bar in Split Screen View */}
                       {splitLayout !== "single" && (
-                        <div className={`h-8 bg-[#090B10]/95 backdrop-blur-md border-b flex items-center justify-between px-2.5 z-20 shrink-0 text-slate-200 select-none ${
+                        <div className={`h-8 bg-[#090B10]/95 backdrop-blur-md border-b flex items-center justify-between gap-1.5 px-2 z-20 shrink-0 text-slate-200 select-none ${
                           isActive ? "border-blue-500/50 bg-blue-950/25" : "border-[#1A1F2E]"
                         }`}>
                           {/* Left: Badge & Title */}
-                          <div className="flex items-center space-x-2 min-w-0">
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider ${
+                          <div className="flex items-center space-x-1.5 min-w-0">
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider shrink-0 ${
                               isActive ? "bg-blue-500 text-white" : "bg-slate-800 text-slate-400"
                             }`}>
                               {pane.title}
                             </span>
 
                             {isActive ? (
-                              <span className="flex items-center space-x-1 text-[9px] font-bold text-blue-400 bg-blue-500/20 px-1.5 py-0.5 rounded border border-blue-400/30">
+                              <span className="flex items-center space-x-1 text-[9px] font-bold text-blue-400 bg-blue-500/20 px-1.5 py-0.5 rounded border border-blue-400/30 shrink-0">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                                <span>Active Map</span>
+                                <span className="hidden sm:inline">Active Map</span>
+                                <span className="sm:hidden">Active</span>
                               </span>
                             ) : (
-                              <span className="text-[9px] text-slate-500 hover:text-slate-300 transition">
+                              <span className="hidden sm:inline text-[9px] text-slate-500 hover:text-slate-300 transition truncate">
                                 (Click to activate)
                               </span>
                             )}
                           </div>
 
                           {/* Center: Quick Layer Selection Dropdown */}
-                          <div className="flex items-center space-x-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center space-x-1 shrink-0 min-w-0" onClick={(e) => e.stopPropagation()}>
                             <select
                               value={pane.activeLayer.id}
                               onChange={(e) => {
@@ -1510,7 +1589,7 @@ export default function App() {
                                   handleSetActiveLayerForPane(paneIdx, newLayer);
                                 }
                               }}
-                              className="bg-[#121622] text-blue-300 text-[10px] font-bold border border-[#232B3E] rounded px-2 py-0.5 focus:outline-none focus:border-blue-500 transition cursor-pointer"
+                              className="bg-[#121622] text-blue-300 text-[10px] font-bold border border-[#232B3E] rounded px-1.5 sm:px-2 py-0.5 focus:outline-none focus:border-blue-500 transition cursor-pointer max-w-[125px] sm:max-w-[200px] truncate"
                             >
                               {WEATHER_LAYERS.map((layer) => (
                                 <option key={layer.id} value={layer.id} className="bg-[#0D1017] text-slate-200">
@@ -1559,6 +1638,7 @@ export default function App() {
                           showLiveLightning={isLightningActive}
                           activeLayers={activeLayers}
                           lightningTimeFilter={lightningTimeFilter}
+                          hasTopLegend={splitLayout === "single"}
                         />
 
                         {/* Compact Layer Legend Tag at bottom-left of map pane */}
@@ -1581,10 +1661,10 @@ export default function App() {
                 })}
               </div>
 
-              {/* AI Scientific Analysis Overlay brief (Displays absolute over map when computed) */}
+              {/* AI Scientific Analysis Overlay brief (Clears top legend and map controls) */}
               {analysisReport && (
-                <div className="absolute top-4 left-4 right-4 md:left-48 max-w-lg bg-[#1a1a1a]/95 backdrop-blur-md border border-blue-500/40 rounded shadow-2xl p-4.5 z-40" id="ai-report-modal">
-                  <div className="flex justify-between items-center border-b border-blue-500/20 pb-2 mb-3">
+                <div className="absolute top-[86px] sm:top-4 left-2.5 right-2.5 sm:left-auto sm:right-14 sm:w-[26rem] max-w-full max-h-[70dvh] flex flex-col bg-[#1a1a1a]/95 backdrop-blur-md border border-blue-500/40 rounded shadow-2xl p-3.5 sm:p-4.5 z-40" id="ai-report-modal">
+                  <div className="flex justify-between items-center border-b border-blue-500/20 pb-2 mb-3 shrink-0">
                     <div className="flex items-center space-x-2">
                       <Sparkles className="w-4 h-4 text-blue-400 animate-pulse" />
                       <span className="text-xs font-bold uppercase tracking-wider text-white">Clinical AI Atmospheric Briefing</span>
@@ -1597,8 +1677,8 @@ export default function App() {
                     </button>
                   </div>
                   
-                  <div className="text-[11px] leading-relaxed text-slate-300 font-sans space-y-2 max-h-52 overflow-y-auto custom-scrollbar pr-1 select-text">
-                    <div className="font-mono text-[9px] text-blue-400 bg-blue-950/20 border border-blue-900/30 p-2 rounded flex justify-between">
+                  <div className="text-[11px] leading-relaxed text-slate-300 font-sans space-y-2 flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 select-text">
+                    <div className="font-mono text-[9px] text-blue-400 bg-blue-950/20 border border-blue-900/30 p-2 rounded flex flex-wrap justify-between gap-1">
                       <span>Coordinates: {currentCoords.lat.toFixed(3)}°N, {currentCoords.lon.toFixed(3)}°E</span>
                       <span>GFS Precision</span>
                     </div>
@@ -1644,93 +1724,101 @@ export default function App() {
                 </div>
               )}
 
-              {/* HORIZONTAL COLOR LEGEND Overlay (Top Left on map) */}
-              <div 
-                className="absolute top-3 left-3 sm:top-4 sm:left-4 bg-[#1a1a1a]/90 backdrop-blur-md rounded-lg border border-[#1A1C23] px-3 py-2 z-30 flex flex-col space-y-1.5 shadow-xl select-none w-auto min-w-[200px] max-w-[calc(100vw-70px)] sm:max-w-xs md:max-w-sm transition-all" 
-                id="map-color-legend"
-                dir="ltr"
-              >
-                <div className="flex items-center justify-between text-[10px] font-mono">
-                  <span className="font-bold text-slate-200 truncate max-w-[150px]">{activeLayer.name}</span>
-                  {activeLayer.unit && (
-                    <span className="font-black text-blue-400 uppercase tracking-wider ml-2 shrink-0">{activeLayer.unit}</span>
-                  )}
-                </div>
+              {/* HORIZONTAL COLOR LEGEND Overlay (Single view only; split panes have per-pane legends) */}
+              {splitLayout === "single" && (
+                <div 
+                  className="absolute top-3 left-14 md:top-3.5 md:left-3.5 bg-[#1a1a1a]/90 backdrop-blur-md rounded-lg border border-[#1A1C23] px-2.5 sm:px-3 py-1.5 sm:py-2 z-30 flex flex-col space-y-1 shadow-xl select-none w-auto min-w-[130px] sm:min-w-[185px] max-w-[min(20rem,calc(100%-7.25rem))] md:max-w-[min(22rem,calc(100%-4.5rem))] transition-all" 
+                  id="map-color-legend"
+                  dir="ltr"
+                >
+                  <div className="flex items-center justify-between text-[10px] font-mono">
+                    <span className="font-bold text-slate-200 truncate max-w-[110px] sm:max-w-[150px]">{activeLayer.name}</span>
+                    {activeLayer.unit && (
+                      <span className="font-black text-blue-400 uppercase tracking-wider ml-2 shrink-0">{activeLayer.unit}</span>
+                    )}
+                  </div>
 
-                <div className="w-full">
-                  <div 
-                    className={`h-2 w-full rounded-full bg-gradient-to-r ${activeLayer.gradient} shadow-inner border border-white/10`} 
-                  />
-                  {activeLayer.id !== "none" && (
-                    <div className="flex justify-between text-[9px] font-bold text-slate-400 font-mono pt-1">
-                      <span>{minVal}</span>
-                      <span className="hidden xs:inline">{Math.round(minVal + (maxVal - minVal) * 0.25)}</span>
-                      <span>{Math.round(minVal + (maxVal - minVal) * 0.5)}</span>
-                      <span className="hidden xs:inline">{Math.round(minVal + (maxVal - minVal) * 0.75)}</span>
-                      <span>{maxVal}</span>
-                    </div>
-                  )}
+                  <div className="w-full">
+                    <div 
+                      className={`h-2 w-full rounded-full bg-gradient-to-r ${activeLayer.gradient} shadow-inner border border-white/10`} 
+                    />
+                    {activeLayer.id !== "none" && (
+                      <div className="flex justify-between text-[9px] font-bold text-slate-400 font-mono pt-1">
+                        <span>{minVal}</span>
+                        <span className="hidden sm:inline">{Math.round(minVal + (maxVal - minVal) * 0.25)}</span>
+                        <span>{Math.round(minVal + (maxVal - minVal) * 0.5)}</span>
+                        <span className="hidden sm:inline">{Math.round(minVal + (maxVal - minVal) * 0.75)}</span>
+                        <span>{maxVal}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* DYNAMIC TIMELINE CONTROL PANEL (Bottom edge of map layout) */}
               {isLightningActive ? (
                 /* REAL-TIME EUMETSAT MTG-LI SATELLITE LIGHTNING TIMELINE HUD */
-                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#1a1a1a]/95 backdrop-blur-md rounded-lg border border-amber-500/20 p-3 shadow-2xl flex flex-col space-y-2.5" id="timeline-scrubber-hud">
-                  {/* Top Row: Live Indicator, Satellite Source, Exact Date & Exact Time (to the second) */}
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 pb-2 border-b border-[#1A1C23]">
+                <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-30 bg-[#1a1a1a]/95 backdrop-blur-md rounded-lg border border-amber-500/20 p-2 sm:p-3 shadow-2xl flex flex-col space-y-2" id="timeline-scrubber-hud">
+                  {/* Top Row: Live Indicator, Satellite Source, Exact Date & Exact Time + Collapse Toggle */}
+                  <div className={`flex flex-wrap items-center justify-between gap-2 ${isTimelineCollapsed ? "" : "pb-2 border-b border-[#1A1C23]"}`}>
                     {/* Live Source Badge */}
-                    <div className="flex items-center space-x-2 select-none shrink-0">
-                      <div className="flex items-center space-x-1.5 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-md">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-[10px] font-black text-emerald-400 font-mono tracking-wider">SIMULATED STREAM • 1,000 FPS</span>
+                    <div className="flex flex-wrap items-center gap-1.5 select-none min-w-0">
+                      <div className="flex items-center space-x-1.5 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 sm:py-1 rounded-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        <span className="text-[9px] sm:text-[10px] font-black text-emerald-400 font-mono tracking-wider">
+                          <span className="sm:hidden">LIVE STREAM</span>
+                          <span className="hidden sm:inline">SIMULATED STREAM • 1,000 FPS</span>
+                        </span>
                       </div>
-                      <div className="flex items-center space-x-1.5 bg-[#12141A] border border-[#212530] px-2.5 py-1 rounded-md">
-                        <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
-                        <span className="text-[10px] font-bold text-slate-200">EUMETSAT MTG-I1 LI Sensor (0.0° GEO)</span>
+                      <div className="flex items-center space-x-1.5 bg-[#12141A] border border-[#212530] px-2 py-0.5 sm:py-1 rounded-md">
+                        <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
+                        <span className="text-[9.5px] sm:text-[10px] font-bold text-slate-200 truncate max-w-[140px] sm:max-w-none">
+                          EUMETSAT MTG-I1 LI
+                        </span>
                       </div>
                     </div>
 
                     {/* Exact Date & Time Directly From API Engine */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono font-bold">
-                      {/* Exact Date */}
-                      <div className="flex items-center space-x-1.5 bg-blue-950/40 text-blue-300 border border-blue-800/40 px-2.5 py-1 rounded-md shadow-sm" title="Date reported by lightning telemetry feed">
-                        <Calendar className="w-3.5 h-3.5 text-blue-400" />
-                        <span className="text-[11px] font-bold text-slate-200">
-                          {apiDateGregorian}
-                        </span>
-                      </div>
+                    {!isTimelineCollapsed && (
+                      <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono font-bold">
+                        {/* Exact Date */}
+                        <div className="hidden sm:flex items-center space-x-1.5 bg-blue-950/40 text-blue-300 border border-blue-800/40 px-2 py-0.5 rounded-md shadow-sm" title="Date reported by lightning telemetry feed">
+                          <Calendar className="w-3 h-3 text-blue-400" />
+                          <span className="text-[10px] font-bold text-slate-200">
+                            {apiDateGregorian}
+                          </span>
+                        </div>
 
-                      {/* Exact API Output Clock */}
-                      <div className="flex items-center space-x-1.5 bg-amber-950/40 text-amber-300 border border-amber-800/40 px-2.5 py-1 rounded-md shadow-sm" title="Timestamp recorded in telemetry feed (UTC and Local)">
-                        <Clock className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-[9px] text-amber-400/80 font-sans border-r border-amber-800/50 pr-1.5">
-                          API TIME:
-                        </span>
-                        <span className="text-[11px] font-black tracking-wider text-amber-300">
-                          {apiTimeUtc}
-                        </span>
-                        <span className="text-[10px] text-amber-400/80 border-l border-amber-800/50 pl-1.5">
-                          {apiTimeLocal}
-                        </span>
-                      </div>
+                        {/* Exact API Output Clock */}
+                        <div className="flex items-center space-x-1.5 bg-amber-950/40 text-amber-300 border border-amber-800/40 px-2 py-0.5 rounded-md shadow-sm" title="Timestamp recorded in telemetry feed (UTC and Local)">
+                          <Clock className="w-3 h-3 text-amber-400" />
+                          <span className="hidden md:inline text-[9px] text-amber-400/80 font-sans border-r border-amber-800/50 pr-1.5">
+                            API TIME:
+                          </span>
+                          <span className="text-[10px] font-black tracking-wider text-amber-300">
+                            {apiTimeUtc}
+                          </span>
+                          <span className="hidden sm:inline text-[9.5px] text-amber-400/80 border-l border-amber-800/50 pl-1.5">
+                            {apiTimeLocal}
+                          </span>
+                        </div>
 
-                      {/* Last Detection Time */}
-                      <div className="flex items-center space-x-1 bg-[#141824] text-slate-300 border border-[#23293D] px-2.5 py-1 rounded-md text-[10px]" title="Latest electrical discharge pulse recorded by telemetry feed">
-                        <Activity className="w-3 h-3 text-emerald-400" />
-                        <span>Last Pulse:</span>
-                        <span className="text-emerald-400 font-bold">
-                          {secondsAgo <= 2 ? "Just now" : `${secondsAgo}s ago`}
-                        </span>
-                        <span className="text-slate-400 font-mono">({lastDetectionTimeUtc})</span>
+                        {/* Last Detection Time */}
+                        <div className="hidden xl:flex items-center space-x-1 bg-[#141824] text-slate-300 border border-[#23293D] px-2 py-0.5 rounded-md text-[10px]" title="Latest electrical discharge pulse recorded by telemetry feed">
+                          <Activity className="w-3 h-3 text-emerald-400" />
+                          <span>Last Pulse:</span>
+                          <span className="text-emerald-400 font-bold">
+                            {secondsAgo <= 2 ? "Just now" : `${secondsAgo}s ago`}
+                          </span>
+                          <span className="text-slate-400 font-mono">({lastDetectionTimeUtc})</span>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Stats & Instant Refresh */}
-                    <div className="flex items-center space-x-2 text-[10px] font-mono shrink-0">
+                    {/* Stats, Instant Refresh & Collapse Toggle */}
+                    <div className="flex items-center space-x-1.5 text-[10px] font-mono shrink-0 ml-auto">
                       <span className="bg-[#12141A] text-slate-400 px-2 py-0.5 rounded border border-[#212530]">
-                        Active Flashes: <strong className="text-amber-400">{lightningStats?.totalActiveFlashes ?? 0}</strong>
+                        Flashes: <strong className="text-amber-400">{lightningStats?.totalActiveFlashes ?? 0}</strong>
                       </span>
                       <button
                         onClick={async () => {
@@ -1742,84 +1830,96 @@ export default function App() {
                         title="Refresh telemetry from API"
                       >
                         <RefreshCw className="w-3 h-3 text-emerald-400" />
-                        <span>Refresh API</span>
+                        <span className="hidden sm:inline">Refresh</span>
+                      </button>
+                      <button
+                        onClick={() => setIsTimelineCollapsed(!isTimelineCollapsed)}
+                        className="p-1 bg-[#12141A] hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded border border-[#212530] transition"
+                        title={isTimelineCollapsed ? "Expand Lightning Timeline" : "Collapse Lightning Timeline"}
+                      >
+                        {isTimelineCollapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                   </div>
 
                   {/* Second Row: Time Filtering Shortcuts & Sensor Specifications */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-0.5">
-                    <div className="flex items-center space-x-2 w-full sm:w-auto">
-                      <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">Observation Window:</span>
-                      <div className="flex items-center space-x-1 bg-[#12141A] p-0.5 rounded-md border border-[#212530]">
-                        <button
-                          onClick={() => setLightningTimeFilter("2m")}
-                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
-                            lightningTimeFilter === "2m" 
-                              ? "bg-amber-500 text-slate-950 shadow" 
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          ⚡ Last 2m (Latest)
-                        </button>
-                        <button
-                          onClick={() => setLightningTimeFilter("5m")}
-                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
-                            lightningTimeFilter === "5m" 
-                              ? "bg-amber-500 text-slate-950 shadow" 
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          Last 5m
-                        </button>
-                        <button
-                          onClick={() => setLightningTimeFilter("15m")}
-                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
-                            lightningTimeFilter === "15m" 
-                              ? "bg-amber-500 text-slate-950 shadow" 
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          Last 15m
-                        </button>
-                        <button
-                          onClick={() => setLightningTimeFilter("all")}
-                          className={`cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold transition ${
-                            lightningTimeFilter === "all" 
-                              ? "bg-blue-600 text-white shadow" 
-                              : "text-slate-400 hover:text-white"
-                          }`}
-                        >
-                          Full 30m (All Buffer)
-                        </button>
+                  {!isTimelineCollapsed && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-0.5">
+                      <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto no-scrollbar">
+                        <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap hidden sm:inline">Observation Window:</span>
+                        <div className="flex items-center space-x-1 bg-[#12141A] p-0.5 rounded-md border border-[#212530] shrink-0">
+                          <button
+                            onClick={() => setLightningTimeFilter("2m")}
+                            className={`cursor-pointer px-2 sm:px-2.5 py-1 rounded text-[10px] font-bold transition whitespace-nowrap ${
+                              lightningTimeFilter === "2m" 
+                                ? "bg-amber-500 text-slate-950 shadow" 
+                                : "text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="sm:hidden">⚡ 2m</span>
+                            <span className="hidden sm:inline">⚡ Last 2m (Latest)</span>
+                          </button>
+                          <button
+                            onClick={() => setLightningTimeFilter("5m")}
+                            className={`cursor-pointer px-2 sm:px-2.5 py-1 rounded text-[10px] font-bold transition whitespace-nowrap ${
+                              lightningTimeFilter === "5m" 
+                                ? "bg-amber-500 text-slate-950 shadow" 
+                                : "text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="sm:hidden">5m</span>
+                            <span className="hidden sm:inline">Last 5m</span>
+                          </button>
+                          <button
+                            onClick={() => setLightningTimeFilter("15m")}
+                            className={`cursor-pointer px-2 sm:px-2.5 py-1 rounded text-[10px] font-bold transition whitespace-nowrap ${
+                              lightningTimeFilter === "15m" 
+                                ? "bg-amber-500 text-slate-950 shadow" 
+                                : "text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="sm:hidden">15m</span>
+                            <span className="hidden sm:inline">Last 15m</span>
+                          </button>
+                          <button
+                            onClick={() => setLightningTimeFilter("all")}
+                            className={`cursor-pointer px-2 sm:px-2.5 py-1 rounded text-[10px] font-bold transition whitespace-nowrap ${
+                              lightningTimeFilter === "all" 
+                                ? "bg-blue-600 text-white shadow" 
+                                : "text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="sm:hidden">All (30m)</span>
+                            <span className="hidden sm:inline">Full 30m (All Buffer)</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="hidden md:flex items-center space-x-3 text-[9px] text-slate-400 font-mono w-full sm:w-auto justify-between sm:justify-end">
+                        <span className="text-slate-400">
+                          Active Coverage: <span className="text-slate-300 font-bold">Europe, Middle East, Africa (OC1 - OC4)</span>
+                        </span>
+                        <span className="bg-emerald-950/40 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/30">
+                          777.4nm O2 Optical Channel
+                        </span>
                       </div>
                     </div>
-
-                    <div className="flex items-center space-x-3 text-[9px] text-slate-400 font-mono w-full sm:w-auto justify-between sm:justify-end">
-                      <span className="text-slate-400">
-                        Active Coverage: <span className="text-slate-300 font-bold">Europe, Middle East, Africa (OC1 - OC4)</span>
-                      </span>
-                      <span className="bg-emerald-950/40 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/30">
-                        777.4nm O2 Optical Channel
-                      </span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 /* FORECAST TIMELINE CONTROL PANEL (Bottom edge of map layout) */
-                <div className="absolute bottom-4 left-4 right-4 z-30 bg-[#1a1a1a]/95 backdrop-blur-md rounded-lg border border-[#1A1C23] p-3 shadow-2xl flex flex-col space-y-3" id="timeline-scrubber-hud">
+                <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-30 bg-[#1a1a1a]/95 backdrop-blur-md rounded-lg border border-[#1A1C23] p-2 sm:p-3 shadow-2xl flex flex-col space-y-2 sm:space-y-3" id="timeline-scrubber-hud">
                   {/* Top Row: Title, Playback buttons, and Step Size */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-2">
-                    <div className="flex items-center space-x-2 select-none shrink-0 w-full sm:w-auto justify-between sm:justify-start">
-                      <span className="text-[10px] font-black text-slate-400 tracking-wider">FORECAST TIMELINE</span>
+                  <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2 select-none shrink-0">
+                      <span className="text-[10px] font-black text-slate-400 tracking-wider hidden sm:inline">FORECAST TIMELINE</span>
                       <span className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/20 font-bold font-mono">
-                        {formatForecastDate(timelineHour, { includeYear: true })}
+                        {formatForecastDate(timelineHour, { includeYear: false })}
                       </span>
                     </div>
 
                     {/* Playback & Step Controller */}
-                    <div className="flex items-center space-x-1.5 bg-[#12141A] rounded border border-[#212530] p-0.5 shrink-0">
-                      {/* Jump to first */}
+                    <div className="flex items-center space-x-1 bg-[#12141A] rounded border border-[#212530] p-0.5 shrink-0">
                       <button
                         onClick={() => setTimelineHour(0)}
                         className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
@@ -1827,7 +1927,6 @@ export default function App() {
                       >
                         <ChevronsLeft className="w-3.5 h-3.5" />
                       </button>
-                      {/* Step backward */}
                       <button
                         onClick={() => setTimelineHour(prev => Math.max(0, prev - timeStep))}
                         className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
@@ -1835,25 +1934,23 @@ export default function App() {
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
                       </button>
-                      {/* Play/Pause */}
                       <button
                         onClick={() => setIsPlaying(!isPlaying)}
-                        className="px-3 py-1 hover:bg-[#1A1D27] text-blue-400 border-x border-[#212530] transition flex items-center justify-center space-x-1 rounded-sm"
+                        className="px-2.5 sm:px-3 py-1 hover:bg-[#1A1D27] text-blue-400 border-x border-[#212530] transition flex items-center justify-center space-x-1 rounded-sm"
                         title={isPlaying ? "Pause Forecast Loop" : "Play Forecast Loop"}
                       >
                         {isPlaying ? (
                           <>
                             <Pause className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
-                            <span className="text-[9px] font-bold text-amber-500 hidden xs:inline">PAUSE</span>
+                            <span className="text-[9px] font-bold text-amber-500 hidden sm:inline">PAUSE</span>
                           </>
                         ) : (
                           <>
                             <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
-                            <span className="text-[9px] font-bold text-emerald-500 hidden xs:inline">PLAY</span>
+                            <span className="text-[9px] font-bold text-emerald-500 hidden sm:inline">PLAY</span>
                           </>
                         )}
                       </button>
-                      {/* Step forward */}
                       <button
                         onClick={() => setTimelineHour(prev => Math.min(360, prev + timeStep))}
                         className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
@@ -1861,7 +1958,6 @@ export default function App() {
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
-                      {/* Jump to last */}
                       <button
                         onClick={() => setTimelineHour(360)}
                         className="p-1 hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded transition"
@@ -1871,88 +1967,101 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Step Increment buttons */}
-                    <div className="flex items-center space-x-1 bg-[#12141A] rounded p-0.5 border border-[#212530] shrink-0 w-full sm:w-auto justify-between sm:justify-start">
-                      <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans px-1 hidden sm:inline">STEP:</span>
-                      {[1, 3, 6, 12, 24].map((step) => (
-                        <button
-                          key={step}
-                          onClick={() => setTimeStep(step)}
-                          className={`flex-1 sm:flex-initial px-2 py-0.5 rounded text-[9px] font-bold font-mono transition duration-150 ${
-                            timeStep === step ? "bg-blue-600 text-white shadow" : "text-slate-500 hover:text-slate-200"
-                          }`}
-                        >
-                          {step}h
-                        </button>
-                      ))}
+                    {/* Step Increment buttons & Collapse Toggle */}
+                    <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+                      <div className="flex items-center space-x-1 bg-[#12141A] rounded p-0.5 border border-[#212530] flex-1 sm:flex-initial">
+                        <span className="text-[8px] text-slate-500 uppercase tracking-widest font-black font-sans px-1 hidden md:inline">STEP:</span>
+                        {[1, 3, 6, 12, 24].map((step) => (
+                          <button
+                            key={step}
+                            onClick={() => setTimeStep(step)}
+                            className={`flex-1 sm:flex-initial px-1.5 sm:px-2 py-0.5 rounded text-[9px] font-bold font-mono transition duration-150 ${
+                              timeStep === step ? "bg-blue-600 text-white shadow" : "text-slate-500 hover:text-slate-200"
+                            }`}
+                          >
+                            {step}h
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => setIsTimelineCollapsed(!isTimelineCollapsed)}
+                        className="p-1 bg-[#12141A] hover:bg-[#1A1D27] text-slate-400 hover:text-white rounded border border-[#212530] transition shrink-0"
+                        title={isTimelineCollapsed ? "Expand Timeline Scrubber" : "Collapse Timeline Scrubber"}
+                      >
+                        {isTimelineCollapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   </div>
 
                   {/* Second Row: Slider with reference ticks */}
-                  <div className="relative h-7 flex items-end px-2">
-                    <div className="absolute bottom-0 left-0 right-0 border-b border-[#1A1C23]" />
-                    
-                    {/* Active dynamic visual ticks/labels */}
-                    <span className="absolute bottom-3 left-0 text-[9px] text-slate-500 font-bold font-mono">
-                      Today
-                    </span>
-                    <span className="absolute bottom-3 left-[25%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
-                      Day 4 ({formatForecastDate(96, { onlyDate: true, isShort: true })})
-                    </span>
-                    <span className="absolute bottom-3 left-[50%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
-                      Day 8 ({formatForecastDate(192, { onlyDate: true, isShort: true })})
-                    </span>
-                    <span className="absolute bottom-3 left-[75%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
-                      Day 11 ({formatForecastDate(264, { onlyDate: true, isShort: true })})
-                    </span>
-                    <span className="absolute bottom-3 right-0 text-[9px] text-slate-500 font-bold font-mono">
-                      Day 15 ({formatForecastDate(360, { onlyDate: true, isShort: true })})
-                    </span>
+                  {!isTimelineCollapsed && (
+                    <>
+                      <div className="relative h-7 flex items-end px-2">
+                        <div className="absolute bottom-0 left-0 right-0 border-b border-[#1A1C23]" />
+                        
+                        {/* Active dynamic visual ticks/labels */}
+                        <span className="absolute bottom-3 left-0 text-[9px] text-slate-500 font-bold font-mono">
+                          Today
+                        </span>
+                        <span className="absolute bottom-3 left-[25%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
+                          Day 4 ({formatForecastDate(96, { onlyDate: true, isShort: true })})
+                        </span>
+                        <span className="absolute bottom-3 left-[50%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
+                          Day 8 ({formatForecastDate(192, { onlyDate: true, isShort: true })})
+                        </span>
+                        <span className="absolute bottom-3 left-[75%] text-[9px] text-slate-500 font-bold font-mono -translate-x-1/2 hidden sm:inline">
+                          Day 11 ({formatForecastDate(264, { onlyDate: true, isShort: true })})
+                        </span>
+                        <span className="absolute bottom-3 right-0 text-[9px] text-slate-500 font-bold font-mono">
+                          Day 15 ({formatForecastDate(360, { onlyDate: true, isShort: true })})
+                        </span>
 
-                    {/* Timeline slider itself */}
-                    <input
-                      type="range"
-                      min="0"
-                      max="360"
-                      step={timeStep}
-                      value={timelineHour}
-                      onChange={(e) => setTimelineHour(parseInt(e.target.value))}
-                      className="absolute bottom-[-1px] left-0 right-0 w-full opacity-100 h-1.5 bg-transparent cursor-pointer accent-blue-500"
-                    />
-                  </div>
+                        {/* Timeline slider itself */}
+                        <input
+                          type="range"
+                          min="0"
+                          max="360"
+                          step={timeStep}
+                          value={timelineHour}
+                          onChange={(e) => setTimelineHour(parseInt(e.target.value))}
+                          className="absolute bottom-[-1px] left-0 right-0 w-full opacity-100 h-1.5 bg-transparent cursor-pointer accent-blue-500"
+                        />
+                      </div>
 
-                  {/* Third Row: Day List Shortcuts */}
-                  <div className="hidden md:flex items-center justify-between border-t border-[#1A1C23] pt-2">
-                    <div className="flex items-center space-x-2 w-28 shrink-0">
-                      <span className="text-[10px] font-black text-slate-500 tracking-wider">JUMP TO DAY</span>
-                    </div>
-                    <div className="flex-1 flex justify-between items-center text-[9px] font-mono text-slate-500 px-4 overflow-x-auto custom-scrollbar gap-1.5 py-0.5">
-                      {Array.from({ length: 16 }).map((_, day) => {
-                        const hr = day * 24;
-                        const isActive = Math.abs(timelineHour - hr) < 12; // active day highlight
-                        const dateObj = new Date();
-                        dateObj.setDate(dateObj.getDate() + day);
-                        const formattedDay = dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
-                        return (
-                          <button
-                            key={day}
-                            onClick={() => setTimelineHour(hr)}
-                            className={`cursor-pointer px-2 py-0.5 rounded transition whitespace-nowrap text-[9px] font-bold ${
-                              isActive 
-                                ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
-                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
-                            }`}
-                            title={`Jump to ${formattedDay}`}
-                          >
-                            {day === 0 ? "Today" : `D${day}`}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="w-[120px] ml-4 flex justify-end text-[9px] text-slate-400 font-mono font-bold shrink-0">
-                      <span className="bg-blue-950/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-900/30">Step +{timelineHour}h</span>
-                    </div>
-                  </div>
+                      {/* Third Row: Day List Shortcuts */}
+                      <div className="hidden md:flex items-center justify-between border-t border-[#1A1C23] pt-2">
+                        <div className="flex items-center space-x-2 w-28 shrink-0">
+                          <span className="text-[10px] font-black text-slate-500 tracking-wider">JUMP TO DAY</span>
+                        </div>
+                        <div className="flex-1 flex justify-between items-center text-[9px] font-mono text-slate-500 px-4 overflow-x-auto custom-scrollbar gap-1.5 py-0.5">
+                          {Array.from({ length: 16 }).map((_, day) => {
+                            const hr = day * 24;
+                            const isActive = Math.abs(timelineHour - hr) < 12; // active day highlight
+                            const dateObj = new Date();
+                            dateObj.setDate(dateObj.getDate() + day);
+                            const formattedDay = dateObj.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+                            return (
+                              <button
+                                key={day}
+                                onClick={() => setTimelineHour(hr)}
+                                className={`cursor-pointer px-2 py-0.5 rounded transition whitespace-nowrap text-[9px] font-bold ${
+                                  isActive 
+                                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30" 
+                                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent"
+                                }`}
+                                title={`Jump to ${formattedDay}`}
+                              >
+                                {day === 0 ? "Today" : `D${day}`}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="w-[120px] ml-4 flex justify-end text-[9px] text-slate-400 font-mono font-bold shrink-0">
+                          <span className="bg-blue-950/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-900/30">Step +{timelineHour}h</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </main>
@@ -1961,12 +2070,20 @@ export default function App() {
           </>
         )}
 
+        {/* MOBILE BACKDROP WHEN RIGHT DRAWER IS OPEN */}
+        {showLeftDrawer && (
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-[1px] z-30 md:hidden"
+            onClick={() => setShowLeftDrawer(false)}
+          />
+        )}
+
         {/* RIGHT AREA (Sidebar Panel + Far Right Global Dock in a single container) */}
-        <aside className="flex h-full shrink-0 border-l border-[#1A1C23] z-30 bg-[#1a1a1a] overflow-hidden max-md:absolute max-md:right-0 max-md:top-0 max-md:bottom-0 max-md:h-full max-md:border-l-0 max-md:shadow-2xl" id="right-side-container">
+        <aside className={`flex h-full shrink-0 border-l border-[#1A1C23] bg-[#1a1a1a] overflow-hidden max-md:absolute max-md:right-0 max-md:top-0 max-md:bottom-0 max-md:h-full max-md:border-l-0 max-md:shadow-2xl ${showLeftDrawer ? "z-40" : "z-30"}`} id="right-side-container">
           {/* Collapsible Config & Selection Panel */}
           {showLeftDrawer && (
             <div 
-              className="bg-[#1a1a1a] flex flex-col h-full overflow-hidden relative border-r border-[#1A1C23] max-w-[calc(100vw-56px)]" 
+              className="bg-[#1a1a1a] flex flex-col h-full overflow-hidden relative border-r border-[#1A1C23] max-w-[calc(100vw-48px)] sm:max-w-[calc(100vw-56px)]" 
               id="right-sidebar-panel"
               style={{ width: `${drawerWidth}px` }}
             >
@@ -2019,6 +2136,7 @@ export default function App() {
                   messages={chatMessages}
                   onSendMessage={handleSendMessage}
                   isSending={chatLoading}
+                  onClosePanel={() => setShowLeftDrawer(false)}
                 />
               )}
 
@@ -2136,6 +2254,7 @@ export default function App() {
                     setCurrentCoords(coords);
                     setLocationName(`Coordinates: ${coords.lat.toFixed(3)}°N, ${coords.lon.toFixed(3)}°E`);
                   }}
+                  onClosePanel={() => setShowLeftDrawer(false)}
                 />
               )}
 
@@ -2172,6 +2291,7 @@ export default function App() {
                     localStorage.setItem("meteo_notes", JSON.stringify(parsed));
                     window.dispatchEvent(new CustomEvent("meteo-notes-updated"));
                   }}
+                  onClosePanel={() => setShowLeftDrawer(false)}
                 />
               )}
 
@@ -2179,8 +2299,8 @@ export default function App() {
           )}
 
           {/* 3. FAR RIGHT GLOBAL UTILITY NAVIGATION PANEL BAR */}
-          <div className="w-14 bg-[#1a1a1a] flex flex-col items-center py-2 space-y-1.5 shrink-0 h-full border-l border-[#1A1C23]/50" id="far-right-global-dock">
-            <div className="text-[7.5px] text-slate-500 uppercase font-black tracking-widest mb-1 select-none text-center">GIS Dock</div>
+          <div className="w-12 sm:w-14 bg-[#1a1a1a] flex flex-col items-center py-2 space-y-1 shrink-0 h-full border-l border-[#1A1C23]/50 overflow-y-auto overflow-x-hidden no-scrollbar" id="far-right-global-dock">
+            <div className="text-[7px] sm:text-[7.5px] text-slate-500 uppercase font-black tracking-widest mb-1 select-none text-center shrink-0">GIS Dock</div>
 
             {/* Layers tab */}
             <button
@@ -2192,7 +2312,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition ${
                 activePanel === "layers" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2213,7 +2333,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition relative ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition relative ${
                 activePanel === "notes" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2234,7 +2354,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition ${
                 activePanel === "layer_settings" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2255,7 +2375,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition relative ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition relative ${
                 activePanel === "chat" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2276,7 +2396,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition ${
                 activePanel === "favorites" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2297,7 +2417,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition ${
                 activePanel === "bookmarks" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2318,7 +2438,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition relative ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition relative ${
                 activePanel === "news" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2339,7 +2459,7 @@ export default function App() {
                   setShowLeftDrawer(true);
                 }
               }}
-              className={`w-14 py-1.5 flex flex-col items-center transition relative ${
+              className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition relative ${
                 activePanel === "alerts" && showLeftDrawer
                   ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2362,7 +2482,7 @@ export default function App() {
                     setShowLeftDrawer(true);
                   }
                 }}
-                className={`w-14 py-1.5 flex flex-col items-center transition ${
+                className={`w-12 sm:w-14 py-1.5 flex flex-col items-center shrink-0 transition ${
                   activePanel === "profile" && showLeftDrawer
                     ? "bg-blue-600/15 text-blue-400 border-r-2 border-blue-500 font-medium"
                     : "text-slate-400 hover:text-white hover:bg-slate-800/50"
@@ -2378,17 +2498,17 @@ export default function App() {
       </div>
 
       {/* 4. BASE ANALYTICAL STATUS BAR FOOTER */}
-      <footer className="h-8 bg-[#040507] border-t border-[#1A1C23] flex items-center justify-between px-4 text-[10px] text-slate-500 shrink-0 z-50 shadow-inner" id="global-status-bar">
+      <footer className="h-7 sm:h-8 bg-[#040507] border-t border-[#1A1C23] flex items-center justify-between px-2.5 sm:px-4 gap-2 text-[10px] text-slate-500 shrink-0 z-50 shadow-inner overflow-hidden" id="global-status-bar">
         {/* Left Side: GFS Data Feed status */}
-        <div className="flex items-center space-x-5 select-none">
+        <div className="flex items-center space-x-2 sm:space-x-5 select-none shrink-0">
           <div className="flex items-center space-x-1.5">
-            <span>Model:</span>
-            <span className="font-semibold text-slate-300 font-mono">GFS 0.25° Grid</span>
+            <span className="hidden sm:inline">Model:</span>
+            <span className="font-semibold text-slate-300 font-mono">GFS 0.25°<span className="hidden md:inline"> Grid</span></span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-            <span className="text-emerald-500 font-bold uppercase text-[9px]">Active feed</span>
+            <span className="text-emerald-500 font-bold uppercase text-[9px] hidden sm:inline">Active feed</span>
           </div>
-          <span className="text-slate-800">|</span>
-          <div>
+          <span className="text-slate-800 hidden md:inline">|</span>
+          <div className="hidden md:block">
             <span>Run Sync:</span>
             <span className="font-semibold text-slate-300 ml-1 font-mono">10 min ago</span>
           </div>
@@ -2396,18 +2516,18 @@ export default function App() {
 
         {/* Center Readouts: Mouse Focus geography details (Only shown when hovering on map) */}
         {hoverCoords ? (
-          <div className="flex items-center space-x-6 font-mono text-[9px] select-all">
+          <div className="flex items-center space-x-2 sm:space-x-5 font-mono text-[9px] select-all truncate">
             <div>
-              <span className="text-slate-500 uppercase tracking-widest">Lat:</span>
-              <span className="font-bold text-slate-300 ml-1">{hoverCoords.lat.toFixed(4)}° N</span>
+              <span className="text-slate-500 uppercase tracking-widest hidden sm:inline">Lat:</span>
+              <span className="font-bold text-slate-300 sm:ml-1">{hoverCoords.lat.toFixed(3)}°N</span>
             </div>
-            <div className="w-1 h-1 rounded-full bg-slate-800" />
+            <div className="w-1 h-1 rounded-full bg-slate-800 shrink-0" />
             <div>
-              <span className="text-slate-500 uppercase tracking-widest">Lon:</span>
-              <span className="font-bold text-slate-300 ml-1">{hoverCoords.lon.toFixed(4)}° E</span>
+              <span className="text-slate-500 uppercase tracking-widest hidden sm:inline">Lon:</span>
+              <span className="font-bold text-slate-300 sm:ml-1">{hoverCoords.lon.toFixed(3)}°E</span>
             </div>
-            <div className="w-1 h-1 rounded-full bg-slate-800" />
-            <div>
+            <div className="w-1 h-1 rounded-full bg-slate-800 hidden sm:block shrink-0" />
+            <div className="hidden sm:block">
               <span className="text-slate-500 uppercase tracking-widest">Elevation:</span>
               <span className="font-bold text-slate-300 ml-1">{hoverCoords.elevation} m</span>
             </div>
@@ -2417,13 +2537,13 @@ export default function App() {
         )}
 
         {/* Right Readouts: Metric system, interface language */}
-        <div className="flex items-center space-x-5 select-none">
-          <div className="cursor-pointer hover:text-slate-300 transition duration-150">
+        <div className="flex items-center space-x-3 sm:space-x-5 select-none shrink-0">
+          <div className="hidden lg:block cursor-pointer hover:text-slate-300 transition duration-150">
             <span>System:</span>
             <span className="font-bold text-slate-300 ml-1">Metric (°C, m/s, hPa)</span>
           </div>
-          <span className="text-slate-800">|</span>
-          <div className="flex items-center space-x-1.5 cursor-pointer hover:text-slate-300 transition duration-150">
+          <span className="text-slate-800 hidden lg:inline">|</span>
+          <div className="hidden sm:flex items-center space-x-1.5 cursor-pointer hover:text-slate-300 transition duration-150">
             <span>Language:</span>
             <span className="font-bold text-slate-300 font-mono">English</span>
             <span className="text-[8px] text-slate-500">▼</span>
@@ -2450,7 +2570,7 @@ export default function App() {
       {/* Global Toast Notification */}
       {toastMessage && (
         <div
-          className={`fixed bottom-12 right-6 z-[100] px-4 py-2.5 rounded-lg shadow-2xl text-xs font-sans flex items-center gap-2 border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 ${
+          className={`fixed bottom-10 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-12 z-[100] px-4 py-2.5 rounded-lg shadow-2xl text-xs font-sans flex items-center gap-2 border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 ${
             toastMessage.type === "success"
               ? "bg-emerald-950/90 text-emerald-200 border-emerald-500/40"
               : toastMessage.type === "error"

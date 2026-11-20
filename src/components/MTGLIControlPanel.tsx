@@ -123,24 +123,24 @@ export const MTGLIControlPanel: React.FC<MTGLIControlPanelProps> = ({
   return (
     <div
       id="mtg-li-control-panel"
-      className="absolute top-14 right-4 z-40 w-96 max-w-[calc(100vw-2rem)] bg-[#0c1017]/95 backdrop-blur-md border border-sky-500/30 rounded-xl shadow-2xl text-white font-sans overflow-hidden transition-all duration-300"
+      className="absolute top-[84px] left-2.5 right-12 sm:top-3.5 sm:left-auto sm:right-14 z-40 sm:w-96 max-w-[calc(100%-4rem)] bg-[#0c1017]/95 backdrop-blur-md border border-sky-500/30 rounded-xl shadow-2xl text-white font-sans overflow-hidden transition-all duration-300"
     >
       {/* 1. Header with satellite credentials */}
-      <div className="bg-gradient-to-r from-sky-950/80 via-[#0d1527] to-[#0c1017] p-3 border-b border-sky-500/20 flex items-center justify-between">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 relative">
+      <div className="bg-gradient-to-r from-sky-950/80 via-[#0d1527] to-[#0c1017] p-2.5 sm:p-3 border-b border-sky-500/20 flex items-center justify-between gap-2">
+        <div className="flex items-center space-x-2 sm:space-x-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 relative shrink-0">
             <Zap className="w-4 h-4 fill-sky-400/30 text-sky-400" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500" />
           </div>
-          <div>
-            <div className="flex items-center space-x-1.5">
-              <span className="text-xs font-black tracking-wide text-white">EUMETSAT MTG-LI</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5 flex-wrap">
+              <span className="text-xs font-black tracking-wide text-white truncate">EUMETSAT MTG-LI</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-bold shrink-0">
                 SIMULATED
               </span>
             </div>
-            <div className="text-[10px] text-sky-200/80 font-mono flex items-center space-x-1">
+            <div className="text-[10px] text-sky-200/80 font-mono flex items-center space-x-1 truncate">
               <span>MTG-I1 (0.0° GEO)</span>
               <span>·</span>
               <span className="text-amber-300">777.4 nm</span>
@@ -148,7 +148,7 @@ export const MTGLIControlPanel: React.FC<MTGLIControlPanelProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 shrink-0">
           <button
             onClick={handleManualRefresh}
             disabled={isRefreshing}
@@ -168,9 +168,9 @@ export const MTGLIControlPanel: React.FC<MTGLIControlPanelProps> = ({
       </div>
 
       {!isCollapsed && (
-        <div className="p-3.5 space-y-3.5 text-xs max-h-[75vh] overflow-y-auto custom-scrollbar">
+        <div className="p-3 sm:p-3.5 space-y-3 sm:space-y-3.5 text-xs max-h-[55dvh] sm:max-h-[75dvh] overflow-y-auto custom-scrollbar">
           {/* 2. Top Telemetry Metrics */}
-          <div className="grid grid-cols-4 gap-1.5 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center">
             <div className="bg-[#131b2c] p-2 rounded-lg border border-sky-900/40">
               <div className="text-[10px] text-slate-400">Active Flashes</div>
               <div className="text-sm font-black text-sky-400 font-mono">
@@ -292,9 +292,9 @@ export const MTGLIControlPanel: React.FC<MTGLIControlPanelProps> = ({
             </div>
 
             {/* Product Type (LFL, LGR, AF) */}
-            <div className="flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-800/80">
-              <span className="text-slate-400">EUMETSAT Product Level:</span>
-              <div className="flex space-x-1 font-mono text-[10px]">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 text-[11px] pt-1.5 border-t border-slate-800/80">
+              <span className="text-slate-400">Product Level:</span>
+              <div className="flex flex-wrap gap-1 font-mono text-[10px]">
                 <button
                   onClick={() => setSelectedProduct("LFL")}
                   className={`px-2 py-0.5 rounded transition ${

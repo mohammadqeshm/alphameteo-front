@@ -13,7 +13,8 @@ import {
   ExternalLink,
   Layers,
   MapPin,
-  FileText
+  FileText,
+  X
 } from "lucide-react";
 import { Coordinate, WeatherLayer } from "../types";
 
@@ -36,6 +37,7 @@ interface SidebarNewsProps {
   activeLayer: WeatherLayer;
   onFocusLocation: (coords: Coordinate) => void;
   onCopyToNotes: (text: string) => void;
+  onClosePanel?: () => void;
 }
 
 const SAMPLE_NEWS: NewsItem[] = [
@@ -104,7 +106,8 @@ export const SidebarNews: React.FC<SidebarNewsProps> = ({
   currentCoords,
   activeLayer,
   onFocusLocation,
-  onCopyToNotes
+  onCopyToNotes,
+  onClosePanel
 }) => {
   const [news, setNews] = useState<NewsItem[]>(SAMPLE_NEWS);
   const [selectedNewsId, setSelectedNewsId] = useState<string | null>(null);
@@ -169,15 +172,27 @@ export const SidebarNews: React.FC<SidebarNewsProps> = ({
     <div className="flex flex-col h-full bg-[#1a1a1a] text-slate-200" id="news-panel">
       {/* Panel Header */}
       <div className="p-4 border-b border-[#1A1C23] flex flex-col space-y-2 bg-[#1a1a1a] shrink-0">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xs font-bold tracking-widest text-slate-100 uppercase flex items-center space-x-2 font-sans">
-            <Newspaper className="w-3.5 h-3.5 text-amber-500" />
-            <span>Synoptic News & Bulletins</span>
+        <div className="flex justify-between items-center gap-2">
+          <h2 className="text-xs font-bold tracking-widest text-slate-100 uppercase flex items-center space-x-2 font-sans min-w-0">
+            <Newspaper className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="truncate">Synoptic News & Bulletins</span>
           </h2>
-          <span className="flex items-center space-x-1 text-[9px] bg-red-600/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-mono font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
-            <span>LIVE</span>
-          </span>
+          <div className="flex items-center space-x-1.5 shrink-0">
+            <span className="flex items-center space-x-1 text-[9px] bg-red-600/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-mono font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+              <span>LIVE</span>
+            </span>
+            {onClosePanel && (
+              <button
+                type="button"
+                onClick={onClosePanel}
+                className="md:hidden p-1 rounded bg-[#14161f] border border-[#212532] text-slate-400 hover:text-white transition"
+                title="Close Panel"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -197,7 +212,7 @@ export const SidebarNews: React.FC<SidebarNewsProps> = ({
         // Detailed Article View
         <div className="flex-1 flex flex-col overflow-hidden" dir="ltr">
           {/* Back Action Bar */}
-          <div className="px-3 py-2 bg-[#0d0e13] border-b border-[#1A1C23] flex justify-between items-center shrink-0">
+          <div className="px-3 py-2 bg-[#0d0e13] border-b border-[#1A1C23] flex flex-wrap gap-2 justify-between items-center shrink-0">
             <button 
               onClick={() => setSelectedNewsId(null)}
               className="flex items-center space-x-1 text-slate-400 hover:text-slate-200 text-xs transition py-0.5 px-1.5 rounded hover:bg-slate-800"

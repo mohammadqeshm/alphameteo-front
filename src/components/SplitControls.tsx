@@ -122,10 +122,10 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
     <div className="relative inline-block text-left" ref={dropdownRef} id="split-screen-controls">
       
       {/* Trigger Button */}
-      <div className="flex items-center space-x-1 bg-[#12141A] hover:bg-[#181B24] border border-[#232838] rounded-lg p-1 transition shadow-sm">
+      <div className="flex items-center space-x-1 bg-[#12141A] hover:bg-[#181B24] border border-[#232838] rounded-lg p-0.5 sm:p-1 transition shadow-sm">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center space-x-2 px-2.5 py-1 rounded text-xs font-bold transition ${
+          className={`flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-2.5 py-1 rounded text-xs font-bold transition ${
             splitLayout !== "single"
               ? "bg-gradient-to-r from-blue-600/30 to-indigo-600/30 text-blue-300 border border-blue-500/40 shadow-sm"
               : "text-slate-300 hover:text-white"
@@ -133,7 +133,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
           title="Split Screen Layout Settings"
         >
           {currentLayoutOption.icon}
-          <span className="font-sans font-bold text-[11px] tracking-wide">
+          <span className="font-sans font-bold text-[11px] tracking-wide hidden sm:inline">
             {splitLayout === "single" ? "Split View" : `${currentLayoutOption.count} Maps`}
           </span>
           {splitLayout !== "single" && (
@@ -162,7 +162,7 @@ export const SplitControls: React.FC<SplitControlsProps> = ({
 
       {/* Popover Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-80 sm:w-96 bg-[#0B0D14]/95 backdrop-blur-xl border border-[#232A3E] rounded-xl shadow-2xl z-50 p-3.5 text-slate-200 space-y-3 font-sans animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-1.5 w-[min(22rem,calc(100vw-1rem))] sm:w-96 max-h-[75dvh] overflow-y-auto custom-scrollbar bg-[#0B0D14]/95 backdrop-blur-xl border border-[#232A3E] rounded-xl shadow-2xl z-50 p-3 sm:p-3.5 text-slate-200 space-y-3 font-sans animate-in fade-in slide-in-from-top-2 duration-150">
           
           {/* Menu Header */}
           <div className="flex items-center justify-between border-b border-[#1E2436] pb-2.5">
